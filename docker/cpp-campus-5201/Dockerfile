@@ -10,7 +10,7 @@ RUN apt-get update
 #RUN apt-get upgrade -y
 RUN apt-get install -y valgrind clang gcc make python3
 
-ADD payload/* /home/
+ADD payload /home/
 
 # Don't allow file modification
 RUN chmod -R 555 /home/*

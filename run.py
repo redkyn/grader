@@ -31,23 +31,23 @@ def grade(args, cli):
     dirnames = map(lambda x: os.path.join(dirpath, x), dirnames)
     filenames = map(lambda x: os.path.join(dirpath, x), filenames)
 
-    # Create a container for a file/folder
-    for folder in dirnames:
-        # cleanup name
-        name = re.sub(r'_submit$', '', os.path.basename(folder))
-        cleanup.append(make_gzip(folder, name))
-        create_container(cli, dirpath, cleanup[-1], args.image, args.extra)
+    targets = list(dirnames)+list(filenames)
 
-    # assumed gzips
-    for filename in filenames:
-        create_container(cli, dirpath, filename, 
-                args.image, args.extra)
+    # Create a container for a file/folder
+    for f in targets:
+        if os.path.isdir(f):
+            # cleanup name
+            name = re.sub(r'_submit$', '', os.path.basename(f))
+            cleanup.append(make_gzip(f, name))
+            f = cleanup[-1]
+        id = create_container(cli, dirpath, f, args.image, args.extra, args.force)
+        run_grader(cli, id)
 
     print("Cleaning up temporary files")
     for f in cleanup:
         os.remove(f)
 
-def create_container(cli, folder, file, image, extra=None):
+def create_container(cli, folder, file, image, extra=None, force=False):
     """
     Pass in a docker connection, a the folder source name (ie HW8), a filename
     (can be a folder name, supports stripping _submit), and a imagefile name.
@@ -66,13 +66,17 @@ def create_container(cli, folder, file, image, extra=None):
         for container_name in c['Names']:
             if container_name[1:] == name: # prefixed with /?
                 # Try not to clobber images that aren't this
-                if c['Image'] != image:
+                if c['Image'] != image and not force:
                     print(("  Container already exists for \"{0}\" and it "
                       + "doesn't appear to match the provided image. Skipping "
                       + "assignment").format(name))
                     return
+                elif force and c['Image'] != image:
+                    print("  Forcing removal of old container \"{0}\""\
+                        .format(c['name']))
+                else:
+                    print("  Removing old container")
 
-                print("  Removing old container")
                 try:
                     cli.remove_container(c['Id'], force=True)
                 except Exception as e:
@@ -84,7 +88,7 @@ def create_container(cli, folder, file, image, extra=None):
     hostconf = cli.create_host_config(mem_limit='64m')
     # Create container
     id = cli.create_container(image=image, host_config=hostconf, 
-            network_disabled=True, name=name, detach=True, tty=True,
+            network_disabled=True, name=name, detach=True, stdin_open=True,
             command="/bin/bash")
     # Copy provided file
     print("  Extracting assignment")
@@ -98,6 +102,18 @@ def create_container(cli, folder, file, image, extra=None):
             cli.put_archive(container=id, path="/home/", data=g.read())
     print("  Container created")
 
+    return id
+
+def run_grader(cli, id):
+    """
+    Delegates away to the run.py on /home/ in the container.
+    """
+    cli.start(container=id)
+    info = cli.exec_create(container=id, stdout=True, stderr=True, 
+            cmd="python3 /home/run.py")
+    print("  Running suite")
+    cli.exec_start(info['Id'])
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Grade assignments.')
@@ -106,6 +122,7 @@ if __name__ == '__main__':
     parser.add_argument('--image', default='5201', help='Docker image for assignments.')
     #NOTE: This could be done with volumes. Is that better..?
     parser.add_argument('--extra', default=None, help='Extra files to copy into container (tarball).')
+    parser.add_argument('--force', default=False, help='Force removal of conflicting containers even if their image doesn\'t match.')
 
     args = parser.parse_args()
 
