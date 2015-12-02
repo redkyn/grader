@@ -41,7 +41,8 @@ def grade(args, cli):
             cleanup.append(make_gzip(f, name))
             f = cleanup[-1]
         id = create_container(cli, dirpath, f, args.image, args.extra, args.force)
-        run_grader(cli, id)
+        if id is not None:
+            run_grader(cli, id)
 
     print("Cleaning up temporary files")
     for f in cleanup:
@@ -66,14 +67,15 @@ def create_container(cli, folder, file, image, extra=None, force=False):
         for container_name in c['Names']:
             if container_name[1:] == name: # prefixed with /?
                 # Try not to clobber images that aren't this
-                if c['Image'] != image and not force:
-                    print(("  Container already exists for \"{0}\" and it "
-                      + "doesn't appear to match the provided image. Skipping "
-                      + "assignment").format(name))
-                    return
-                elif force and c['Image'] != image:
-                    print("  Forcing removal of old container \"{0}\""\
-                        .format(c['name']))
+                if c['Image'] != image:
+                    if not force:
+                        print(("  Container already exists for \"{0}\" and it "
+                          + "doesn't appear to match the provided image. Skipping "
+                          + "assignment").format(name))
+                        return None
+                    else:
+                        print("  Forcing removal of old container \"{0}\""\
+                            .format(name))
                 else:
                     print("  Removing old container")
 
@@ -82,7 +84,7 @@ def create_container(cli, folder, file, image, extra=None, force=False):
                 except Exception as e:
                     print("  Failed to remove. {0}.\n  Skipping assignment."\
                         .format(str(e)))
-                    return
+                    return None
                 break
 
     hostconf = cli.create_host_config(mem_limit='64m')
@@ -119,10 +121,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Grade assignments.')
     parser.add_argument('folder', metavar='folder', 
                        help='Folder of tarballs or assignment folders.')
-    parser.add_argument('--image', default='5201', help='Docker image for assignments.')
+    parser.add_argument('--image', default='5201', 
+        help='Docker image for assignments.')
     #NOTE: This could be done with volumes. Is that better..?
-    parser.add_argument('--extra', default=None, help='Extra files to copy into container (tarball).')
-    parser.add_argument('--force', default=False, help='Force removal of conflicting containers even if their image doesn\'t match.')
+    parser.add_argument('--extra', 
+        default=None, help='Extra files to copy into container (tarball).')
+    parser.add_argument('--force', action='store_true', default=False, 
+        help='Force removal of conflicting containers even if their image doesn\'t match.')
 
     args = parser.parse_args()
 
