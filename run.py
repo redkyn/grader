@@ -1,12 +1,16 @@
 # Houses basic logic for running the assignment grading.
 
+import mimetypes
 import argparse
 import os
 import re
 from docker import Client
 import gzip
+from utils import make_gzip
 
 def grade(args, cli):
+    cleanup = []
+
     if not os.path.isdir(args.folder):
         print("Must provide a valid folder of assignments")
         return
@@ -14,17 +18,34 @@ def grade(args, cli):
     if args.extra is not None and not os.path.isfile(args.extra):
         print("Extra argument must be a valid file.")
         return
+    elif args.extra is not None:
+        # if it's not a gzipped tarball, make it one
+        if os.path.isdir(args.extra) or mimetypes.guess_type(args.extra)[1] != \
+            'gzip':
+            print("Creating temporary gzip file for extra")
+            args.extra = make_gzip(args.extra)
+            cleanup.append(args.extra)
 
     # Scrape the top level files and folders
     (dirpath, dirnames, filenames) = next(os.walk(args.folder))
+    dirnames = map(lambda x: os.path.join(dirpath, x), dirnames)
+    filenames = map(lambda x: os.path.join(dirpath, x), filenames)
 
     # Create a container for a file/folder
     for folder in dirnames:
-        create_container(cli, dirpath, folder, args.image, args.extra)
+        # cleanup name
+        name = re.sub(r'_submit$', '', os.path.basename(folder))
+        cleanup.append(make_gzip(folder, name))
+        create_container(cli, dirpath, cleanup[-1], args.image, args.extra)
 
+    # assumed gzips
     for filename in filenames:
-        create_container(cli, dirpath, os.path.join(dirpath,filename), 
+        create_container(cli, dirpath, filename, 
                 args.image, args.extra)
+
+    print("Cleaning up temporary files")
+    for f in cleanup:
+        os.remove(f)
 
 def create_container(cli, folder, file, image, extra=None):
     """
@@ -38,8 +59,6 @@ def create_container(cli, folder, file, image, extra=None):
     print("{0}:".format(user))
     # Get the name from the target folder (ie HW8) + username
     name = "{0}_{1}".format(os.path.basename(folder), user)
-    #hostconf = cli.create_host_config(mem_limit='64m')
-    hostconf = cli.create_host_config()
 
     # Check if container exists
     containers = cli.containers(all=True)
@@ -55,18 +74,19 @@ def create_container(cli, folder, file, image, extra=None):
 
                 print("  Removing old container")
                 try:
-                    cli.remove_container(c['Id'])
-                except:
-                    print("  Failed to remove. Skipping assignment.")
+                    cli.remove_container(c['Id'], force=True)
+                except Exception as e:
+                    print("  Failed to remove. {0}.\n  Skipping assignment."\
+                        .format(str(e)))
                     return
                 break
 
+    hostconf = cli.create_host_config(mem_limit='64m')
     # Create container
     id = cli.create_container(image=image, host_config=hostconf, 
             network_disabled=True, name=name, detach=True, tty=True,
             command="/bin/bash")
     # Copy provided file
-    #FIXME: folder support
     print("  Extracting assignment")
     with gzip.open(os.path.abspath(file)) as g:
         cli.put_archive(container=id, path="/home/", data=g.read())
