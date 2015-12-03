@@ -2,10 +2,14 @@
 import mimetypes
 import argparse
 import os
+import sys
 import re
 from docker import Client
 import gzip
-from utils import make_gzip
+
+# Custom libraries
+sys.path.append("..")
+from lib.utils import make_gzip
 
 def grade(args, cli):
     cleanup = []
