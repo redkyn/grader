@@ -1,2 +1,2 @@
-# grader
-Grading framework that uses Docker, Clang, Python, and Valgrind to assist in grading C++ assignments. 
+# Grader
+Grading framework that uses Docker and Python to easily grade many assignments in an encapsulated, safe manner. The general process starts by creating an iamge for a class or an assignment. That image can be given a payload, a protected grading script, which has a grading hooks. The grade module, when ran, creates an individual container for each student's assignment and runs a payload hook if there is one. The grade module returns a JSON response with stdin, stdout, and additioanl response information depending on the image ran.
