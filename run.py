@@ -82,7 +82,7 @@ def create_container(cli, folder, file, image, extra=None, force=False):
                 try:
                     cli.remove_container(c['Id'], force=True)
                 except Exception as e:
-                    print("  Failed to remove. {0}.\n  Skipping assignment."\
+                    print("  Failed to remove: \"{0}\".\n  Skipping assignment."\
                         .format(str(e)))
                     return None
                 break
@@ -90,7 +90,7 @@ def create_container(cli, folder, file, image, extra=None, force=False):
     hostconf = cli.create_host_config(mem_limit='64m')
     # Create container
     id = cli.create_container(image=image, host_config=hostconf, 
-            network_disabled=True, name=name, detach=True, stdin_open=True,
+            network_disabled=False, name=name, detach=True, stdin_open=True,
             command="/bin/bash")
     # Copy provided file
     print("  Extracting assignment")
