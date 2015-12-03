@@ -1,5 +1,4 @@
 # Houses basic logic for running the assignment grading.
-
 import mimetypes
 import argparse
 import os
@@ -118,7 +117,7 @@ def run_grader(cli, id):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Grade assignments.')
+    parser = argparse.ArgumentParser(description='Create images for grading.')
     parser.add_argument('folder', metavar='folder', 
                        help='Folder of tarballs or assignment folders.')
     parser.add_argument('--image', default='5201', 
