@@ -1,11 +1,11 @@
 import argparse
 
-import image, grade
+from grader import image, grade
 # This module delegates to submodules
 
 submodules = [image, grade]
 
-def run_module():
+def run():
     parser = argparse.ArgumentParser(description='Grading script. Fix this desc.')
     subparsers = parser.add_subparsers(help="sub command help")
     for m in submodules:
@@ -17,4 +17,4 @@ def run_module():
     args.func(args)
 
 if __name__ == '__main__':
-    run_module()
+    run()
