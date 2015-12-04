@@ -6,7 +6,7 @@ setup(name="grader",
       url='https://github.com/brhoades/grader',
       description="A grading framework for evaluating programming assignments",
       packages=find_packages('src'),
-      package_dir={'': '.'},
+      package_dir={'': 'src'},
       install_requires=[
           'setuptools',
           'GitPython==1.0.1',
