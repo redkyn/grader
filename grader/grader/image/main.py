@@ -5,6 +5,8 @@ import sys
 # Custom libraries
 from grader.lib.utils import get_folder
 
-def run(target, no_cache=False):
+def run(target, args):
+    print("Obtaining source")
     f = get_folder(target)
-    print(f)
+
+    

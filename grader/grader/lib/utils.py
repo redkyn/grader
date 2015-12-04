@@ -3,6 +3,9 @@ import tarfile
 import os
 import re
 from git import Repo
+from subprocess import Popen, PIPE
+from commandresult import CommandResult
+import logging
 
 def make_gzip(f, name=None):
     # Make a temporary (named) gzip file somewhere. 
@@ -65,3 +68,69 @@ def get_folder(source, **args):
             print("  Error when copying (got code {0})".format(r))
     
     return folder
+
+def get_logger(payload_dir, module_name, level=logging.INFO):
+    filename = os.path.abspath(os.path.join(payload_dir, 'logs', 
+        "{0}.log".format(module_name)))
+    if not os.path.isdir(os.path.dirname(filename)):
+        os.mkdir(os.path.dirname(filename))
+    logging.basicConfig(filename=filename, level=level)
+    return logging.getLogger(module_name)
+
+def run_command(dir, command, log, file_diff=True, **kwargs):
+    """
+    Runs a command, command, and logs it to log if provided.
+
+    Outputs what files changed if file_diff is True.
+
+    Returns a CommandResult with appropriate details.
+    """
+    log = log.getChild('runcommand')
+    file_diff = kwargs.get("file_diff", True)
+    name = kwargs.get("name", "\"{0}\"".format(command))
+
+    log.info("{0}BEGIN{0}".format('='*20))
+
+    # Files before running
+    (_, dirs, files) = next(os.walk(os.path.abspath(dir)))
+    dirs.extend(files)
+    combined_old = dirs
+
+    # Run it
+    log.info("Running: {0}".format(command))
+    p = Popen(command, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, 
+            close_fds=True)
+    (stdout, stderr) = map(lambda x: x.decode("UTF-8"), p.communicate())
+
+    # Complain if it's nonzero
+    if p.returncode != 0:
+        log.error("Command returned nonzero code {0}".format(p.returncode))
+
+    log.info("{0}STDOUT{0}".format('='*20))
+    for line in stdout.split('\n'):
+        log.info(line)
+    log.info("{0}STDERR{0}".format('='*20))
+    for line in stderr.split('\n'):
+        log.info(line)
+
+    # Files after running
+    (_, dirs, files) = next(os.walk(os.path.abspath(dir)))
+    dirs.extend(files)
+    combined = dirs
+
+    new = [x for x in combined if x not in combined_old]
+    missing = [x for x in combined_old if x not in combined]
+
+    # print out file changes
+    if file_diff:
+        log.info("{0}New Files{0}".format('='*20))
+        for line in new:
+            log.info(line)
+        log.info("{0}Missing Files{0}".format('='*20))
+        for line in missing:
+            log.info(line)
+
+    log.info("{0} END {0}".format('='*20))
+
+    return CommandResult(p, stdout, stderr, new, missing)
+
