@@ -95,13 +95,13 @@ def create_container(cli, folder, file, image, extra=None, force=False):
     # Copy provided file
     print("  Extracting assignment")
     with gzip.open(os.path.abspath(file)) as g:
-        cli.put_archive(container=id, path="/home/", data=g.read())
+        cli.put_archive(container=id, path="/home/grader", data=g.read())
 
     # Copy extra file
     if extra is not None:
         print("  Extracting extra file")
         with gzip.open(os.path.abspath(extra)) as g:
-            cli.put_archive(container=id, path="/home/", data=g.read())
+            cli.put_archive(container=id, path="/home/grader", data=g.read())
     print("  Container created")
 
     return id
@@ -112,6 +112,6 @@ def run_grader(cli, id):
     """
     cli.start(container=id)
     info = cli.exec_create(container=id, stdout=True, stderr=True,
-            cmd="python3 /home/run.py")
+            cmd="python3 /home/grader/grader/run.py")
     print("  Running suite")
     cli.exec_start(info['Id'])

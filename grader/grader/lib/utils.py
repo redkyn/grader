@@ -11,12 +11,13 @@ def make_gzip(f, name=None):
     fn = file.name
 
     with tarfile.open(fn, "w:gz") as t:
-        t.add(f)
+        t.add(f, recursive=True, arcname='')
+
 
     if name is not None:
         fn = os.path.join(os.path.dirname(fn),name) + ".tar.gz"
         os.rename(file.name, fn)
-                
+
     return fn
 
 def get_folder(source, **args):
