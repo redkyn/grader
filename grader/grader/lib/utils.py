@@ -4,7 +4,7 @@ import os
 import re
 from git import Repo
 from subprocess import Popen, PIPE
-from commandresult import CommandResult
+from grader.lib.commandresult import CommandResult
 import logging
 
 def make_gzip(f, name=None):
