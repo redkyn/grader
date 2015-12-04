@@ -21,7 +21,7 @@ def make_gzip(f, name=None):
 
 def get_folder(source, **args):
     """
-    Determines source and makes it a local folder on tmp.
+    Determines source and makes it a local folder on /tmp.
     Accepts: git repos (/\.git$/ ssh or https)
              folders
              tarballs (will extract)
@@ -38,8 +38,8 @@ def get_folder(source, **args):
                 print("Extracting archive")
                 type = ""
                 if e[0] == "gz" or e[0] == "bz2":
+                    # Automatically handles tars that are gzipped/bzipped
                     if not re.search(r'tar\.(gz|bz2)$', source):
-                        # Tar gzipped/bzipped
                         type = e[0]
                 with tarfile.open(source, "r:{0}".format(type)) as t:
                     t.extractall(folder)
@@ -54,7 +54,13 @@ def get_folder(source, **args):
         origin = repo.create_remote('origin', source)
         origin.fetch()
         origin.pull(origin.refs[0].remote_head)
+    elif re.search(r'^[\\\/]{2}', source):
+        print("Copying from CIFS share")
+        # :< this is hard
     else:
-        print("Unknown image source provided")
+        print("Copying from ssh")
+        r = os.system("scp -rq \"{0}\" \"{1}\"".format(source, folder))
+        if r:
+            print("  Error when copying (got code {0})".format(r))
     
     return folder
