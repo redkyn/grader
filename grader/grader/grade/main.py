@@ -6,8 +6,7 @@ import re
 import gzip
 
 # Custom libraries
-sys.path.append("..")
-from lib.utils import make_gzip
+from grader.lib.utils import make_gzip
 
 def grade(args, cli):
     cleanup = []
@@ -57,7 +56,7 @@ def create_container(cli, folder, file, image, extra=None, force=False):
     user = os.path.basename(file)
     # Strip extension or filetype, if any
     user = re.sub(r'(_submit|\.[^\/]+)$', '', user)
-    
+
     print("{0}:".format(user))
     # Get the name from the target folder (ie HW8) + username
     name = "{0}_{1}".format(os.path.basename(folder), user)
@@ -90,7 +89,7 @@ def create_container(cli, folder, file, image, extra=None, force=False):
 
     hostconf = cli.create_host_config(mem_limit='64m')
     # Create container
-    id = cli.create_container(image=image, host_config=hostconf, 
+    id = cli.create_container(image=image, host_config=hostconf,
             network_disabled=False, name=name, detach=True, stdin_open=True,
             command="/bin/bash")
     # Copy provided file
@@ -112,7 +111,7 @@ def run_grader(cli, id):
     Delegates away to the run.py on /home/ in the container.
     """
     cli.start(container=id)
-    info = cli.exec_create(container=id, stdout=True, stderr=True, 
+    info = cli.exec_create(container=id, stdout=True, stderr=True,
             cmd="python3 /home/run.py")
     print("  Running suite")
     cli.exec_start(info['Id'])
