@@ -134,3 +134,12 @@ def run_command(dir, command, log, file_diff=True, **kwargs):
     log.info("{0} END {0}".format('='*20))
 
     return (p, stdout, stderr, new, missing)
+
+
+def touch(fname, times=None):
+    with open(fname, 'a'):
+        os.utime(fname, times)
+
+
+def is_grader_dir(path):
+    return os.path.exists(os.path.join(path, "grader.yml"))
