@@ -27,8 +27,6 @@ def run():
     # If no arguments are provided, show the usage screen
     parser.set_defaults(run=lambda x: parser.print_usage())
 
-
-
     # Set up subcommands for each package
     subparsers = parser.add_subparsers(title="subcommands")
     for name, path in subcommands.items():
