@@ -11,7 +11,7 @@ def setup_parser(parser):
                         help='Folder of tarballs or assignment folders.')
     parser.add_argument('--image', default='5201',
                         help='Docker image for assignments.')
-    #NOTE: This could be done with volumes. Is that better..?
+    # NOTE: This could be done with volumes. Is that better..?
     parser.add_argument('--extra', default=None,
                         help='Extra files to copy into container (tarball).')
     parser.add_argument('--force', action='store_true', default=False,
