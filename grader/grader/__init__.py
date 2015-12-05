@@ -19,7 +19,7 @@ subcommands = {
 
 def run():
     # Configure logging
-    logging.basicConfig()
+    logging.basicConfig(level=logging.INFO)
 
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--path', default=os.getcwd(),
