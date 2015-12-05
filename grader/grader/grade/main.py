@@ -1,12 +1,11 @@
-# Houses basic logic for running the assignment grading.
+'''Basic logic for running the assignment grading.
+'''
 import mimetypes
 import os
-import sys
 import re
 import gzip
 
-# Custom libraries
-from grader.lib.utils import make_gzip
+from grader.utils.utils import make_gzip
 
 def grade(args, cli):
     cleanup = []

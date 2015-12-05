@@ -4,11 +4,10 @@ import os
 import re
 from git import Repo
 from subprocess import Popen, PIPE
-from grader.lib.commandresult import CommandResult
 import logging
 
 def make_gzip(f, name=None):
-    # Make a temporary (named) gzip file somewhere. 
+    # Make a temporary (named) gzip file somewhere.
     file = tempfile.NamedTemporaryFile(delete=False)
     file.close()
     fn = file.name
@@ -66,11 +65,11 @@ def get_folder(source, **args):
         r = os.system("scp -rq \"{0}\" \"{1}\"".format(source, folder))
         if r:
             print("  Error when copying (got code {0})".format(r))
-    
+
     return folder
 
 def get_logger(payload_dir, module_name, level=logging.INFO):
-    filename = os.path.abspath(os.path.join(payload_dir, 'logs', 
+    filename = os.path.abspath(os.path.join(payload_dir, 'logs',
         "{0}.log".format(module_name)))
     if not os.path.isdir(os.path.dirname(filename)):
         os.mkdir(os.path.dirname(filename))
@@ -98,7 +97,7 @@ def run_command(dir, command, log, file_diff=True, **kwargs):
 
     # Run it
     log.info("Running: {0}".format(command))
-    p = Popen(command, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE, 
+    p = Popen(command, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,
             close_fds=True)
     (stdout, stderr) = map(lambda x: x.decode("UTF-8"), p.communicate())
 
@@ -132,5 +131,4 @@ def run_command(dir, command, log, file_diff=True, **kwargs):
 
     log.info("{0} END {0}".format('='*20))
 
-    return CommandResult(p, stdout, stderr, new, missing)
-
+    return (p, stdout, stderr, new, missing)
