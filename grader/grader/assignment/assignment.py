@@ -1,7 +1,7 @@
 import logging
 import os
 
-from grader.assignment.config import Config, ConfigException
+from grader.assignment.config import Config
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ class AssignmentException(Exception):
 class Assignment(object):
 
     @classmethod
-    def new(name, dest, config_repo=None):
+    def new(cls, name, dest, config_repo=None):
         path = os.path.join(dest, name)
 
         # Make sure the parent directory exists
@@ -27,16 +27,13 @@ class Assignment(object):
         os.mkdir(path)
         os.mkdir(os.path.join(path, "submissions"))
         os.mkdir(os.path.join(path, "results"))
-        Assignment._setup_config(config_repo)
 
-        return Assignment(path)
-
-    @classmethod
-    def _setup_config(path, repo_url):
-        try:
-            Config.from_repo(path, repo_url)
-        except ConfigException:
+        if config_repo:
+            Config.from_repo(path, config_repo)
+        else:
             Config.new(path)
+
+        return cls(path)
 
     @property
     def submissions_path(self):

@@ -4,12 +4,11 @@
 from grader.new.create import create_assignment
 
 help = 'Create a new assignment'
-default_shell_repo = 'git://'
 
 
 def setup_parser(parser):
     parser.add_argument('name', help='Assignment name')
-    parser.add_argument('repo', nargs='?', default=default_shell_repo,
+    parser.add_argument('repo', nargs='?', default=None,
                         help='Payload repo')
     parser.set_defaults(run=run)
 
