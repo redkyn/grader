@@ -61,3 +61,7 @@ bin/
 
 # Emacs temp files
 *~
+
+# Section/course-specific grader files
+assignments
+grader.yml
