@@ -2,6 +2,8 @@ import argparse
 import importlib
 import sys
 
+description = "An automated grading tool for programming assignments."
+
 subcommands = {
     "image": "grader.image",
     "grade": "grader.grade"
@@ -9,7 +11,7 @@ subcommands = {
 
 
 def run():
-    parser = argparse.ArgumentParser(description='Grading script. Fix this desc.')
+    parser = argparse.ArgumentParser(description=description)
     subparsers = parser.add_subparsers(title="subcommands")
 
     for name, path in subcommands.items():

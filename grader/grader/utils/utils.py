@@ -6,6 +6,7 @@ from git import Repo
 from subprocess import Popen, PIPE
 import logging
 
+
 def make_gzip(f, name=None):
     # Make a temporary (named) gzip file somewhere.
     file = tempfile.NamedTemporaryFile(delete=False)
@@ -15,12 +16,12 @@ def make_gzip(f, name=None):
     with tarfile.open(fn, "w:gz") as t:
         t.add(f, recursive=True, arcname='')
 
-
     if name is not None:
-        fn = os.path.join(os.path.dirname(fn),name) + ".tar.gz"
+        fn = os.path.join(os.path.dirname(fn), name) + ".tar.gz"
         os.rename(file.name, fn)
 
     return fn
+
 
 def get_folder(source, **args):
     """
@@ -68,13 +69,15 @@ def get_folder(source, **args):
 
     return folder
 
+
 def get_logger(payload_dir, module_name, level=logging.INFO):
     filename = os.path.abspath(os.path.join(payload_dir, 'logs',
-        "{0}.log".format(module_name)))
+                                            "{0}.log".format(module_name)))
     if not os.path.isdir(os.path.dirname(filename)):
         os.mkdir(os.path.dirname(filename))
     logging.basicConfig(filename=filename, level=level)
     return logging.getLogger(module_name)
+
 
 def run_command(dir, command, log, file_diff=True, **kwargs):
     """
@@ -86,7 +89,6 @@ def run_command(dir, command, log, file_diff=True, **kwargs):
     """
     log = log.getChild('runcommand')
     file_diff = kwargs.get("file_diff", True)
-    name = kwargs.get("name", "\"{0}\"".format(command))
 
     log.info("{0}BEGIN{0}".format('='*20))
 
@@ -98,7 +100,7 @@ def run_command(dir, command, log, file_diff=True, **kwargs):
     # Run it
     log.info("Running: {0}".format(command))
     p = Popen(command, shell=True, stdin=PIPE, stdout=PIPE, stderr=PIPE,
-            close_fds=True)
+              close_fds=True)
     (stdout, stderr) = map(lambda x: x.decode("UTF-8"), p.communicate())
 
     # Complain if it's nonzero

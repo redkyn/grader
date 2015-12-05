@@ -7,6 +7,7 @@ import gzip
 
 from grader.utils.utils import make_gzip
 
+
 def grade(args, cli):
     cleanup = []
 
@@ -19,8 +20,8 @@ def grade(args, cli):
         return
     elif args.extra is not None:
         # if it's not a gzipped tarball, make it one
-        if os.path.isdir(args.extra) or mimetypes.guess_type(args.extra)[1] != \
-            'gzip':
+        if os.path.isdir(args.extra) or \
+           mimetypes.guess_type(args.extra)[1] != 'gzip':
             print("Creating temporary gzip file for extra")
             args.extra = make_gzip(args.extra)
             cleanup.append(args.extra)
@@ -39,13 +40,15 @@ def grade(args, cli):
             name = re.sub(r'_submit$', '', os.path.basename(f))
             cleanup.append(make_gzip(f, name))
             f = cleanup[-1]
-        id = create_container(cli, dirpath, f, args.image, args.extra, args.force)
+        id = create_container(cli, dirpath, f, args.image,
+                              args.extra, args.force)
         if id is not None:
             run_grader(cli, id)
 
     print("Cleaning up temporary files")
     for f in cleanup:
         os.remove(f)
+
 
 def create_container(cli, folder, file, image, extra=None, force=False):
     """
@@ -64,33 +67,33 @@ def create_container(cli, folder, file, image, extra=None, force=False):
     containers = cli.containers(all=True)
     for c in containers:
         for container_name in c['Names']:
-            if container_name[1:] == name: # prefixed with /?
+            if container_name[1:] == name:  # prefixed with /?
                 # Try not to clobber images that aren't this
                 if c['Image'] != image:
                     if not force:
                         print(("  Container already exists for \"{0}\" and it "
-                          + "doesn't appear to match the provided image. Skipping "
-                          + "assignment").format(name))
+                               "doesn't appear to match the provided image. "
+                               "Skipping assignment").format(name))
                         return None
                     else:
-                        print("  Forcing removal of old container \"{0}\""\
-                            .format(name))
+                        print("  Forcing removal of "
+                              "old container \"{0}\"".format(name))
                 else:
                     print("  Removing old container")
 
                 try:
                     cli.remove_container(c['Id'], force=True)
                 except Exception as e:
-                    print("  Failed to remove: \"{0}\".\n  Skipping assignment."\
-                        .format(str(e)))
+                    print("  Failed to remove: \"{0}\".\n "
+                          " Skipping assignment.".format(str(e)))
                     return None
                 break
 
     hostconf = cli.create_host_config(mem_limit='64m')
     # Create container
     id = cli.create_container(image=image, host_config=hostconf,
-            network_disabled=False, name=name, detach=True, stdin_open=True,
-            command="/bin/bash")
+                              network_disabled=False, name=name, detach=True,
+                              stdin_open=True, command="/bin/bash")
     # Copy provided file
     print("  Extracting assignment")
     with gzip.open(os.path.abspath(file)) as g:
@@ -103,11 +106,13 @@ def create_container(cli, folder, file, image, extra=None, force=False):
             cli.put_archive(container=id, path="/home/grader/", data=g.read())
     cli.start(container=id)
     # Rechown /home/grader after copying stuff over
-    cli.exec_start(exec_id=cli.exec_create(cmd= \
-        "chown grader.grader /home/grader", container=id, user="root"))
+    cli.exec_start(exec_id=cli.exec_create(
+        cmd="chown grader.grader /home/grader", container=id, user="root")
+    )
     print("  Container created")
 
     return id
+
 
 def run_grader(cli, id):
     """
@@ -115,7 +120,7 @@ def run_grader(cli, id):
     """
     cli.start(container=id)
     info = cli.exec_create(container=id, stdout=True, stderr=True,
-            cmd="python3 /home/grader/grader/run.py", user="grader",
-            tty=True)
+                           cmd="python3 /home/grader/grader/run.py",
+                           user="grader", tty=True)
     print("  Running suite")
     cli.exec_start(info['Id'])
