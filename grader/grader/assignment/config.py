@@ -40,5 +40,23 @@ class Config(object):
 
         return cls(config_path)
 
+    @property
+    def dockerfile_path(self):
+        return os.path.join(self.path, "Dockerfile")
+
+    @property
+    def config_file_path(self):
+        return os.path.join(self.path, "assignment.yml")
+
     def __init__(self, path):
+        self.path = path
+
+        # Verify that paths exist like we expect
+        if not os.path.exists(path):
+            raise ConfigException("Config repo path doesn't exist")
+        if not os.path.exists(self.dockerfile_path):
+            raise ConfigException("Config repo is missing a Dockerfile!")
+        if not os.path.exists(self.config_file_path):
+            raise ConfigException("Assignment config doesn't exist!")
+
         self.repository = git.Repo(path)

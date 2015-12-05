@@ -27,6 +27,7 @@ def create_assignment(name, path, repo=None):
         # If we couldn't clone the config properly, we have to clean
         # up the assignment folder.
         logger.info(str(e))
+        logger.info("Cannot construct assignment.")
         delete_assignment(name, path)
     except AssignmentException as e:
         logger.info(str(e))
