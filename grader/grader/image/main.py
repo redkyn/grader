@@ -3,6 +3,6 @@
 
 from grader.utils.utils import get_folder
 
-def run(target, args):
+def build_image(target, args):
     print("Obtaining source")
     f = get_folder(target)
