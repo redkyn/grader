@@ -58,3 +58,6 @@ target/
 
 # Buildout
 bin/
+
+# Emacs temp files
+*~

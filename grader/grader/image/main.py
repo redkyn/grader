@@ -1,12 +1,10 @@
-# Houses logic and functionality for creating images with payloads
-import os
-import sys
+'''Logic and functionality for creating images with payloads
+'''
 
-# Custom libraries
-from grader.lib.utils import get_folder
+from grader.utils.utils import get_folder
 
-def run(target, args):
+
+def build_image(target, args):
     print("Obtaining source")
     f = get_folder(target)
-
-    
+    print("Got {}".format(f))
