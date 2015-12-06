@@ -18,3 +18,12 @@ Now you're done! When it sets up your environment, buildout creates a couple of 
 * **buildout** : That's buildout. Run it whenever you add eggs to `grader/setup.py` or modify `buildout.cfg`
 * **grader** : That's `grader`!
 * **python** : "What? Another Python!?" Yeah... This is an ipython interpreter. It's handy because it has access to all the same packages that were installed for `grader`.
+
+## Check your style
+
+It's important to keep our code looking consistent. There's a tool installed by buildout called `flake8` that will check your Python source for issues in style. Simply run it like this:
+
+```shell
+# Make sure you run this in your grader directory. flake8 will recursively check source files for style issues.
+bin/flake8 grader/
+```
