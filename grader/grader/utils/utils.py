@@ -4,8 +4,9 @@ import os
 import re
 from git import Repo
 
+
 def make_gzip(f, name=None):
-    # Make a temporary (named) gzip file somewhere. 
+    # Make a temporary (named) gzip file somewhere.
     file = tempfile.NamedTemporaryFile(delete=False)
     file.close()
     fn = file.name
@@ -13,12 +14,12 @@ def make_gzip(f, name=None):
     with tarfile.open(fn, "w:gz") as t:
         t.add(f, recursive=True, arcname='')
 
-
     if name is not None:
-        fn = os.path.join(os.path.dirname(fn),name) + ".tar.gz"
+        fn = os.path.join(os.path.dirname(fn), name) + ".tar.gz"
         os.rename(file.name, fn)
 
     return fn
+
 
 def get_folder(source, **args):
     """
@@ -63,5 +64,14 @@ def get_folder(source, **args):
         r = os.system("scp -rq \"{0}\" \"{1}\"".format(source, folder))
         if r:
             print("  Error when copying (got code {0})".format(r))
-    
+
     return folder
+
+
+def touch(fname, times=None):
+    with open(fname, 'a'):
+        os.utime(fname, times)
+
+
+def is_grader_dir(path):
+    return os.path.exists(os.path.join(path, "grader.yml"))
