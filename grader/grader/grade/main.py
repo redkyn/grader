@@ -11,6 +11,7 @@ from grader.utils.utils import make_gzip
 
 def grade(args, cli):
     cleanup = []
+    results = {}
 
     if not os.path.isdir(args.folder):
         print("Must provide a valid folder of assignments")
@@ -41,11 +42,15 @@ def grade(args, cli):
             name = re.sub(r'_submit$', '', os.path.basename(f))
             cleanup.append(make_gzip(f, name))
             f = cleanup[-1]
+        #FIXME V
+        user = os.path.basename(f)
+        # Strip extension or filetype, if any
+        user = re.sub(r'(_submit|\.[^\/]+)$', '', user)
+
         id = create_container(cli, dirpath, f, args.image,
                               args.extra, args.force)
         if id is not None:
-            res = run_grader(cli, id)
-            print(res)
+            results[user] =run_grader(cli, id)
 
     print("Cleaning up temporary files")
     for f in cleanup:
@@ -101,7 +106,7 @@ def create_container(cli, folder, file, image, extra=None, force=False):
     ### Do a little dance to get files to be modifiable
     # Create temp folder
     cli.exec_start(exec_id=cli.exec_create(
-        cmd="mkdir /tmp/code", container=id, user="root")
+        cmd="mkdir /tmp/code", container=id, user="root", stdout=True)
     )
 
     # Copy provided file
@@ -115,15 +120,12 @@ def create_container(cli, folder, file, image, extra=None, force=False):
         with gzip.open(os.path.abspath(extra)) as g:
             cli.put_archive(container=id, path="/tmp/code/", data=g.read())
 
-    # Rechown /home/grader after copying stuff over
-    cli.exec_start(exec_id=cli.exec_create(
-        cmd="chown grader.grader /home/grader", container=id, user="root")
-    )
-
     # Chown files and move them
+    # Using lists for cmd appears to be broken
     cli.exec_start(exec_id=cli.exec_create(
-        cmd="chown grader.grader /tmp/code;"
-        + "mv /tmp/code/* /home/grader/", container=id, user="root")
+        cmd="bash -c \"chown -R grader.grader /tmp/code; " 
+        + "mv -v /tmp/code/* /home/grader\"", container=id, user="root", 
+        tty=True)
     )
     print("  Container created")
 
@@ -135,7 +137,7 @@ def run_grader(cli, id):
     Delegates away to the run.py on /home/ in the container.
     """
     info = cli.exec_create(container=id, stdout=True, stderr=True,
-                           cmd="python3 /home/grader/grader/run.py",
+                           cmd="python3 rubric/run.py",
                            user="grader", tty=True)
     print("  Running suite")
     ret = cli.exec_start(info['Id']).decode('utf-8')
@@ -145,4 +147,10 @@ def run_grader(cli, id):
             if l != "":
                 print("    {0}".format(l))
     else:
-        return json.loads(ret)
+        try:
+            r = json.loads(ret)
+            print("  Success")
+            return r
+        except:
+            print("  Failure parsing response")
+            return
