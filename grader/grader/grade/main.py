@@ -123,4 +123,8 @@ def run_grader(cli, id):
                            cmd="python3 /home/grader/grader/run.py",
                            user="grader", tty=True)
     print("  Running suite")
-    cli.exec_start(info['Id'])
+    ret = cli.exec_start(info['Id']).decode('utf-8')
+    if re.match(r'^Traceback', ret):
+        print("  Payload failed to run: ")
+        for l in ret.split('\r\n'):
+            print("    {0}".format(l))
