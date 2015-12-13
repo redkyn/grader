@@ -71,7 +71,3 @@ def get_folder(source, **args):
 def touch(fname, times=None):
     with open(fname, 'a'):
         os.utime(fname, times)
-
-
-def is_grader_dir(path):
-    return os.path.exists(os.path.join(path, "grader.yml"))

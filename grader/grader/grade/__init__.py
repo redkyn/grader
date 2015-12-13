@@ -1,5 +1,6 @@
 '''TODO: Grade package docs
 '''
+from grader.utils.config import require_grader_config
 from grader.grade.main import grade
 from docker import Client
 
@@ -20,6 +21,7 @@ def setup_parser(parser):
     parser.set_defaults(run=run)
 
 
+@require_grader_config
 def run(args):
     # Connect up with docker
     cli = Client(base_url='unix://var/run/docker.sock')

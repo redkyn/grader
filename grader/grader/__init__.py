@@ -2,9 +2,6 @@ import argparse
 import importlib
 import logging
 import os
-import sys
-
-from grader.utils.utils import is_grader_dir
 
 logger = logging.getLogger(__name__)
 
@@ -40,13 +37,6 @@ def run():
 
     # Parse CLI args
     args = parser.parse_args()
-
-    # Check whether we're in a valid path
-    if not is_grader_dir(args.path):
-        # TODO implement "grader config" command
-        logger.critical("Cannot execute grader! "
-                        "{} has no grader.yml".format(args.path))
-        sys.exit(1)
 
     # Do it
     args.run(args)
