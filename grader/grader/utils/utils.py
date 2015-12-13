@@ -1,7 +1,8 @@
-import tempfile
-import tarfile
 import os
 import re
+import tarfile
+import tempfile
+
 from git import Repo
 
 
