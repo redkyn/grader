@@ -24,11 +24,12 @@ def setup_parser(parser):
 
 def run(args):
     config_path = os.path.join(args.path, "grader.yml")
-    logger.info("Setting up grader in {}".format(args.path))
+    logger.debug("Setting up grader in {}".format(args.path))
 
     # Check for existing config
     if os.path.exists(config_path) and not args.force:
-        logger.critical("grader.yml exists in {}.".format(config_path))
+        logger.critical("grader.yml exists in {}. Abort!".format(config_path))
         sys.exit(1)
 
     setup(config_path, args.name, args.course_id)
+    logger.info("Wrote {}".format(config_path))

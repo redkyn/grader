@@ -20,8 +20,8 @@ def require_grader_config(wrapped):
         if not is_grader_dir(parsed_args.path):
             # TODO implement "grader config" command to set values in
             # the config.
-            logging.critical("Cannot execute grader! "
-                             "{} has no grader.yml".format(parsed_args.path))
+            logging.critical("{} has no grader.yml. Run "
+                             "'grader init' first.".format(parsed_args.path))
             sys.exit(1)
         return wrapped(parsed_args, *args, **kwargs)
     return wrapper
