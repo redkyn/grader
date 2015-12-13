@@ -42,7 +42,7 @@ def grade(args, cli):
             name = re.sub(r'_submit$', '', os.path.basename(f))
             cleanup.append(make_gzip(f, name))
             f = cleanup[-1]
-        #FIXME V
+        # FIXME V
         user = os.path.basename(f)
         # Strip extension or filetype, if any
         user = re.sub(r'(_submit|\.[^\/]+)$', '', user)
@@ -50,7 +50,7 @@ def grade(args, cli):
         id = create_container(cli, dirpath, f, args.image,
                               args.extra, args.force)
         if id is not None:
-            results[user] =run_grader(cli, id)
+            results[user] = run_grader(cli, id)
 
     print("Cleaning up temporary files")
     for f in cleanup:
@@ -103,7 +103,7 @@ def create_container(cli, folder, file, image, extra=None, force=False):
                               stdin_open=True, command="/bin/bash")
 
     cli.start(container=id)
-    ### Do a little dance to get files to be modifiable
+    # Do a little dance to get files to be modifiable
     # Create temp folder
     cli.exec_start(exec_id=cli.exec_create(
         cmd="mkdir /tmp/code", container=id, user="root", stdout=True)
@@ -123,8 +123,8 @@ def create_container(cli, folder, file, image, extra=None, force=False):
     # Chown files and move them
     # Using lists for cmd appears to be broken
     cli.exec_start(exec_id=cli.exec_create(
-        cmd="bash -c \"chown -R grader.grader /tmp/code; " 
-        + "mv -v /tmp/code/* /home/grader\"", container=id, user="root", 
+        cmd="bash -c \"chown -R grader.grader /tmp/code; "
+        + "mv -v /tmp/code/* /home/grader\"", container=id, user="root",
         tty=True)
     )
     print("  Container created")
