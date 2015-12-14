@@ -1,7 +1,7 @@
 import logging
 import os
 
-from grader.assignment.gradesheet import GradeSheet
+from .gradesheet import GradeSheet
 
 logger = logging.getLogger(__name__)
 

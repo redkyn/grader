@@ -2,11 +2,9 @@
 '''
 
 import logging
-import os
-import sys
 import uuid
 
-from grader.init.setup_grader import setup
+from grader.models import Grader, GraderException
 
 logger = logging.getLogger(__name__)
 
@@ -23,13 +21,16 @@ def setup_parser(parser):
 
 
 def run(args):
-    config_path = os.path.join(args.path, "grader.yml")
     logger.debug("Setting up grader in {}".format(args.path))
 
     # Check for existing config
-    if os.path.exists(config_path) and not args.force:
-        logger.critical("grader.yml exists in {}. Abort!".format(config_path))
-        sys.exit(1)
+    try:
+        g = Grader(args.path)
+        if not args.force:
+            logger.critical("grader.yml exists in {}. Abort!".format(g.config_path))
+            raise SystemExit(1)
+    except GraderException:
+        pass
 
-    setup(config_path, args.name, args.course_id)
-    logger.info("Wrote {}".format(config_path))
+    g = Grader.new(args.name, args.path, args.course_id)
+    logger.info("Wrote {}".format(g.config_path))
