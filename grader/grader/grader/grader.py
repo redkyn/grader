@@ -3,8 +3,8 @@ import os
 import shutil
 import yaml
 
-from grader.assignment.assignment import Assignment, AssignmentException
-from grader.assignment.gradesheet import GradeSheetException
+from .assignment import Assignment, AssignmentException
+from .gradesheet import GradeSheetException
 
 
 logger = logging.getLogger(__name__)
