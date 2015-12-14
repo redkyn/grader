@@ -3,7 +3,7 @@ import logging
 import shutil
 
 from grader.assignment.assignment import Assignment, AssignmentException
-from grader.assignment.config import ConfigException
+from grader.assignment.gradesheet import GradeSheetException
 
 logger = logging.getLogger(__name__)
 
@@ -23,9 +23,9 @@ def create_assignment(name, path, repo=None):
         logger.debug("Creating assignment")
         Assignment.new(name, assignments_dir, repo)
         return
-    except ConfigException as e:
-        # If we couldn't clone the config properly, we have to clean
-        # up the assignment folder.
+    except GradeSheetException as e:
+        # If we couldn't clone the gradesheet properly, we have to
+        # clean up the assignment folder.
         logger.info(str(e))
         logger.info("Cannot construct assignment.")
         delete_assignment(name, path)

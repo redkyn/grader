@@ -7,27 +7,27 @@ from grader.utils.utils import touch
 logger = logging.getLogger(__name__)
 
 
-class ConfigException(Exception):
+class GradeSheetException(Exception):
     pass
 
 
-class Config(object):
+class GradeSheet(object):
 
     @classmethod
     def from_repo(cls, path, repo_url):
-        config_path = os.path.join(path, "config")
+        gradesheet_path = os.path.join(path, "gradesheet")
 
         try:
-            git.Repo.clone_from(repo_url, config_path)
+            git.Repo.clone_from(repo_url, gradesheet_path)
             logger.info("Successfully cloned {}".format(repo_url))
-            return cls(config_path)
+            return cls(gradesheet_path)
         except git.exc.GitCommandError:
-            raise ConfigException("Could not clone {}".format(repo_url))
+            raise GradeSheetException("Could not clone {}".format(repo_url))
 
     @classmethod
     def new(cls, path):
-        config_path = os.path.join(path, "config")
-        repo = git.Repo.init(config_path)
+        gradesheet_path = os.path.join(path, "gradesheet")
+        repo = git.Repo.init(gradesheet_path)
 
         def touch_and_stage(name):
             f = os.path.join(repo.working_tree_dir, name)
@@ -38,7 +38,7 @@ class Config(object):
         touch_and_stage("Dockerfile")
         repo.index.commit("Add empty assignment.yml and Dockerfile")
 
-        return cls(config_path)
+        return cls(gradesheet_path)
 
     @property
     def dockerfile_path(self):
@@ -53,10 +53,10 @@ class Config(object):
 
         # Verify that paths exist like we expect
         if not os.path.exists(path):
-            raise ConfigException("Config repo path doesn't exist")
+            raise GradeSheetException("GradeSheet repo path doesn't exist")
         if not os.path.exists(self.dockerfile_path):
-            raise ConfigException("Config repo is missing a Dockerfile!")
+            raise GradeSheetException("GradeSheet repo has no Dockerfile!")
         if not os.path.exists(self.config_file_path):
-            raise ConfigException("Assignment config doesn't exist!")
+            raise GradeSheetException("Assignment gradesheet doesn't exist!")
 
         self.repository = git.Repo(path)

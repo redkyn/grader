@@ -1,7 +1,7 @@
 import logging
 import os
 
-from grader.assignment.config import Config
+from grader.assignment.gradesheet import GradeSheet
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ class AssignmentException(Exception):
 class Assignment(object):
 
     @classmethod
-    def new(cls, name, dest, config_repo=None):
+    def new(cls, name, dest, gradesheet_repo=None):
         path = os.path.join(dest, name)
 
         # Make sure the parent directory exists
@@ -28,10 +28,10 @@ class Assignment(object):
         os.mkdir(os.path.join(path, "submissions"))
         os.mkdir(os.path.join(path, "results"))
 
-        if config_repo:
-            Config.from_repo(path, config_repo)
+        if gradesheet_repo:
+            GradeSheet.from_repo(path, gradesheet_repo)
         else:
-            Config.new(path)
+            GradeSheet.new(path)
 
         return cls(path)
 
@@ -44,8 +44,8 @@ class Assignment(object):
         return os.path.join(self.path, "results")
 
     @property
-    def config_path(self):
-        return os.path.join(self.path, "config")
+    def gradesheet_path(self):
+        return os.path.join(self.path, "gradesheet")
 
     def __init__(self, path):
         self.path = path
@@ -57,7 +57,7 @@ class Assignment(object):
             raise AssignmentException("Submission path doesn't exist")
         if not os.path.exists(self.results_path):
             raise AssignmentException("Results path doesn't exist")
-        if not os.path.exists(self.config_path):
-            raise AssignmentException("Config path doesn't exist")
+        if not os.path.exists(self.gradesheet_path):
+            raise AssignmentException("GradeSheet path doesn't exist")
 
-        self.config = Config(self.config_path)
+        self.gradesheet = GradeSheet(self.gradesheet_path)
