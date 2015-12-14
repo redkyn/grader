@@ -2,11 +2,9 @@
 '''
 
 import logging
-import os
-import sys
 import uuid
 
-from grader.grader import Grader, GraderException
+from grader.models import Grader, GraderException
 
 logger = logging.getLogger(__name__)
 

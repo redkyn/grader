@@ -1,7 +1,7 @@
 ''' TODO: New package docs
 '''
 
-from grader.grader import Grader
+from grader.models import Grader
 from grader.utils.config import require_grader_config
 
 help = 'Create a new assignment'
