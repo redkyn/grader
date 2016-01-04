@@ -23,7 +23,7 @@ class Grader(object):
 
     @property
     def assignment_dir(self):
-        return os.path.join(self.path, "assignments")
+        return os.path.join(self.path, Assignment.SUB_DIR)
 
     def __init__(self, path):
         self.path = path

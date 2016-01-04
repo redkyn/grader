@@ -13,6 +13,7 @@ class AssignmentException(Exception):
 
 
 class Assignment(object):
+    SUB_DIR = "assignments"
 
     @classmethod
     def new(cls, grader, assignment_name, gradesheet_repo=None):
