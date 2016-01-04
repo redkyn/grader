@@ -38,4 +38,4 @@ def run(args):
 
     # Create the new grader
     g = Grader.new(args.path, args.name, args.course_id)
-    logger.info("Wrote {}".format(g.config.path))
+    logger.info("Wrote {}".format(g.config.file_path))
