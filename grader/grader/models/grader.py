@@ -41,12 +41,15 @@ class Grader(object):
 
         try:
             logger.debug("Creating assignment")
-            a = Assignment.new(self, name, repo)
+            assignment = Assignment.new(self, name, repo)
             logger.info("Created '{}'.".format(name))
 
-            logger.info("Building assignment...")
-            a.build_image()
-            logger.info("Build complete.")
+            if not repo:
+                logger.info("Skipping build. Dockerfile needs to be completed.")
+            else:
+                logger.info("Building assignment...")
+                assignment.build_image()
+                logger.info("Build complete.")
             return
         except GradeSheetException as e:
             # If we couldn't clone the gradesheet properly, we have to
