@@ -44,8 +44,9 @@ class Assignment(object):
 
     @property
     def image_tag(self):
-        return "{}/{}".format(self.grader.config['course-id'],
-                              self.grader.config['course-name'])
+        return "{}-{}-{}".format(self.grader.config['course-id'],
+                                 self.grader.config['course-name'],
+                                 self.name)
 
     @property
     def submissions_path(self):
