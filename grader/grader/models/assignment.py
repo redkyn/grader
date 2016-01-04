@@ -1,6 +1,8 @@
 import logging
 import os
 
+from docker import Client
+
 from .gradesheet import GradeSheet
 
 logger = logging.getLogger(__name__)
@@ -36,6 +38,11 @@ class Assignment(object):
         return cls(path)
 
     @property
+    def image_tag(self):
+        return "{}/{}".format(self.grader_config['course-id'],
+                              self.grader_config['course-name'])
+
+    @property
     def submissions_path(self):
         return os.path.join(self.path, "submissions")
 
@@ -61,3 +68,14 @@ class Assignment(object):
             raise AssignmentException("GradeSheet path doesn't exist")
 
         self.gradesheet = GradeSheet(self.gradesheet_path)
+
+    def build_image(self):
+        cli = Client(base_url="unix://var/run/docker.sock", version="auto")
+        output = cli.build(
+            path=self.gradesheet.path,
+            tag=self.image_tag,
+            decode=True
+        )
+
+        for line in output:
+            logger.debug(line)
