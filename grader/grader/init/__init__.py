@@ -31,11 +31,14 @@ def run(args):
                             "Abort!".format(g.config.path))
             raise SystemExit(1)
         logger.info("Overwriting existing grader configuration")
-    except GraderException:
-        pass
-    except GraderConfigException:
-        pass
+    except GraderException as e:
+        logger.debug("Caught exception: {}".format(e))
+    except GraderConfigException as e:
+        logger.debug("Caught exception: {}".format(e))
 
-    # Create the new grader
-    g = Grader.new(args.path, args.name, args.course_id)
-    logger.info("Wrote {}".format(g.config.file_path))
+    try:
+        # Create the new grader
+        g = Grader.new(args.path, args.name, args.course_id)
+        logger.info("Wrote {}".format(g.config.file_path))
+    except GraderException as e:
+        logger.warn(e)

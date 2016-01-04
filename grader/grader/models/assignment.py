@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 
 from docker import Client
 
@@ -14,6 +15,7 @@ class AssignmentException(Exception):
 
 class Assignment(object):
     SUB_DIR = "assignments"
+    NAME_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
 
     @classmethod
     def new(cls, grader, assignment_name, gradesheet_repo=None):
@@ -28,6 +30,13 @@ class Assignment(object):
         # Make sure the target directory doesn't exist
         if os.path.exists(path):
             raise AssignmentException("{} exists".format(path))
+
+        # Check the assignment name
+        if not cls.NAME_RE.match(assignment_name):
+            raise AssignmentException(
+                "Bad assignment name {}. "
+                "Must match {}".format(assignment_name, cls.NAME_RE.pattern)
+            )
 
         # Make assignment root and subdirs
         os.mkdir(path)

@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import shutil
 
 from .assignment import Assignment, AssignmentException
@@ -15,9 +16,25 @@ class GraderException(Exception):
 
 
 class Grader(object):
+    COURSE_NAME_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
+    COURSE_ID_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
 
     @classmethod
     def new(cls, path, course_name, course_id):
+        # Check the course name
+        if not cls.COURSE_NAME_RE.match(course_name):
+            raise GraderException(
+                "Bad course name {}. "
+                "Must match {}".format(course_name, cls.COURSE_NAME_RE.pattern)
+            )
+
+        # Check the course id
+        if not cls.COURSE_ID_RE.match(course_id):
+            raise GraderException(
+                "Bad course id {}. "
+                "Must match {}".format(course_id, cls.COURSE_ID_RE.pattern)
+            )
+
         GraderConfig.new(path, course_name, course_id)
         return cls(path)
 
