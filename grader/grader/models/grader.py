@@ -3,7 +3,7 @@ import os
 import shutil
 
 from .assignment import Assignment, AssignmentException
-from .graderconfig import GraderConfig
+from .config import GraderConfig
 from .gradesheet import GradeSheetException
 
 
