@@ -29,7 +29,7 @@ class GraderConfig(object):
     def __init__(self, path):
         self.path = path
 
-        if not os.path.exists(self.path):
+        if not os.path.exists(self.file_path):
             raise GraderConfigException("Grader configuration file doesn't exist!")
 
         with open(self.file_path) as config_file:

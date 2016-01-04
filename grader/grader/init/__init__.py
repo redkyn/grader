@@ -28,7 +28,7 @@ def run(args):
         g = Grader(args.path)
         if not args.force:
             logger.critical("grader already configured in {}. "
-                            "Abort!".format(g.config_path))
+                            "Abort!".format(g.config.path))
             raise SystemExit(1)
         logger.info("Overwriting existing grader configuration")
     except GraderException:
@@ -38,4 +38,4 @@ def run(args):
 
     # Create the new grader
     g = Grader.new(args.path, args.name, args.course_id)
-    logger.info("Wrote {}".format(g.config_path))
+    logger.info("Wrote {}".format(g.config.path))
