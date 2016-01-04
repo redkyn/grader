@@ -41,7 +41,7 @@ class Grader(object):
 
         try:
             logger.debug("Creating assignment")
-            a = Assignment.new(name, self.assignment_dir, repo)
+            a = Assignment.new(self, name, repo)
             logger.info("Created '{}'.".format(name))
 
             logger.info("Building assignment...")

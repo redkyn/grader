@@ -35,5 +35,5 @@ class GraderConfig(object):
         with open(self.file_path) as config_file:
             self.data = yaml.load(config_file)
 
-    def __getattr__(self, name):
+    def __getitem__(self, name):
         return self.data[name]

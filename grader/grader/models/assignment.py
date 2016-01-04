@@ -15,13 +15,16 @@ class AssignmentException(Exception):
 class Assignment(object):
 
     @classmethod
-    def new(cls, name, dest, gradesheet_repo=None):
-        path = os.path.join(dest, name)
+    def new(cls, grader, assignment_name, gradesheet_repo=None):
+        path = os.path.join(grader.assignment_dir, assignment_name)
 
         # Make sure the parent directory exists
-        if not os.path.exists(dest):
-            raise AssignmentException("{} does not exist".format(dest))
+        if not os.path.exists(grader.assignment_dir):
+            raise AssignmentException(
+                "{} does not exist".format(grader.assignment_dir)
+            )
 
+        # Make sure the target directory doesn't exist
         if os.path.exists(path):
             raise AssignmentException("{} exists".format(path))
 
@@ -35,12 +38,12 @@ class Assignment(object):
         else:
             GradeSheet.new(path)
 
-        return cls(path)
+        return cls(grader, assignment_name)
 
     @property
     def image_tag(self):
-        return "{}/{}".format(self.grader_config['course-id'],
-                              self.grader_config['course-name'])
+        return "{}/{}".format(self.grader.config['course-id'],
+                              self.grader.config['course-name'])
 
     @property
     def submissions_path(self):
@@ -54,11 +57,12 @@ class Assignment(object):
     def gradesheet_path(self):
         return os.path.join(self.path, "gradesheet")
 
-    def __init__(self, path):
-        self.path = path
+    def __init__(self, grader, assignment_name):
+        self.path = os.path.join(grader.assignment_dir, assignment_name)
+        self.grader = grader
 
         # Verify that paths exist like we expect
-        if not os.path.exists(path):
+        if not os.path.exists(self.path):
             raise AssignmentException("Assignment path doesn't exist")
         if not os.path.exists(self.submissions_path):
             raise AssignmentException("Submission path doesn't exist")
