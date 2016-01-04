@@ -13,10 +13,45 @@ class AssignmentException(Exception):
 
 
 class Assignment(object):
+    """An Assignment
+
+    """
     SUB_DIR = "assignments"
 
     @classmethod
     def new(cls, grader, assignment_name, gradesheet_repo=None):
+        """Creates a new Assignment for a Grader. This includes...
+
+        * Creating a directory to hold assignments, if necessary.
+
+        * Creating a directory within the assignments directory to
+          hold the new assignment.
+
+        * Creating subdirectories for submissions and grading results
+          within the assignment directory
+
+        * Creating a gradesheet repository by...
+
+            * Cloning from a URL, if provided
+
+            * Initializing a repository with default files
+
+        :param grader: The Grader this assignment belongs to
+        :type grader: :class:`grader.models.Grader`
+
+        :param assignment_name: The name of this assignment
+        :type assignment_name: str
+
+        :param gradesheet_repo: The URL of a git repository to clone
+                                for the gradesheet. If set to None, a
+                                repository with default values will be
+                                created.
+
+        :type gradesheet_repo: str
+
+        :rtype: :class:`grader.models.Assignment`
+
+        """
         path = os.path.join(grader.assignment_dir, assignment_name)
 
         # Make sure the parent directory exists
