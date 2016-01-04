@@ -4,7 +4,7 @@
 import logging
 import uuid
 
-from grader.models import Grader, GraderException
+from grader.models import Grader, GraderException, GraderConfigException
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +27,15 @@ def run(args):
     try:
         g = Grader(args.path)
         if not args.force:
-            logger.critical("grader.yml exists in {}. Abort!".format(g.config_path))
+            logger.critical("grader already configured in {}. "
+                            "Abort!".format(g.config_path))
             raise SystemExit(1)
+        logger.info("Overwriting existing grader configuration")
     except GraderException:
         pass
+    except GraderConfigException:
+        pass
 
-    g = Grader.new(args.name, args.path, args.course_id)
+    # Create the new grader
+    g = Grader.new(args.path, args.name, args.course_id)
     logger.info("Wrote {}".format(g.config_path))

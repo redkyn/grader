@@ -1,9 +1,9 @@
 import logging
 import os
 import shutil
-import yaml
 
 from .assignment import Assignment, AssignmentException
+from .graderconfig import GraderConfig
 from .gradesheet import GradeSheetException
 
 
@@ -15,27 +15,11 @@ class GraderException(Exception):
 
 
 class Grader(object):
-    CONFIG_FILE_NAME = "grader.yml"
 
     @classmethod
-    def new(cls, name, path, course_id):
-        # Setup the configuration
-        config_path = os.path.join(path, cls.CONFIG_FILE_NAME)
-        header = "# grader configuration for {}\n\n".format(name)
-        config = {
-            "course-id": course_id,
-            "course-name": name,
-        }
-
-        with open(config_path, 'w') as config_file:
-            config_file.write(header)
-            config_file.write(yaml.dump(config, default_flow_style=False))
-
+    def new(cls, path, course_name, course_id):
+        GraderConfig.new(path, course_name, course_id)
         return cls(path)
-
-    @property
-    def config_path(self):
-        return os.path.join(self.path, self.CONFIG_FILE_NAME)
 
     @property
     def assignment_dir(self):
@@ -47,8 +31,8 @@ class Grader(object):
         # Verify that paths exist like we expect
         if not os.path.exists(path):
             raise GraderException("Grader path doesn't exist!")
-        if not os.path.exists(self.config_path):
-            raise GraderException("Grader configuration file doesn't exist!")
+
+        self.config = GraderConfig(self.path)
 
     def create_assignment(self, name, repo=None):
         if not os.path.exists(self.assignment_dir):
