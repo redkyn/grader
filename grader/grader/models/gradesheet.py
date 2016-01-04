@@ -2,6 +2,7 @@ import git
 import logging
 import os
 
+from .config import AssignmentConfig
 from grader.utils.utils import touch
 
 logger = logging.getLogger(__name__)
@@ -12,51 +13,48 @@ class GradeSheetException(Exception):
 
 
 class GradeSheet(object):
+    SUB_DIR = "gradesheet"
 
     @classmethod
-    def from_repo(cls, path, repo_url):
-        gradesheet_path = os.path.join(path, "gradesheet")
-
+    def from_repo(cls, gradesheet_path, repo_url):
         try:
             git.Repo.clone_from(repo_url, gradesheet_path)
             logger.info("Successfully cloned {}".format(repo_url))
-            return cls(gradesheet_path)
         except git.exc.GitCommandError:
             raise GradeSheetException("Could not clone {}".format(repo_url))
 
+        return None
+
     @classmethod
-    def new(cls, path):
-        gradesheet_path = os.path.join(path, "gradesheet")
-        repo = git.Repo.init(gradesheet_path)
+    def new(cls, gradesheet_path, assignment_name):
+        path = gradesheet_path
 
-        def touch_and_stage(name):
-            f = os.path.join(repo.working_tree_dir, name)
-            touch(f)
-            repo.index.add([f])
+        # Initialize a new gradesheet repo
+        repo = git.Repo.init(path)
 
-        touch_and_stage("assignment.yml")
-        touch_and_stage("Dockerfile")
-        repo.index.commit("Add empty assignment.yml and Dockerfile")
+        # Create a default assignment config
+        config = AssignmentConfig.new(path, assignment_name)
 
-        return cls(gradesheet_path)
+        # Create a default Dockerfile
+        dockerfile_path = os.path.join(path, 'Dockerfile')
+        with open(dockerfile_path, 'w') as dockerfile:
+            dockerfile.write("# Dockerfile for {}".format(assignment_name))
+
+        repo.index.add([config.file_path, dockerfile_path])
+        repo.index.commit("Add default assignment.yml and Dockerfile")
+
+        return None
 
     @property
     def dockerfile_path(self):
         return os.path.join(self.path, "Dockerfile")
 
-    @property
-    def config_file_path(self):
-        return os.path.join(self.path, "assignment.yml")
-
-    def __init__(self, path):
-        self.path = path
+    def __init__(self, assignment):
+        self.path = assignment.gradesheet_path
+        self.assignment = assignment
+        self.config = AssignmentConfig(self.path)
+        self.repository = git.Repo(self.path)
 
         # Verify that paths exist like we expect
-        if not os.path.exists(path):
-            raise GradeSheetException("GradeSheet repo path doesn't exist")
         if not os.path.exists(self.dockerfile_path):
             raise GradeSheetException("GradeSheet repo has no Dockerfile!")
-        if not os.path.exists(self.config_file_path):
-            raise GradeSheetException("Assignment gradesheet doesn't exist!")
-
-        self.repository = git.Repo(path)

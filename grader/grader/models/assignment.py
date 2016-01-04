@@ -33,10 +33,11 @@ class Assignment(object):
         os.mkdir(os.path.join(path, "submissions"))
         os.mkdir(os.path.join(path, "results"))
 
+        gradesheet_path = os.path.join(path, GradeSheet.SUB_DIR)
         if gradesheet_repo:
-            GradeSheet.from_repo(path, gradesheet_repo)
+            GradeSheet.from_repo(gradesheet_path, gradesheet_repo)
         else:
-            GradeSheet.new(path)
+            GradeSheet.new(gradesheet_path, assignment_name)
 
         return cls(grader, assignment_name)
 
@@ -55,10 +56,11 @@ class Assignment(object):
 
     @property
     def gradesheet_path(self):
-        return os.path.join(self.path, "gradesheet")
+        return os.path.join(self.path, GradeSheet.SUB_DIR)
 
     def __init__(self, grader, assignment_name):
         self.path = os.path.join(grader.assignment_dir, assignment_name)
+        self.name = assignment_name
         self.grader = grader
 
         # Verify that paths exist like we expect
@@ -71,7 +73,7 @@ class Assignment(object):
         if not os.path.exists(self.gradesheet_path):
             raise AssignmentException("GradeSheet path doesn't exist")
 
-        self.gradesheet = GradeSheet(self.gradesheet_path)
+        self.gradesheet = GradeSheet(self)
 
     def build_image(self):
         cli = Client(base_url="unix://var/run/docker.sock", version="auto")
