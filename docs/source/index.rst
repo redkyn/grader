@@ -11,8 +11,8 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   assignment
-   grader
+   models
+
 
 
 
