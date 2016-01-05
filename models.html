@@ -1,0 +1,306 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Models &mdash; Grader 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Grader 0.0.1 documentation" href="index.html" />
+    <link rel="next" title="Exceptions" href="exceptions.html" />
+    <link rel="prev" title="Welcome to Grader’s documentation!" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="models">
+<h1>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h1>
+<p>Grader consists of several classes that represent different apsects of
+the grader. Namely:</p>
+<ul>
+<li><p class="first"><a class="reference internal" href="#grader.models.Grader" title="grader.models.Grader"><code class="xref py py-class docutils literal"><span class="pre">Grader</span></code></a> - The whole shebang. This object has
+members that allow for all kinds of high-level assignment
+manipulation: creation, grading, etc. The grader can be configured
+with a YAML file (which is represented with a
+<a class="reference internal" href="#grader.models.GraderConfig" title="grader.models.GraderConfig"><code class="xref py py-class docutils literal"><span class="pre">GraderConfig</span></code></a>)</p>
+</li>
+<li><p class="first"><a class="reference internal" href="#grader.models.Assignment" title="grader.models.Assignment"><code class="xref py py-class docutils literal"><span class="pre">Assignment</span></code></a> - A single assignment</p>
+</li>
+<li><p class="first"><a class="reference internal" href="#grader.models.GradeSheet" title="grader.models.GradeSheet"><code class="xref py py-class docutils literal"><span class="pre">GradeSheet</span></code></a> - A grade sheet for a single
+assignment. Grade sheets describe how an assignment should be
+graded, which includes:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Grading scripts</li>
+<li>A Dockerfile for building the execution environment</li>
+<li>Assignment-specific configuration (via
+<a class="reference internal" href="#grader.models.AssignmentConfig" title="grader.models.AssignmentConfig"><code class="xref py py-class docutils literal"><span class="pre">AssignmentConfig</span></code></a>) for running and
+evaluating submitted assignments.</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+<div class="section" id="grader">
+<h2>Grader<a class="headerlink" href="#grader" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="grader.models.Grader">
+<em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">Grader</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/grader.html#Grader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Grader" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="assignment">
+<h2>Assignment<a class="headerlink" href="#assignment" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="grader.models.Assignment">
+<em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">Assignment</code><span class="sig-paren">(</span><em>grader</em>, <em>assignment_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/assignment.html#Assignment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Assignment" title="Permalink to this definition">¶</a></dt>
+<dd><p>An Assignment</p>
+<dl class="method">
+<dt id="grader.models.Assignment.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>grader</em>, <em>assignment_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/assignment.html#Assignment.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Assignment.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate a new Assignment</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>grader</strong> (<a class="reference internal" href="#grader.models.Grader" title="grader.models.Grader"><code class="xref py py-class docutils literal"><span class="pre">Grader</span></code></a>) &#8211; The grader with which this assignment is associated</li>
+<li><strong>assignment_name</strong> (<em>str</em>) &#8211; The name of the assignment</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>AssignmentException</strong> &#8211; if the assignment path
+(<code class="docutils literal"><span class="pre">Assignment.SUB_DIR/assignment_name</span></code>) doesn&#8217;t exist, if
+the submission path doesn&#8217;t exist with in the assignment
+path, if the results path doesn&#8217;t exist within the
+assignment path, or if the directory for the gradesheet
+repository doesn&#8217;t exist</li>
+<li><strong>GradeSheetException</strong> &#8211; if there was an error
+constructing the Assignment&#8217;s <a class="reference internal" href="#grader.models.GradeSheet" title="grader.models.GradeSheet"><code class="xref py py-class docutils literal"><span class="pre">GradeSheet</span></code></a></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Assignment.NAME_RE">
+<code class="descname">NAME_RE</code><em class="property"> = re.compile('^[A-Za-z0-9_.-]+$')</em><a class="headerlink" href="#grader.models.Assignment.NAME_RE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Regular expression for assignment names</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Assignment.SUB_DIR">
+<code class="descname">SUB_DIR</code><em class="property"> = 'assignments'</em><a class="headerlink" href="#grader.models.Assignment.SUB_DIR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the subdirectory for assignments</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grader.models.Assignment.build_image">
+<code class="descname">build_image</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/assignment.html#Assignment.build_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Assignment.build_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build&#8217;s an assignment&#8217;s docker image using the Dockerfile from its
+<a class="reference internal" href="#grader.models.GradeSheet" title="grader.models.GradeSheet"><code class="xref py py-class docutils literal"><span class="pre">GradeSheet</span></code></a>.</p>
+<p>The docker image will be tagged, so that this assignment&#8217;s
+image is unique from the rest of the assignment images on a
+given machine.</p>
+<div class="admonition-todo admonition" id="index-0">
+<p class="first admonition-title">Todo</p>
+<p class="last">Use configuration from grader.yml and assignment.yml to
+pass additional options to <code class="docutils literal"><span class="pre">docker</span> <span class="pre">build</span></code></p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="xref py py-obj docutils literal"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Assignment.gradesheet_path">
+<code class="descname">gradesheet_path</code><a class="headerlink" href="#grader.models.Assignment.gradesheet_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>File path to the assignment&#8217;s gradesheet repository</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Assignment.image_tag">
+<code class="descname">image_tag</code><a class="headerlink" href="#grader.models.Assignment.image_tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unique tag for an assignment&#8217;s docker image</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="grader.models.Assignment.new">
+<em class="property">classmethod </em><code class="descname">new</code><span class="sig-paren">(</span><em>grader</em>, <em>assignment_name</em>, <em>gradesheet_repo=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/assignment.html#Assignment.new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Assignment.new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new Assignment for a Grader. This includes...</p>
+<ul class="simple">
+<li>Creating a directory to hold assignments, if necessary.</li>
+<li>Creating a directory within the assignments directory to
+hold the new assignment.</li>
+<li>Creating subdirectories for submissions and grading results
+within the assignment directory</li>
+<li>Creating a gradesheet repository by...<ul>
+<li>Cloning from a URL, if provided</li>
+<li>Initializing a repository with default files</li>
+</ul>
+</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>grader</strong> (<a class="reference internal" href="#grader.models.Grader" title="grader.models.Grader"><code class="xref py py-class docutils literal"><span class="pre">Grader</span></code></a>) &#8211; The Grader this assignment belongs to</li>
+<li><strong>assignment_name</strong> (<em>str</em>) &#8211; The name of this assignment. Must
+match <code class="xref py py-data docutils literal"><span class="pre">Grader.NAME_RE</span></code></li>
+<li><strong>gradesheet_repo</strong> (<em>str</em>) &#8211; The URL of a git repository to clone
+for the gradesheet. If set to None, a repository with
+default values will be created.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The newly created Assignment</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference internal" href="#grader.models.Assignment" title="grader.models.Assignment"><code class="xref py py-class docutils literal"><span class="pre">Assignment</span></code></a></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises AssignmentException:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last">if the &#8220;assignments&#8221; directory
+doesn&#8217;t exist, if the directory for the new assignment
+already exists, or if the name of the assignment.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Assignment.results_path">
+<code class="descname">results_path</code><a class="headerlink" href="#grader.models.Assignment.results_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>File path to the assignment&#8217;s results directory</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Assignment.submissions_path">
+<code class="descname">submissions_path</code><a class="headerlink" href="#grader.models.Assignment.submissions_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>File path to the assignment&#8217;s submissions directory</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="gradesheet">
+<h2>GradeSheet<a class="headerlink" href="#gradesheet" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="grader.models.GradeSheet">
+<em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">GradeSheet</code><span class="sig-paren">(</span><em>assignment</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/gradesheet.html#GradeSheet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.GradeSheet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="grader.models.GraderConfig">
+<em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">GraderConfig</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/config.html#GraderConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.GraderConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class for creating, loading, and accessing grader-wide,
+YAML-formatted configuration files</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="grader.models.AssignmentConfig">
+<em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">AssignmentConfig</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/config.html#AssignmentConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.AssignmentConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class for creating, loading, and accessing assignment-specific,
+YAML-formatted configuration files</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="index.html">Table Of Contents</a></h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#grader">Grader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#assignment">Assignment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gradesheet">GradeSheet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="todo.html">TODO Items</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/models.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Billy Rhoades, Mike Wisely.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/models.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
