@@ -21,6 +21,11 @@ class Config(object):
 
 
 class GraderConfig(Config):
+    """A class for creating, loading, and accessing grader-wide,
+    YAML-formatted configuration files
+
+    """
+
     CONFIG_FILE_NAME = "grader.yml"
 
     @classmethod
@@ -49,6 +54,11 @@ class GraderConfig(Config):
 
 
 class AssignmentConfig(Config):
+    """A class for creating, loading, and accessing assignment-specific,
+    YAML-formatted configuration files
+
+    """
+
     CONFIG_FILE_NAME = "assignment.yml"
 
     @classmethod

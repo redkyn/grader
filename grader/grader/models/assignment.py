@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 class AssignmentException(Exception):
+    """A general-purpose exception thrown by the Assignment class.
+    """
     pass
 
 
@@ -17,15 +19,18 @@ class Assignment(object):
     """An Assignment
 
     """
+
     SUB_DIR = "assignments"
+    """Name of the subdirectory for assignments"""
+
     NAME_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
+    """Regular expression for assignment names"""
 
     @classmethod
     def new(cls, grader, assignment_name, gradesheet_repo=None):
         """Creates a new Assignment for a Grader. This includes...
 
         * Creating a directory to hold assignments, if necessary.
-
         * Creating a directory within the assignments directory to
           hold the new assignment.
 
@@ -34,24 +39,28 @@ class Assignment(object):
 
         * Creating a gradesheet repository by...
 
-            * Cloning from a URL, if provided
+          * Cloning from a URL, if provided
 
-            * Initializing a repository with default files
+          * Initializing a repository with default files
 
         :param grader: The Grader this assignment belongs to
-        :type grader: :class:`grader.models.Grader`
+        :type grader: :class:`Grader`
 
-        :param assignment_name: The name of this assignment
+        :param assignment_name: The name of this assignment. Must
+               match :data:`Grader.NAME_RE`
         :type assignment_name: str
 
         :param gradesheet_repo: The URL of a git repository to clone
-                                for the gradesheet. If set to None, a
-                                repository with default values will be
-                                created.
-
+               for the gradesheet. If set to None, a repository with
+               default values will be created.
         :type gradesheet_repo: str
 
-        :rtype: :class:`grader.models.Assignment`
+        :return: The newly created Assignment
+        :rtype: :class:`Assignment`
+
+        :raises AssignmentException: if the "assignments" directory
+            doesn't exist, if the directory for the new assignment
+            already exists, or if the name of the assignment.
 
         """
         path = os.path.join(grader.assignment_dir, assignment_name)
@@ -88,23 +97,46 @@ class Assignment(object):
 
     @property
     def image_tag(self):
+        """Unique tag for an assignment's docker image"""
         return "{}-{}-{}".format(self.grader.config['course-id'],
                                  self.grader.config['course-name'],
                                  self.name)
 
     @property
     def submissions_path(self):
+        """File path to the assignment's submissions directory"""
         return os.path.join(self.path, "submissions")
 
     @property
     def results_path(self):
+        """File path to the assignment's results directory"""
         return os.path.join(self.path, "results")
 
     @property
     def gradesheet_path(self):
+        """File path to the assignment's gradesheet repository"""
         return os.path.join(self.path, GradeSheet.SUB_DIR)
 
     def __init__(self, grader, assignment_name):
+        """Instantiate a new Assignment
+
+        :param grader: The grader with which this assignment is associated
+        :type grader: :class:`Grader`
+
+        :param assignment_name: The name of the assignment
+        :type assignment_name: str
+
+        :raises AssignmentException: if the assignment path
+            (``Assignment.SUB_DIR/assignment_name``) doesn't exist, if
+            the submission path doesn't exist with in the assignment
+            path, if the results path doesn't exist within the
+            assignment path, or if the directory for the gradesheet
+            repository doesn't exist
+
+        :raises GradeSheetException: if there was an error
+            constructing the Assignment's :class:`GradeSheet`
+
+        """
         self.path = os.path.join(grader.assignment_dir, assignment_name)
         self.name = assignment_name
         self.grader = grader
@@ -122,6 +154,21 @@ class Assignment(object):
         self.gradesheet = GradeSheet(self)
 
     def build_image(self):
+        """Build's an assignment's docker image using the Dockerfile from its
+        :class:`GradeSheet`.
+
+        The docker image will be tagged, so that this assignment's
+        image is unique from the rest of the assignment images on a
+        given machine.
+
+        .. todo::
+
+           Use configuration from grader.yml and assignment.yml to
+           pass additional options to ``docker build``
+
+        :return: :obj:`None`
+
+        """
         cli = Client(base_url="unix://var/run/docker.sock", version="auto")
         output = cli.build(
             path=self.gradesheet.path,
