@@ -16,7 +16,19 @@ class AssignmentException(Exception):
 
 
 class Assignment(object):
-    """An Assignment
+    """An Assignment with several neato attributes:
+
+    * A place (directory) for storing student submissions for the
+      assignment
+
+    * A place (directory) for storing the grade reports for graded
+      submissions
+
+    * A place (git repository) for storing grading scripts and
+      configuration files
+
+    This class makes dealing with all those files and folders just a
+    little easier. Creating new assignments, grading them, etc.
 
     """
 
