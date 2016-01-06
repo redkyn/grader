@@ -29,6 +29,8 @@ Grader
 .. autoclass:: Grader
    :members:
 
+   .. automethod:: __init__
+
 
 Assignment
 ----------
@@ -39,12 +41,13 @@ Assignment
    .. automethod:: __init__
 
 
-
 GradeSheet
 ----------
 
 .. autoclass:: GradeSheet
    :members:
+
+   .. automethod:: __init__
 
 
 Configuration
@@ -55,12 +58,14 @@ Configuration
 
     .. automethod:: grader.models.config.Config.__getitem__
 
+
 .. autoclass:: GraderConfig
    :members:
    :inherited-members:
 
    .. automethod:: __init__
    .. automethod:: __getitem__
+
 
 .. autoclass:: AssignmentConfig
    :members:

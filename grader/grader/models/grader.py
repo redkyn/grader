@@ -101,6 +101,10 @@ class Grader(object):
         :param str repo: An optional URL to a gradesheet
             repository. Read more about it in :meth:`Assignment.new`
 
+        .. todo::
+
+           Build as a separate step. Maybe have a build flag?
+
         :return: None
 
         """
