@@ -95,7 +95,7 @@ class GraderConfig(Config):
         self.path = path
 
         if not os.path.exists(self.file_path):
-            raise GraderConfigException("Grader configuration file doesn't exist!")
+            raise GraderConfigException("Grader config file doesn't exist!")
 
         with open(self.file_path) as config_file:
             self.data = yaml.load(config_file)
@@ -143,7 +143,8 @@ class AssignmentConfig(Config):
         self.path = path
 
         if not os.path.exists(self.file_path):
-            raise AssignmentConfigException("Assignment configuration file doesn't exist!")
+            raise AssignmentConfigException("Assignment config file "
+                                            "doesn't exist!")
 
         with open(self.file_path) as config_file:
             self.data = yaml.load(config_file)

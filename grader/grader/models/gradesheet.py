@@ -3,7 +3,6 @@ import logging
 import os
 
 from .config import AssignmentConfig
-from grader.utils.utils import touch
 
 logger = logging.getLogger(__name__)
 

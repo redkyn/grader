@@ -114,7 +114,7 @@ class Grader(object):
             logger.info("Created '{}'.".format(name))
 
             if not repo:
-                logger.info("Skipping build. Dockerfile needs to be completed.")
+                logger.info("Skipping build. Dockerfile must be completed.")
             else:
                 logger.info("Building assignment...")
                 assignment.build_image()

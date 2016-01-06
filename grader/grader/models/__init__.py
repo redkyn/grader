@@ -1,5 +1,7 @@
-from .assignment import Assignment, AssignmentException
-from .config import (GraderConfig, GraderConfigException,
-                     AssignmentConfig, AssignmentConfigException)
-from .grader import Grader, GraderException
-from .gradesheet import GradeSheet, GradeSheetException
+from .assignment import Assignment, AssignmentException   # NOQA
+from .config import (  # NOQA
+    GraderConfig, GraderConfigException,
+    AssignmentConfig, AssignmentConfigException
+)
+from .grader import Grader, GraderException  # NOQA
+from .gradesheet import GradeSheet, GradeSheetException  # NOQA
