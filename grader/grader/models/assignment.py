@@ -55,11 +55,16 @@ class Assignment(object):
 
           * Initializing a repository with default files
 
+        .. note::
+
+           If you provide a repository URL, the Assignment will
+           attempt to clone the repo. You will need pull access to it.
+
         :param grader: The Grader this assignment belongs to
         :type grader: :class:`Grader`
 
         :param assignment_name: The name of this assignment. Must
-               match :data:`Grader.NAME_RE`
+               match :data:`Assignment.NAME_RE`
         :type assignment_name: str
 
         :param gradesheet_repo: The URL of a git repository to clone
