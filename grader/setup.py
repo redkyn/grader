@@ -11,6 +11,8 @@ setup(
         'setuptools',
         'GitPython==1.0.1',
         'docker-py==1.6.0',
+        'PyYAML==3.11',
+        'jsonschema==2.5.1',
     ],
     entry_points={
         'console_scripts': ['grader = grader:run'],

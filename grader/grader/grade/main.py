@@ -4,12 +4,14 @@ import mimetypes
 import os
 import re
 import gzip
+import json
 
 from grader.utils.utils import make_gzip
 
 
 def grade(args, cli):
     cleanup = []
+    results = {}
 
     if not os.path.isdir(args.folder):
         print("Must provide a valid folder of assignments")
@@ -40,10 +42,15 @@ def grade(args, cli):
             name = re.sub(r'_submit$', '', os.path.basename(f))
             cleanup.append(make_gzip(f, name))
             f = cleanup[-1]
+        # FIXME V
+        user = os.path.basename(f)
+        # Strip extension or filetype, if any
+        user = re.sub(r'(_submit|\.[^\/]+)$', '', user)
+
         id = create_container(cli, dirpath, f, args.image,
                               args.extra, args.force)
         if id is not None:
-            run_grader(cli, id)
+            results[user] = run_grader(cli, id)
 
     print("Cleaning up temporary files")
     for f in cleanup:
@@ -94,20 +101,31 @@ def create_container(cli, folder, file, image, extra=None, force=False):
     id = cli.create_container(image=image, host_config=hostconf,
                               network_disabled=False, name=name, detach=True,
                               stdin_open=True, command="/bin/bash")
+
+    cli.start(container=id)
+    # Do a little dance to get files to be modifiable
+    # Create temp folder
+    cli.exec_start(exec_id=cli.exec_create(
+        cmd="mkdir /tmp/code", container=id, user="root", stdout=True)
+    )
+
     # Copy provided file
     print("  Extracting assignment")
     with gzip.open(os.path.abspath(file)) as g:
-        cli.put_archive(container=id, path="/home/grader/", data=g.read())
+        cli.put_archive(container=id, path="/tmp/code/", data=g.read())
 
     # Copy extra file
     if extra is not None:
         print("  Extracting extra file")
         with gzip.open(os.path.abspath(extra)) as g:
-            cli.put_archive(container=id, path="/home/grader/", data=g.read())
-    cli.start(container=id)
-    # Rechown /home/grader after copying stuff over
+            cli.put_archive(container=id, path="/tmp/code/", data=g.read())
+
+    # Chown files and move them
+    # Using lists for cmd appears to be broken
     cli.exec_start(exec_id=cli.exec_create(
-        cmd="chown grader.grader /home/grader", container=id, user="root")
+        cmd="bash -c \"chown -R grader.grader /tmp/code; "
+        + "mv -v /tmp/code/* /home/grader\"", container=id, user="root",
+        tty=True)
     )
     print("  Container created")
 
@@ -118,9 +136,21 @@ def run_grader(cli, id):
     """
     Delegates away to the run.py on /home/ in the container.
     """
-    cli.start(container=id)
     info = cli.exec_create(container=id, stdout=True, stderr=True,
-                           cmd="python3 /home/grader/grader/run.py",
+                           cmd="python3 rubric/run.py",
                            user="grader", tty=True)
     print("  Running suite")
-    cli.exec_start(info['Id'])
+    ret = cli.exec_start(info['Id']).decode('utf-8')
+    if re.match(r'^Traceback', ret):
+        print("  Payload failed to run: ")
+        for l in ret.split('\r\n'):
+            if l != "":
+                print("    {0}".format(l))
+    else:
+        try:
+            r = json.loads(ret)
+            print("  Success")
+            return r
+        except:
+            print("  Failure parsing response")
+            return
