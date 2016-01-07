@@ -1,7 +1,6 @@
 '''TODO: Image package docs
 '''
 
-from grader.image.main import build_image
 from grader.utils.config import require_grader_config
 
 help = "Create images for grading."
@@ -18,4 +17,4 @@ def setup_parser(parser):
 
 @require_grader_config
 def run(args):
-    build_image(args.target, args.no_cache)
+    pass

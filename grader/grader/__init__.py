@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 description = "An automated grading tool for programming assignments."
 
 subcommands = {
-    "init": "grader.init",
-    "new": "grader.new",
-    "image": "grader.image",
+    "init": "grader.commands.init",
+    "new": "grader.commands.new",
+    "image": "grader.commands.image",
     "grade": "grader.grade"
 }
 
