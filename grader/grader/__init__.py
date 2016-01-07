@@ -17,10 +17,6 @@ subcommands = {
 
 def run():
     """Script entry point
-
-    .. todo::
-
-       Add a "verbose" flag
     """
     # Configure logging
     logging.basicConfig(level=logging.INFO)
@@ -28,6 +24,9 @@ def run():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--path', default=os.getcwd(),
                         help='Path to the root of a grader')
+    parser.add_argument('--verbosity', default="INFO",
+                        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+                        help='Desired log level')
     # If no arguments are provided, show the usage screen
     parser.set_defaults(run=lambda x: parser.print_usage())
 
@@ -44,6 +43,9 @@ def run():
 
     # Parse CLI args
     args = parser.parse_args()
+
+    # Set logging verbosity
+    logging.getLogger().setLevel(args.verbosity)
 
     # Do it
     args.run(args)
