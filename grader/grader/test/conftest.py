@@ -19,6 +19,7 @@ def clean_dir(request):
     request.addfinalizer(cleanup)
     return newpath
 
+
 @pytest.fixture
 def parse_and_run(request):
     oldpath = os.getcwd()

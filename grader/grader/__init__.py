@@ -43,6 +43,7 @@ def make_parser():
 
     return parser
 
+
 def run():
     """Script entry point
     """

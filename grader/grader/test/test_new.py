@@ -29,6 +29,7 @@ def test_new_without_repo(parse_and_run):
 
     assert config['assignment-name'] == 'assignment1'
 
+
 def test_new_with_repo(parse_and_run):
     """Test assignment initialization from existing repository
     """
@@ -57,6 +58,7 @@ def test_new_with_repo(parse_and_run):
     # Now it's equal to the value from the repo
     assert config['assignment-name'] == 'new-python-assignment'
 
+
 def test_new_existing_assignment(parse_and_run):
     """Test overwriting an existing an assignment
     """
@@ -66,13 +68,15 @@ def test_new_existing_assignment(parse_and_run):
     with pytest.raises(SystemExit):
         parse_and_run(["new", "assignment1"])
 
+
 def test_new_failed_clone(parse_and_run):
     """Test cloning a bogus repository
     """
     path = parse_and_run(["init", "cpl"])
 
     with pytest.raises(SystemExit):
-        parse_and_run(["new", "assignment1", "git://github.com/michaelwisely/nope.git"])
+        parse_and_run(["new", "assignment1",
+                       "git://github.com/michaelwisely/nope.git"])
 
     a_path = os.path.join(path, "assignments", "assignment1")
     assert not os.path.exists(a_path)

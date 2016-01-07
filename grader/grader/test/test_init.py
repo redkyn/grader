@@ -5,6 +5,7 @@ import yaml
 
 UUID_RE = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 
+
 def test_init(parse_and_run):
     """Test vanilla grader initialization
     """
