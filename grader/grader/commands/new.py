@@ -1,10 +1,13 @@
 ''' TODO: New package docs
 '''
+import logging
 
-from grader.models import Grader
+from grader.models import Grader, GraderException
 from grader.utils.config import require_grader_config
 
 help = 'Create a new assignment'
+
+logger = logging.getLogger(__name__)
 
 
 def setup_parser(parser):
@@ -16,5 +19,9 @@ def setup_parser(parser):
 
 @require_grader_config
 def run(args):
-    g = Grader(args.path)
-    g.create_assignment(args.name, repo=args.repo)
+    try:
+        g = Grader(args.path)
+        g.create_assignment(args.name, repo=args.repo)
+    except GraderException as e:
+        logger.warning(str(e))
+        raise SystemExit(1)

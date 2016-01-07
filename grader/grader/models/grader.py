@@ -7,7 +7,6 @@ from .assignment import Assignment, AssignmentException
 from .config import GraderConfig
 from .gradesheet import GradeSheetException
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -116,11 +115,10 @@ class Grader(object):
         except GradeSheetException as e:
             # If we couldn't clone the gradesheet properly, we have to
             # clean up the assignment folder.
-            logger.info(str(e))
-            logger.warning("Cannot construct assignment.")
             self.delete_assignment(name)
+            raise GraderException("Cannot construct assignment.") from e
         except AssignmentException as e:
-            logger.info(str(e))
+            raise GraderException("Cannot construct assignment.") from e
 
     def build_assignment(self, name):
         """Builds an assignment's docker image using its Dockerfile
