@@ -28,15 +28,33 @@ def run(args):
     # Check for existing config
     try:
         g = Grader(args.path)
+
+        # Successfully loaded. Check for force flag.
         if not args.force:
-            logger.critical("grader already configured in {}. "
-                            "Abort!".format(g.config.path))
+            logger.critical(
+                "grader already configured in {}. Abort!".format(g.config.path)
+            )
             raise SystemExit(1)
         logger.info("Overwriting existing grader configuration")
     except ConfigValidationError as e:
-        logger.debug("Caught exception: {}".format(e))
+        # Couldn't load. Check for force flag.
+        if not args.force:
+            logger.warn(
+                "Could not load grader configuration: {}\n"
+                "Use --force to force overwrite.".format(e)
+            )
+            raise SystemExit(1)
     except GraderConfigError as e:
+        # Something is wrong with the config itself
         logger.debug("Caught exception: {}".format(e))
+        if not args.force:
+            logger.warn(
+                "Could not load grader configuration: {}\n"
+                "Use --force to force overwrite.".format(e)
+            )
+            raise SystemExit(1)
+    except FileNotFoundError:
+        logger.debug("No existing config file found")
 
     try:
         # Create the new grader

@@ -44,7 +44,7 @@ def make_parser():
     return parser
 
 
-def run():
+def run():                      # pragma: no cover
     """Script entry point
     """
     # Configure logging
@@ -60,5 +60,5 @@ def run():
     # Do it
     args.run(args)
 
-if __name__ == '__main__':
+if __name__ == '__main__':      # pragma: no cover
     run()

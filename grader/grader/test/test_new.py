@@ -92,3 +92,18 @@ def test_new_bad_assignment_name(parse_and_run):
 
     a_path = os.path.join(path, "assignments", "assignment1")
     assert not os.path.exists(a_path)
+
+
+def test_new_without_init(parse_and_run):
+    """Test creating an assignment without a grader-wide config
+    """
+    path = parse_and_run(["init", "cpl"])
+
+    os.remove(os.path.join(path, "grader.yml"))
+    assert os.listdir(path) == []
+
+    with pytest.raises(SystemExit):
+        parse_and_run(["new", "a1"])
+
+    a_path = os.path.join(path, "assignments", "assignment1")
+    assert not os.path.exists(a_path)

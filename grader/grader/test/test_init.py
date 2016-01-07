@@ -47,3 +47,29 @@ def test_bad_course_name(parse_and_run):
     """
     with pytest.raises(SystemExit):
         parse_and_run(["init", "NOOO%%%%OOPE!"])
+
+
+def test_init_bad_config_file(parse_and_run):
+    """Test that config is not overwritten without force when the config
+    file is bad.
+
+    """
+    path = parse_and_run(["init", "cpl"])
+
+    # Write unparsable YAML
+    with open(os.path.join(path, "grader.yml"), 'w') as config_file:
+        config_file.write("{ thing: ")
+
+    with pytest.raises(SystemExit):
+        parse_and_run(["init", "cpl"])
+
+    parse_and_run(["init", "--force", "cpl"])
+
+    # Write YAML that doesn't match the scheme
+    with open(os.path.join(path, "grader.yml"), 'w') as config_file:
+        config_file.write(yaml.dump("{1: 3}"))
+
+    with pytest.raises(SystemExit):
+        parse_and_run(["init", "cpl"])
+
+    parse_and_run(["init", "--force", "cpl"])

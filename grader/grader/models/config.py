@@ -101,12 +101,14 @@ class Config(object):
         """
         self.path = path
 
-        if not os.path.exists(self.file_path):
-            raise self.__class__.EXCEPTION_CLASS("Config file doesn't exist!")
-
         with open(self.file_path) as config_file:
             logger.debug("Loading {}.".format(self.file_path))
-            self.data = yaml.load(config_file)
+
+            try:
+                self.data = yaml.load(config_file)
+            except yaml.YAMLError:
+                raise self.__class__.EXCEPTION_CLASS("Cannot parse YAML")
+
             logger.debug("Validating {}.".format(self.file_path))
             self.__class__._validate(self.data)
 
