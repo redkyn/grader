@@ -3,16 +3,18 @@ import importlib
 import logging
 import os
 
+from collections import OrderedDict
+
 logger = logging.getLogger(__name__)
 
 description = "An automated grading tool for programming assignments."
 
-subcommands = {
-    "init": "grader.commands.init",
-    "new": "grader.commands.new",
-    "build": "grader.commands.build",
-    "grade": "grader.grade"
-}
+subcommands = OrderedDict([
+    ("init", "grader.commands.init"),
+    ("new", "grader.commands.new"),
+    ("build", "grader.commands.build"),
+    ("grade", "grader.grade"),
+])
 
 
 def run():
@@ -38,7 +40,8 @@ def run():
         module.setup_parser(subparser)
 
     # The 'help' command shows the help screen
-    help_parser = subparsers.add_parser("help", help="Show this help screen")
+    help_parser = subparsers.add_parser("help",
+                                        help="Show this help screen and exit")
     help_parser.set_defaults(run=lambda x: parser.print_help())
 
     # Parse CLI args

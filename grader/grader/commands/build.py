@@ -4,7 +4,7 @@
 from grader.models import Grader
 from grader.utils.config import require_grader_config
 
-help = "Build an assignment's docker images."
+help = "Build an assignment's docker image"
 
 
 def setup_parser(parser):
