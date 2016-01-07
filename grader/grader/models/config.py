@@ -138,11 +138,32 @@ class GraderConfig(Config):
 
         "type": "object",
         "properties": {
-            "course-id": {"type": "string"},
-            "course-name": {"type": "string"},
+            "course-id": {
+                "type": "string",
+                "pattern": r"^[\w-]+$"
+            },
+            "course-name": {
+                "type": "string",
+                "pattern": r"^[\w-]+$"
+            },
+            "roster": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "id": {
+                            "type": "string",
+                            "pattern": "^\w+$",
+                        },
+                    },
+                    "required": ["name", "id"],
+                    "additionalProperties": False,
+                },
+            },
         },
         "required": ["course-id", "course-name"],
-        "additionalProperties": False
+        "additionalProperties": False,
     }
     """The schema for a Grader-wide configuration file"""
 
