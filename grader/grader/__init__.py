@@ -10,7 +10,7 @@ description = "An automated grading tool for programming assignments."
 subcommands = {
     "init": "grader.commands.init",
     "new": "grader.commands.new",
-    "image": "grader.commands.image",
+    "build": "grader.commands.build",
     "grade": "grader.grade"
 }
 
