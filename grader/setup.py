@@ -1,6 +1,6 @@
-from setuptools import setup
+from setuptools import setup  # pragma: no cover
 
-setup(
+setup(  # pragma: no cover
     name="grader",
     version="0.0.1",  # http://semver.org/spec/v2.0.0.html
     url='https://github.com/brhoades/grader',
