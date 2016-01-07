@@ -40,3 +40,10 @@ def test_init_noforce(parse_and_run):
 
     with pytest.raises(SystemExit):
         parse_and_run(["init", "cpl"])
+
+
+def test_bad_course_name(parse_and_run):
+    """Test enforcement of bad course names
+    """
+    with pytest.raises(SystemExit):
+        parse_and_run(["init", "NOOO%%%%OOPE!"])

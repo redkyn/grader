@@ -1,7 +1,6 @@
 import docker
 import logging
 import os
-import re
 
 from .gradesheet import GradeSheet
 
@@ -34,9 +33,6 @@ class Assignment(object):
     SUB_DIR = "assignments"
     """Name of the subdirectory for assignments"""
 
-    NAME_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
-    """Regular expression for assignment names"""
-
     @classmethod
     def new(cls, grader, assignment_name, gradesheet_repo=None):
         """Creates a new Assignment for a Grader. This includes...
@@ -63,7 +59,7 @@ class Assignment(object):
         :type grader: :class:`Grader`
 
         :param assignment_name: The name of this assignment. Must
-               match :data:`Assignment.NAME_RE`
+               comply with :data:`AssignmentConfig.SCHEMA`
         :type assignment_name: str
 
         :param gradesheet_repo: The URL of a git repository to clone
@@ -78,6 +74,12 @@ class Assignment(object):
             doesn't exist, if the directory for the new assignment
             already exists, or if the name of the assignment.
 
+        :raises GradeSheetException: if there was an error creating
+            the GradeSheet
+
+        :raises ConfigValidationException: if there was an error
+            creating the GradeSheet's assignment-specific config file
+
         """
         path = os.path.join(grader.assignment_dir, assignment_name)
 
@@ -90,13 +92,6 @@ class Assignment(object):
         # Make sure the target directory doesn't exist
         if os.path.exists(path):
             raise AssignmentException("{} exists".format(path))
-
-        # Check the assignment name
-        if not cls.NAME_RE.match(assignment_name):
-            raise AssignmentException(
-                "Bad assignment name {}. "
-                "Must match {}".format(assignment_name, cls.NAME_RE.pattern)
-            )
 
         # Make assignment root and subdirs
         os.mkdir(path)

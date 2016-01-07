@@ -6,6 +6,12 @@ import yaml
 logger = logging.getLogger(__name__)
 
 
+class ConfigValidationException(Exception):
+    """An exception thrown when a config file cannot be validated
+    """
+    pass
+
+
 class GraderConfigException(Exception):
     """A general-purpose exception thrown by the GraderConfig class.
     """
@@ -73,7 +79,9 @@ class Config(object):
         try:
             jsonschema.validate(obj, cls.SCHEMA)
         except jsonschema.ValidationError as e:
-            raise cls.EXCEPTION_CLASS("Could not validate config") from e
+            raise ConfigValidationException(
+                "{} is invalid.\n{}".format(cls.CONFIG_FILE_NAME, str(e))
+            )
 
     @property
     def file_path(self):
@@ -185,7 +193,10 @@ class AssignmentConfig(Config):
 
         "type": "object",
         "properties": {
-            "assignment-name": {"type": "string"},
+            "assignment-name": {
+                "type": "string",
+                "pattern": r"^[\w-]+$"
+            },
             "image-build-options": {"type": "object"}
         },
         "required": ["assignment-name"],

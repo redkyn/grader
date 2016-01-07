@@ -1,10 +1,9 @@
 import logging
 import os
-import re
 import shutil
 
 from .assignment import Assignment, AssignmentException
-from .config import GraderConfig
+from .config import GraderConfig, ConfigValidationException
 from .gradesheet import GradeSheetException
 
 logger = logging.getLogger(__name__)
@@ -24,12 +23,6 @@ class Grader(object):
 
     """
 
-    COURSE_NAME_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
-    """Regular expression for course names"""
-
-    COURSE_ID_RE = re.compile(r"^[A-Za-z0-9_.-]+$")
-    """Regular expression for course IDs"""
-
     @classmethod
     def new(cls, path, course_name, course_id):
         """Creates a new Grader instance and sets up its operating
@@ -38,30 +31,16 @@ class Grader(object):
         :param str path: The path to the directory that will contain
             the Grader
 
-        :param str course_name: The name of the course. It must match
-            :data:`Grader.COURSE_NAME_RE`
+        :param str course_name: The name of the course. It must comply with
+            :data:`GraderConfig.SCHEMA`
 
         :param str course_id: The unique ID for the course. It must
-            match :data:`Grader.COURSE_ID_RE`
+            comply with :data:`GraderConfig.SCHEMA`
 
-        :raises GraderException: if ``course_name`` or ``course_id``
-            don't match the required regular expression
+        :raises GraderConfigException: if ``course_name`` or
+            ``course_id`` don't comply with the configuration schema
 
         """
-        # Check the course name
-        if not cls.COURSE_NAME_RE.match(course_name):
-            raise GraderException(
-                "Bad course name {}. "
-                "Must match {}".format(course_name, cls.COURSE_NAME_RE.pattern)
-            )
-
-        # Check the course id
-        if not cls.COURSE_ID_RE.match(course_id):
-            raise GraderException(
-                "Bad course id {}. "
-                "Must match {}".format(course_id, cls.COURSE_ID_RE.pattern)
-            )
-
         GraderConfig.new(path, {'course-name': course_name,
                                 'course-id': course_id})
         return cls(path)
@@ -95,8 +74,8 @@ class Grader(object):
         """Creates a new assignment directory on disk as well as an associated
         gradesheet and subdirectories.
 
-        :param str name: The name of the assignment. Must match
-            :data:`Assignment.NAME_RE`
+        :param str name: The name of the assignment. Must comply with
+            :data:`AssignmentConfig.SCHEMA`
 
         :param str repo: An optional URL to a gradesheet
             repository. Read more about it in :meth:`Assignment.new`
@@ -113,12 +92,23 @@ class Grader(object):
             Assignment.new(self, name, repo)
             logger.info("Created '{}'.".format(name))
         except GradeSheetException as e:
-            # If we couldn't clone the gradesheet properly, we have to
-            # clean up the assignment folder.
+            # If we couldn't clone the gradesheet repo, we have to
+            # delete the assignment folder.
             self.delete_assignment(name)
-            raise GraderException("Cannot construct assignment.") from e
+            raise GraderException(
+                "Could not clone assignment: {}".format(str(e))
+            )
+        except ConfigValidationException as e:
+            # If we couldn't create gradesheet config file properly,
+            # we have to delete the assignment folder.
+            self.delete_assignment(name)
+            raise GraderException(
+                "Cannot create configuration: {}".format(str(e))
+            )
         except AssignmentException as e:
-            raise GraderException("Cannot construct assignment.") from e
+            raise GraderException(
+                "Cannot construct assignment: {}".format(str(e))
+            )
 
     def build_assignment(self, name):
         """Builds an assignment's docker image using its Dockerfile
