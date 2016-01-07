@@ -16,6 +16,12 @@ subcommands = {
 
 
 def run():
+    """Script entry point
+
+    .. todo::
+
+       Add a "verbose" flag
+    """
     # Configure logging
     logging.basicConfig(level=logging.INFO)
 
