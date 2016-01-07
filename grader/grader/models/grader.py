@@ -102,10 +102,6 @@ class Grader(object):
         :param str repo: An optional URL to a gradesheet
             repository. Read more about it in :meth:`Assignment.new`
 
-        .. todo::
-
-           Build as a separate step. Maybe have a build flag?
-
         :return: None
 
         """
@@ -115,16 +111,8 @@ class Grader(object):
 
         try:
             logger.debug("Creating assignment")
-            assignment = Assignment.new(self, name, repo)
+            Assignment.new(self, name, repo)
             logger.info("Created '{}'.".format(name))
-
-            if not repo:
-                logger.info("Skipping build. Dockerfile must be completed.")
-            else:
-                logger.info("Building assignment...")
-                assignment.build_image()
-                logger.info("Build complete.")
-            return
         except GradeSheetException as e:
             # If we couldn't clone the gradesheet properly, we have to
             # clean up the assignment folder.
@@ -133,6 +121,14 @@ class Grader(object):
             self.delete_assignment(name)
         except AssignmentException as e:
             logger.info(str(e))
+
+    def build_assignment(self, name):
+        """Builds an assignment's docker image using its Dockerfile
+
+        """
+        logger.debug("Loading assignment.")
+        assignment = Assignment(self, name)
+        assignment.build_image()
 
     def delete_assignment(self, name):
         """Deletes an assignment from the Grader's assignments directory.
