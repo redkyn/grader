@@ -37,8 +37,5 @@ def test_init_noforce(parse_and_run):
     """
     parse_and_run(["init", "cpl"])
 
-    try:
+    with pytest.raises(SystemExit):
         parse_and_run(["init", "cpl"])
-        pytest.fail("Overwrote grader.yml")
-    except SystemExit:
-        pass
