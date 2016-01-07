@@ -3,7 +3,7 @@ import pytest
 import uuid
 import yaml
 
-from grader.models import Grader, ConfigValidationError
+from grader.models import Grader, AssignmentConfig, ConfigValidationError
 
 
 def write_config(path, name, config):
@@ -14,6 +14,13 @@ def write_config(path, name, config):
 def test_correct_config(clean_dir):
     """Test loading Grader with a correct config
     """
+    write_config(clean_dir, "grader.yml", {
+        "course-name": "cs2001",
+        "course-id": str(uuid.uuid4()),
+    })
+
+    Grader(clean_dir)
+
     write_config(clean_dir, "grader.yml", {
         "course-name": "cs2001",
         "course-id": str(uuid.uuid4()),
@@ -141,3 +148,52 @@ def test_bad_roster_id(clean_dir):
 
     with pytest.raises(ConfigValidationError):
         Grader(clean_dir)
+
+
+def test_correct_assignment_config(clean_dir):
+    """Test loading Assignment with a correct config
+    """
+    write_config(clean_dir, "assignment.yml", {
+        "assignment-name": "cs2001",
+    })
+
+    AssignmentConfig(clean_dir)
+
+    write_config(clean_dir, "assignment.yml", {
+        "assignment-name": "cs2001",
+        "image-build-options": {
+            "container_limits": {
+                "memory": 1024
+            },
+        },
+    })
+
+    AssignmentConfig(clean_dir)
+
+
+def test_bad_assignment_name(clean_dir):
+    """Test loading Assignment with a bad name
+    """
+    write_config(clean_dir, "assignment.yml", {
+        "assignment-name": "nooo%%%%ope!",
+        "image-build-options": {
+            "container_limits": {
+                "memory": 1024
+            },
+        },
+    })
+
+    with pytest.raises(ConfigValidationError):
+        AssignmentConfig(clean_dir)
+
+    write_config(clean_dir, "assignment.yml", {
+        "assignment-nooo%%ope": "cs2001",
+        "image-build-options": {
+            "container_limits": {
+                "memory": 1024
+            },
+        },
+    })
+
+    with pytest.raises(ConfigValidationError):
+        AssignmentConfig(clean_dir)
