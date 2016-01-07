@@ -17,12 +17,9 @@ subcommands = OrderedDict([
 ])
 
 
-def run():
-    """Script entry point
+def make_parser():
+    """Construct and return a CLI argument parser.
     """
-    # Configure logging
-    logging.basicConfig(level=logging.INFO)
-
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--path', default=os.getcwd(),
                         help='Path to the root of a grader')
@@ -44,7 +41,16 @@ def run():
                                         help="Show this help screen and exit")
     help_parser.set_defaults(run=lambda x: parser.print_help())
 
+    return parser
+
+def run():
+    """Script entry point
+    """
+    # Configure logging
+    logging.basicConfig(level=logging.INFO)
+
     # Parse CLI args
+    parser = make_parser()
     args = parser.parse_args()
 
     # Set logging verbosity
