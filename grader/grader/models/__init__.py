@@ -6,3 +6,4 @@ from .config import (  # NOQA
 )
 from .grader import Grader, GraderError  # NOQA
 from .gradesheet import GradeSheet, GradeSheetError  # NOQA
+from .submission import Submission, SubmissionError  # NOQA

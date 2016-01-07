@@ -3,6 +3,7 @@ import logging
 import os
 
 from .gradesheet import GradeSheet
+from .submission import Submission
 
 logger = logging.getLogger(__name__)
 
@@ -204,3 +205,7 @@ class Assignment(object):
         # asynchronously
         for line in output:
             logger.debug(line)
+
+    def import_submission(self, path, submission_type):
+        importer = Submission.get_importer(submission_type)
+        submission = importer(self, path)

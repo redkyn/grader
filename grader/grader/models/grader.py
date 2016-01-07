@@ -125,3 +125,13 @@ class Grader(object):
         """
         assignment_dir = os.path.join(self.assignment_dir, name)
         shutil.rmtree(assignment_dir, ignore_errors=True)
+
+    def import_submission(self, name, path, submission_type):
+        """Imports an submission for an assignment
+
+        :param str name: The name of the assignment to associate the
+            submission with
+
+        """
+        assignment = Assignment(self, name)
+        assignment.import_submission(path, submission_type)
