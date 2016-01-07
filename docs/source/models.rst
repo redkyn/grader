@@ -56,20 +56,12 @@ Configuration
 .. autoclass:: grader.models.config.Config
    :members:
 
+    .. automethod:: grader.models.config.Config.__init__
     .. automethod:: grader.models.config.Config.__getitem__
 
 
 .. autoclass:: GraderConfig
    :members:
-   :inherited-members:
-
-   .. automethod:: __init__
-   .. automethod:: __getitem__
-
 
 .. autoclass:: AssignmentConfig
    :members:
-   :inherited-members:
-
-   .. automethod:: __init__
-   .. automethod:: __getitem__

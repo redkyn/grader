@@ -63,7 +63,8 @@ class Grader(object):
                 "Must match {}".format(course_id, cls.COURSE_ID_RE.pattern)
             )
 
-        GraderConfig.new(path, course_name, course_id)
+        GraderConfig.new(path, {'course-name': course_name,
+                                'course-id': course_id})
         return cls(path)
 
     @property

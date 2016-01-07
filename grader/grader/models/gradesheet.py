@@ -74,7 +74,8 @@ class GradeSheet(object):
         repo = git.Repo.init(path)
 
         # Create a default assignment config
-        config = AssignmentConfig.new(path, assignment_name)
+        config = AssignmentConfig.new(path,
+                                      {'assignment-name': assignment_name})
 
         # Create a default Dockerfile
         dockerfile_path = os.path.join(path, 'Dockerfile')

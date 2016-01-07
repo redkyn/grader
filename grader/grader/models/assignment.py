@@ -187,11 +187,24 @@ class Assignment(object):
 
         """
         cli = Client(base_url="unix://var/run/docker.sock", version="auto")
-        output = cli.build(
-            path=self.gradesheet.path,
-            tag=self.image_tag,
-            decode=True
-        )
 
+        # Load build options from the config
+        logger.info(self.gradesheet.config.data)
+        build_options = self.gradesheet.config.get('image-build-options', {})
+
+        # Override required build options
+        build_options.update({
+            "path": self.gradesheet.path,
+            "tag": self.image_tag,
+            "decode": True
+        })
+
+        logger.info("Building container with options {}".format(build_options))
+
+        # Build
+        output = cli.build(**build_options)
+
+        # Log output line-by-line to avoid running the build
+        # asynchronously
         for line in output:
             logger.debug(line)
