@@ -1,8 +1,7 @@
+import docker
 import logging
 import os
 import re
-
-from docker import Client
 
 from .gradesheet import GradeSheet
 
@@ -186,10 +185,10 @@ class Assignment(object):
         :return: :obj:`None`
 
         """
-        cli = Client(base_url="unix://var/run/docker.sock", version="auto")
+        cli = docker.Client(base_url="unix://var/run/docker.sock",
+                            version="auto")
 
         # Load build options from the config
-        logger.info(self.gradesheet.config.data)
         build_options = self.gradesheet.config.get('image-build-options', {})
 
         # Override required build options
@@ -199,7 +198,8 @@ class Assignment(object):
             "decode": True
         })
 
-        logger.info("Building container with options {}".format(build_options))
+        logger.info("Building image...")
+        logger.debug("Image options: {}".format(build_options))
 
         # Build
         output = cli.build(**build_options)

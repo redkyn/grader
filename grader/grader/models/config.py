@@ -165,6 +165,7 @@ class AssignmentConfig(Config):
         "type": "object",
         "properties": {
             "assignment-name": {"type": "string"},
+            "image-build-options": {"type": "object"}
         },
         "required": ["assignment-name"],
         "additionalProperties": False
