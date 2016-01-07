@@ -148,6 +148,7 @@ class Assignment(object):
             constructing the Assignment's :class:`GradeSheet`
 
         """
+        logger.debug("Loading assignment.")
         self.path = os.path.join(grader.assignment_dir, assignment_name)
         self.name = assignment_name
         self.grader = grader

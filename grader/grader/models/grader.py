@@ -113,8 +113,8 @@ class Grader(object):
     def build_assignment(self, name):
         """Builds an assignment's docker image using its Dockerfile
 
+        :param str name: The name of the assignment to build
         """
-        logger.debug("Loading assignment.")
         assignment = Assignment(self, name)
         assignment.build_image()
 
