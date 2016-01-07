@@ -65,3 +65,14 @@ def test_new_existing_assignment(parse_and_run):
 
     with pytest.raises(SystemExit):
         parse_and_run(["new", "assignment1"])
+
+def test_new_failed_clone(parse_and_run):
+    """Test cloning a bogus repository
+    """
+    path = parse_and_run(["init", "cpl"])
+
+    with pytest.raises(SystemExit):
+        parse_and_run(["new", "assignment1", "git://github.com/michaelwisely/nope.git"])
+
+    a_path = os.path.join(path, "assignments", "assignment1")
+    assert not os.path.exists(a_path)
