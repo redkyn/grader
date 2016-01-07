@@ -5,7 +5,7 @@ import logging
 import uuid
 
 from grader.models import (
-    Grader, GraderConfigException, ConfigValidationException
+    Grader, GraderConfigError, ConfigValidationError
 )
 
 logger = logging.getLogger(__name__)
@@ -33,15 +33,15 @@ def run(args):
                             "Abort!".format(g.config.path))
             raise SystemExit(1)
         logger.info("Overwriting existing grader configuration")
-    except ConfigValidationException as e:
+    except ConfigValidationError as e:
         logger.debug("Caught exception: {}".format(e))
-    except GraderConfigException as e:
+    except GraderConfigError as e:
         logger.debug("Caught exception: {}".format(e))
 
     try:
         # Create the new grader
         g = Grader.new(args.path, args.name, args.course_id)
         logger.info("Wrote {}".format(g.config.file_path))
-    except ConfigValidationException as e:
+    except ConfigValidationError as e:
         logger.warning(e)
         raise SystemExit(1)

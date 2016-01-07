@@ -6,19 +6,19 @@ import yaml
 logger = logging.getLogger(__name__)
 
 
-class ConfigValidationException(Exception):
+class ConfigValidationError(Exception):
     """An exception thrown when a config file cannot be validated
     """
     pass
 
 
-class GraderConfigException(Exception):
+class GraderConfigError(Exception):
     """A general-purpose exception thrown by the GraderConfig class.
     """
     pass
 
 
-class AssignmentConfigException(Exception):
+class AssignmentConfigError(Exception):
     """A general-purpose exception thrown by the AssignmentConfig class.
     """
     pass
@@ -79,7 +79,7 @@ class Config(object):
         try:
             jsonschema.validate(obj, cls.SCHEMA)
         except jsonschema.ValidationError as e:
-            raise ConfigValidationException(
+            raise ConfigValidationError(
                 "{} is invalid.\n{}".format(cls.CONFIG_FILE_NAME, str(e))
             )
 
@@ -135,7 +135,7 @@ class GraderConfig(Config):
 
     """
 
-    EXCEPTION_CLASS = GraderConfigException
+    EXCEPTION_CLASS = GraderConfigError
     """The exception to throw in the event of an error"""
 
     CONFIG_FILE_NAME = "grader.yml"
@@ -182,7 +182,7 @@ class AssignmentConfig(Config):
 
     """
 
-    EXCEPTION_CLASS = AssignmentConfigException
+    EXCEPTION_CLASS = AssignmentConfigError
     """The exception to throw in the event of an error"""
 
     CONFIG_FILE_NAME = "assignment.yml"

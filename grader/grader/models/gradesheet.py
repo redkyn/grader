@@ -7,7 +7,7 @@ from .config import AssignmentConfig
 logger = logging.getLogger(__name__)
 
 
-class GradeSheetException(Exception):
+class GradeSheetError(Exception):
     """A general-purpose exception thrown by the Assignment class.
     """
     pass
@@ -47,7 +47,7 @@ class GradeSheet(object):
         :param str repo_url: A URL pointing to a gradesheet repository
             to clone.
 
-        :raises GradeSheetException: if there was a problem cloning
+        :raises GradeSheetError: if there was a problem cloning
             the repo
 
         """
@@ -55,7 +55,7 @@ class GradeSheet(object):
             git.Repo.clone_from(repo_url, gradesheet_path)
             logger.info("Successfully cloned {}".format(repo_url))
         except git.exc.GitCommandError:
-            raise GradeSheetException("Could not clone {}".format(repo_url))
+            raise GradeSheetError("Could not clone {}".format(repo_url))
 
         return None
 
@@ -98,10 +98,10 @@ class GradeSheet(object):
         :param Assignment assignment: The assignment to which this
             gradesheet belongs.
 
-        :raises AssignmentConfigException: if the assignment-specific
+        :raises AssignmentConfigError: if the assignment-specific
             config file in the gradesheet cannot be loaded
 
-        :raises GradeSheetException: if the Dockefile can't be found
+        :raises GradeSheetError: if the Dockefile can't be found
 
         """
         self.path = assignment.gradesheet_path
@@ -111,4 +111,4 @@ class GradeSheet(object):
 
         # Verify that paths exist like we expect
         if not os.path.exists(self.dockerfile_path):
-            raise GradeSheetException("GradeSheet repo has no Dockerfile!")
+            raise GradeSheetError("GradeSheet repo has no Dockerfile!")

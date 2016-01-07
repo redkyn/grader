@@ -3,7 +3,7 @@ import pytest
 import uuid
 import yaml
 
-from grader.models import Grader, ConfigValidationException
+from grader.models import Grader, ConfigValidationError
 
 
 def write_config(path, name, config):
@@ -34,7 +34,7 @@ def test_bad_course_name_value(clean_dir):
         "course-id": str(uuid.uuid4())
     })
 
-    with pytest.raises(ConfigValidationException):
+    with pytest.raises(ConfigValidationError):
         Grader(clean_dir)
 
 
@@ -46,7 +46,7 @@ def test_bad_course_name_key(clean_dir):
         "course-id": str(uuid.uuid4())
     })
 
-    with pytest.raises(ConfigValidationException):
+    with pytest.raises(ConfigValidationError):
         Grader(clean_dir)
 
 
@@ -57,7 +57,7 @@ def test_missing_course_name(clean_dir):
         "course-id": str(uuid.uuid4())
     })
 
-    with pytest.raises(ConfigValidationException):
+    with pytest.raises(ConfigValidationError):
         Grader(clean_dir)
 
 
@@ -69,7 +69,7 @@ def test_bad_course_id_value(clean_dir):
         "course-id": "invalid %%% key"
     })
 
-    with pytest.raises(ConfigValidationException):
+    with pytest.raises(ConfigValidationError):
         Grader(clean_dir)
 
 
@@ -81,7 +81,7 @@ def test_bad_course_id_key(clean_dir):
         "course-id-wrong": str(uuid.uuid4())
     })
 
-    with pytest.raises(ConfigValidationException):
+    with pytest.raises(ConfigValidationError):
         Grader(clean_dir)
 
 
@@ -92,7 +92,7 @@ def test_missing_course_id(clean_dir):
         "course-name": "cs2001"
     })
 
-    with pytest.raises(ConfigValidationException):
+    with pytest.raises(ConfigValidationError):
         Grader(clean_dir)
 
 
@@ -110,7 +110,7 @@ def test_missing_roster_items(clean_dir):
         ],
     })
 
-    with pytest.raises(ConfigValidationException):
+    with pytest.raises(ConfigValidationError):
         Grader(clean_dir)
 
     # Forgot the id
@@ -123,7 +123,7 @@ def test_missing_roster_items(clean_dir):
         ],
     })
 
-    with pytest.raises(ConfigValidationException):
+    with pytest.raises(ConfigValidationError):
         Grader(clean_dir)
 
 
@@ -139,5 +139,5 @@ def test_bad_roster_id(clean_dir):
         ],
     })
 
-    with pytest.raises(ConfigValidationException):
+    with pytest.raises(ConfigValidationError):
         Grader(clean_dir)

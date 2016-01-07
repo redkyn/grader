@@ -7,7 +7,7 @@ from .gradesheet import GradeSheet
 logger = logging.getLogger(__name__)
 
 
-class AssignmentException(Exception):
+class AssignmentError(Exception):
     """A general-purpose exception thrown by the Assignment class.
     """
     pass
@@ -70,14 +70,14 @@ class Assignment(object):
         :return: The newly created Assignment
         :rtype: :class:`Assignment`
 
-        :raises AssignmentException: if the "assignments" directory
+        :raises AssignmentError: if the "assignments" directory
             doesn't exist, if the directory for the new assignment
             already exists, or if the name of the assignment.
 
-        :raises GradeSheetException: if there was an error creating
+        :raises GradeSheetError: if there was an error creating
             the GradeSheet
 
-        :raises ConfigValidationException: if there was an error
+        :raises ConfigValidationError: if there was an error
             creating the GradeSheet's assignment-specific config file
 
         """
@@ -85,13 +85,13 @@ class Assignment(object):
 
         # Make sure the parent directory exists
         if not os.path.exists(grader.assignment_dir):
-            raise AssignmentException(
+            raise AssignmentError(
                 "{} does not exist".format(grader.assignment_dir)
             )
 
         # Make sure the target directory doesn't exist
         if os.path.exists(path):
-            raise AssignmentException("{} exists".format(path))
+            raise AssignmentError("{} exists".format(path))
 
         # Make assignment root and subdirs
         os.mkdir(path)
@@ -137,14 +137,14 @@ class Assignment(object):
         :param assignment_name: The name of the assignment
         :type assignment_name: str
 
-        :raises AssignmentException: if the assignment path
+        :raises AssignmentError: if the assignment path
             (``Assignment.SUB_DIR/assignment_name``) doesn't exist, if
             the submission path doesn't exist with in the assignment
             path, if the results path doesn't exist within the
             assignment path, or if the directory for the gradesheet
             repository doesn't exist
 
-        :raises GradeSheetException: if there was an error
+        :raises GradeSheetError: if there was an error
             constructing the Assignment's :class:`GradeSheet`
 
         """
@@ -154,13 +154,13 @@ class Assignment(object):
 
         # Verify that paths exist like we expect
         if not os.path.exists(self.path):
-            raise AssignmentException("Assignment path doesn't exist")
+            raise AssignmentError("Assignment path doesn't exist")
         if not os.path.exists(self.submissions_path):
-            raise AssignmentException("Submission path doesn't exist")
+            raise AssignmentError("Submission path doesn't exist")
         if not os.path.exists(self.results_path):
-            raise AssignmentException("Results path doesn't exist")
+            raise AssignmentError("Results path doesn't exist")
         if not os.path.exists(self.gradesheet_path):
-            raise AssignmentException("GradeSheet path doesn't exist")
+            raise AssignmentError("GradeSheet path doesn't exist")
 
         self.gradesheet = GradeSheet(self)
 

@@ -1,8 +1,8 @@
-from .assignment import Assignment, AssignmentException   # NOQA
+from .assignment import Assignment, AssignmentError   # NOQA
 from .config import (  # NOQA
-    GraderConfig, GraderConfigException,
-    AssignmentConfig, AssignmentConfigException,
-    ConfigValidationException
+    GraderConfig, GraderConfigError,
+    AssignmentConfig, AssignmentConfigError,
+    ConfigValidationError
 )
-from .grader import Grader, GraderException  # NOQA
-from .gradesheet import GradeSheet, GradeSheetException  # NOQA
+from .grader import Grader, GraderError  # NOQA
+from .gradesheet import GradeSheet, GradeSheetError  # NOQA

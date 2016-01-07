@@ -2,14 +2,14 @@ import logging
 import os
 import shutil
 
-from .assignment import Assignment, AssignmentException
-from .config import GraderConfig, ConfigValidationException
-from .gradesheet import GradeSheetException
+from .assignment import Assignment, AssignmentError
+from .config import GraderConfig, ConfigValidationError
+from .gradesheet import GradeSheetError
 
 logger = logging.getLogger(__name__)
 
 
-class GraderException(Exception):
+class GraderError(Exception):
     """A general-purpose exception thrown by the Assignment class.
     """
     pass
@@ -37,7 +37,7 @@ class Grader(object):
         :param str course_id: The unique ID for the course. It must
             comply with :data:`GraderConfig.SCHEMA`
 
-        :raises GraderConfigException: if ``course_name`` or
+        :raises GraderConfigError: if ``course_name`` or
             ``course_id`` don't comply with the configuration schema
 
         """
@@ -56,9 +56,9 @@ class Grader(object):
         :param str path: The path to the grader on disk. The path
             should contain the configuration file for the grader.
 
-        :raises GraderException: if the provided path doesn't exist
+        :raises GraderError: if the provided path doesn't exist
 
-        :raises GraderConfigException: if the grader config file
+        :raises GraderConfigError: if the grader config file
             cannot be read
 
         """
@@ -66,7 +66,7 @@ class Grader(object):
 
         # Verify that paths exist like we expect
         if not os.path.exists(path):
-            raise GraderException("Grader path doesn't exist!")
+            raise GraderError("Grader path doesn't exist!")
 
         self.config = GraderConfig(self.path)
 
@@ -91,22 +91,22 @@ class Grader(object):
             logger.debug("Creating assignment")
             Assignment.new(self, name, repo)
             logger.info("Created '{}'.".format(name))
-        except GradeSheetException as e:
+        except GradeSheetError as e:
             # If we couldn't clone the gradesheet repo, we have to
             # delete the assignment folder.
             self.delete_assignment(name)
-            raise GraderException(
+            raise GraderError(
                 "Could not clone assignment: {}".format(str(e))
             )
-        except ConfigValidationException as e:
+        except ConfigValidationError as e:
             # If we couldn't create gradesheet config file properly,
             # we have to delete the assignment folder.
             self.delete_assignment(name)
-            raise GraderException(
+            raise GraderError(
                 "Cannot create configuration: {}".format(str(e))
             )
-        except AssignmentException as e:
-            raise GraderException(
+        except AssignmentError as e:
+            raise GraderError(
                 "Cannot construct assignment: {}".format(str(e))
             )
 
