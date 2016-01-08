@@ -193,8 +193,8 @@ class Submission(object):
         submission_id = cls.get_full_id(basename, sid, sid_pattern)
 
         # Compute the path to the completed .tar.gz
-        dest = os.path.join(assignment.submissions_path,
-                            submission_id + ".tar.gz")
+        tar_name = submission_id + ".tar.gz"
+        dest = os.path.join(assignment.submissions_path, tar_name)
 
         # Prepare the tarball (if necessary)
         tarball, temp_path = None, None
@@ -218,7 +218,7 @@ class Submission(object):
             logger.debug("Removing %s", temp_path)
             shutil.rmtree(temp_path)
 
-        return [cls(assignment, dest)]
+        return [cls(assignment, tar_name)]
 
     @classmethod
     def import_repo(cls, assignment, repo_url, sid=None, sid_pattern=r"(?P<id>.*)"):
@@ -259,9 +259,9 @@ class Submission(object):
                 'No importer for type "{}"'.format(submission_type)
             ) from e
 
-    def __init__(self, assignment, tar_path):
+    def __init__(self, assignment, tar_name):
+        self.path = os.path.join(assignment.submissions_path, tar_name)
         self.assignment = assignment
-        self.path = tar_path
 
         if not os.path.isfile(self.path):
             logger.debug("Cannot find %s", self.path)
