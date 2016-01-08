@@ -2,6 +2,8 @@
 '''
 import logging
 
+from prettytable import PrettyTable
+
 from grader.models import Grader
 from grader.utils.config import require_grader_config
 
@@ -38,9 +40,15 @@ def run(args):
         except KeyError:
             assignments = []
 
-    for assignment in assignments.values():
-        print(assignment)
+    t = PrettyTable(["Assignment", "User ID", "Submission UUID"])
+
+    for aname, assignment in assignments.items():
         for userid, submissions in assignment.submissions.items():
-            print("\t", userid)
             for submission in submissions:
-                print("\t\t", submission)
+                t.add_row([
+                    aname,
+                    userid,
+                    "{}...".format(submission.uuid[0:8]),
+                ])
+
+    print(t)
