@@ -1,3 +1,4 @@
+import functools
 import logging
 import os
 import re
@@ -105,18 +106,19 @@ class Submission(object):
         raise NotImplementedError("Blackboard import isn't implemented yet :/")
 
     @classmethod
-    def import_multiple(cls, assignment, folder_path, sid_pattern=r"(?P<id>.*)"):
-        """Imports multiple submissions from a folder of ``.tar.gz``s
+    def import_multiple(cls, assignment, source, sid_pattern=r"(?P<id>.*)"):
+        """Imports multiple submissions from a folder of ``.tar.gz``'s or
+        folders of submission material.
 
-        The names of the ``.tar.gz`` files (minus extensions) will be
-        used as the ID for each submission. For example, if a folder
-        contains ``hsimpson.tar.gz``, a new Submission with id
-        ``hsimpson`` will be created.
+        By default, the names of the ``.tar.gz`` files (minus
+        extensions) will be used as the ID for each submission. For
+        example, if a folder contains ``hsimpson.tar.gz``, a new
+        Submission with id ``hsimpson`` will be created.
 
         :param str assignment: Assignment associated with this submission
 
-        :param str folder_path: Path to the folder of `.tar.gz``s to
-            import
+        :param str source: Path to the folder of
+            ``.tar.gz``s/folders to import
 
         :param str sid_pattern: An optional pattern to use to convert
             the name of a submission to a submission id
@@ -124,7 +126,32 @@ class Submission(object):
         :return: A list of Submissions
 
         """
-        raise NotImplementedError("Folder import isn't implemented yet :/")
+        # Make sure this is actually a folder
+        if not os.path.isdir(source):
+            raise SubmissionError(
+                "{} is not a directory. Cannot import.".format(source)
+            )
+
+        # Make sure we can import all the items in this folder
+        for item in os.listdir(source):
+            item = os.path.join(source, item)
+            print(item, os.path.isfile(item))
+            if os.path.isfile(item) and tarfile.is_tarfile(item):
+                logger.debug("%s is a tarfile", item)
+                continue
+            elif os.path.isdir(item):
+                logger.debug("%s is a directory", item)
+                continue
+            else:
+                raise SubmissionError(
+                    "{} is neither a directory nor a tarball".format(item)
+                )
+
+        # Import the items
+        import_it = functools.partial(cls.import_single, assignment,
+                                      sid_pattern=sid_pattern)
+        return [import_it(os.path.join(source, p))[0]
+                for p in os.listdir(source)]
 
     @classmethod
     def import_single(cls, assignment, source,
@@ -138,9 +165,10 @@ class Submission(object):
         * A folder containing files to submit. The folder will be
           compressed as a ``.tar.gz`` then imported.
 
-        The name of the submission (minus extensions) will be used as
-        its ID. For example, if a folder is named ``hsimpson/``, the
-        new Submission with id ``hsimpson`` will be created.
+        By default the name of the submission (minus extensions) will
+        be used as its ID. For example, if a folder is named
+        ``hsimpson/``, the new Submission with id ``hsimpson`` will be
+        created.
 
         :param str assignment: Assignment associated with this submission
 
@@ -171,10 +199,13 @@ class Submission(object):
         # Prepare the tarball (if necessary)
         tarball, temp_path = None, None
         if os.path.isdir(source):
+            logger.debug("Importing a single directory: %s", source)
             tarball, temp_path = make_tarball(source, submission_id)
-        elif tarfile.is_tarfile(source):
+        elif os.path.isfile(source) and tarfile.is_tarfile(source):
+            logger.debug("Importing a single tarball: %s", source)
             tarball = source
         else:
+            logger.debug("Cannot import this thing.")
             raise SubmissionError(
                 "{} is neither a directory nor a tarball.".format(source)
             )
