@@ -1,25 +1,9 @@
 import os
 import pytest
-
-from subprocess import Popen, PIPE
-
-
-def has_installed(program):
-    """Checks to see if a program is installed using ``which``.
-
-    :param str program: the name of the program we're looking for
-
-    :rtype bool:
-
-    :return: True if it's installed, otherwise False.
-
-    """
-    proc = Popen(["which", program], stdout=PIPE, stderr=PIPE)
-    exit_code = proc.wait()
-    return exit_code == 0
+import shutil
 
 
-hasdocker = pytest.mark.skipif(not has_installed("docker"),
+hasdocker = pytest.mark.skipif(shutil.which("docker") is None,
                                reason="Docker must be installed.")
 """A decorator to skip a test if docker is not installed."""
 
