@@ -23,8 +23,8 @@ class Submission(object):
         raise NotImplementedError("Blackboard import isn't implemented yet :/")
 
     @classmethod
-    def import_folder(cls, assignment, folder_path, sid_pattern=None):
-        """Imports submissions from a folder of ``.tar.gz``s
+    def import_multiple(cls, assignment, folder_path, sid_pattern=None):
+        """Imports multiple submissions from a folder of ``.tar.gz``s
 
         The names of the ``.tar.gz`` files (minus extensions) will be
         used as the ID for each submission. For example, if a folder
@@ -45,8 +45,8 @@ class Submission(object):
         raise NotImplementedError("Folder import isn't implemented yet :/")
 
     @classmethod
-    def import_file(cls, assignment, submission_path, sid=None):
-        """Imports a submission.
+    def import_single(cls, assignment, submission_path, sid=None):
+        """Imports a single submission.
 
         The submission may be:
 
@@ -67,7 +67,7 @@ class Submission(object):
         :rtype: Submission
 
         """
-        raise NotImplementedError("Folder import isn't implemented yet :/")
+        raise NotImplementedError("File import isn't implemented yet :/")
 
     @classmethod
     def import_repo(cls, assignment, repo_url, sid=None):
@@ -91,8 +91,8 @@ class Submission(object):
     def get_importers(cls):
         return {
             'blackboard': cls.import_blackboard_zip,
-            'multiple': cls.import_folder,
-            'single': cls.import_file,
+            'multiple': cls.import_multiple,
+            'single': cls.import_single,
             'repo': cls.import_repo,
         }
 
