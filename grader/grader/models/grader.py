@@ -50,6 +50,12 @@ class Grader(object):
         """The path to the Grader's assignment directory."""
         return os.path.join(self.path, Assignment.SUB_DIR)
 
+    @property
+    def assignments(self):
+        """All assignments associated with this grader"""
+        names = os.listdir(self.assignment_dir)
+        return {name: Assignment(self, name) for name in names}
+
     def __init__(self, path):
         """Instantiate a Grader.
 

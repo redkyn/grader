@@ -1,4 +1,5 @@
 import docker
+import itertools
 import logging
 import os
 
@@ -120,6 +121,14 @@ class Assignment(object):
         return os.path.join(self.path, "submissions")
 
     @property
+    def submissions(self):
+        """All submissions for this assignment"""
+        tarballs = os.listdir(self.submissions_path)
+        submissions = [Submission(self, p) for p in tarballs]
+        groups = itertools.groupby(submissions, lambda x: x.user_id)
+        return {k: list(g) for k, g in groups}
+
+    @property
     def results_path(self):
         """File path to the assignment's results directory"""
         return os.path.join(self.path, "results")
@@ -165,6 +174,9 @@ class Assignment(object):
             raise AssignmentError("GradeSheet path doesn't exist")
 
         self.gradesheet = GradeSheet(self)
+
+    def __str__(self):
+        return self.name
 
     def build_image(self):
         """Build's an assignment's docker image using the Dockerfile from its
