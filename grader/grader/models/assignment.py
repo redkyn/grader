@@ -208,4 +208,7 @@ class Assignment(object):
 
     def import_submission(self, path, submission_type):
         importer = Submission.get_importer(submission_type)
-        submission = importer(self, path)
+        submissions = importer(self, path)
+
+        for submission in submissions:
+            logger.info("Imported %s", submission)
