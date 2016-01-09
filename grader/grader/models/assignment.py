@@ -124,9 +124,14 @@ class Assignment(object):
     def submissions(self):
         """All submissions for this assignment"""
         tarballs = os.listdir(self.submissions_path)
-        submissions = [Submission(self, p) for p in tarballs]
-        groups = itertools.groupby(submissions, lambda x: x.user_id)
-        return {k: list(g) for k, g in groups}
+        return [Submission(self, p) for p in tarballs]
+
+    @property
+    def submissions_by_user(self):
+        """All submissions for this assignment grouped by user"""
+        submissions = sorted(self.submissions, key=lambda x: x.user_id)
+        groups = itertools.groupby(submissions, key=lambda x: x.user_id)
+        return {k: sorted(g, key=lambda x: x.import_time) for k, g in groups}
 
     @property
     def results_path(self):
@@ -219,7 +224,6 @@ class Assignment(object):
         cli = docker.Client(base_url="unix://var/run/docker.sock",
                             version="auto")
         cli.remove_image(self.image_tag)
-
 
     def import_submission(self, path, submission_type):
         importer = Submission.get_importer(submission_type)
