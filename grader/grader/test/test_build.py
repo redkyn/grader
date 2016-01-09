@@ -36,10 +36,29 @@ def test_build(parse_and_run):
 def test_build_bad_dockerfile(parse_and_run):
     """Test building an image that has a bad Dockerfile
     """
-    pytest.xfail("Not written yet")
-
-    parse_and_run(["init", "cpl"])
+    path = parse_and_run(["init", "cpl"])
     parse_and_run(["new", "a1"])
+
+    dockerfile_path = os.path.join(path, "assignments", "a1",
+                                   "gradesheet", "Dockerfile")
+    with open(dockerfile_path, 'w') as dockerfile:
+        dockerfile.write("NOPE WHAT ubuntu:12.04")
+
+    with pytest.raises(SystemExit):
+        parse_and_run(["build", "a1"])
+
+
+@hasdocker
+def test_build_empty_dockerfile(parse_and_run):
+    """Test building an image that has an empty Dockerfile
+    """
+    path = parse_and_run(["init", "cpl"])
+    parse_and_run(["new", "a1"])
+
+    dockerfile_path = os.path.join(path, "assignments", "a1",
+                                   "gradesheet", "Dockerfile")
+    with open(dockerfile_path, 'w') as dockerfile:
+        dockerfile.write("")
 
     with pytest.raises(SystemExit):
         parse_and_run(["build", "a1"])
