@@ -12,18 +12,6 @@ class ConfigValidationError(Exception):
     pass
 
 
-class GraderConfigError(Exception):
-    """A general-purpose exception thrown by the GraderConfig class.
-    """
-    pass
-
-
-class AssignmentConfigError(Exception):
-    """A general-purpose exception thrown by the AssignmentConfig class.
-    """
-    pass
-
-
 class Config(object):
     """A base class for configuration objects. Provides two vaguely-useful
     methods to subclasses.
@@ -33,10 +21,6 @@ class Config(object):
     * The class must have a class-wide ``CONFIG_FILE_NAME`` variable,
       which corresponds to the name of the configuration file (e.g.,
       ``"config.yml"``)
-
-    * The class must have a class-wide ``EXCEPTION_CLASS`` variable,
-      which corresponds to a subclass of ``Exception`` that will be
-      thrown in the even of an error.
 
     * The class must have a class-wide ``SCHEMA`` variable, which is a
       valid JSONSchema that can be used to validate the fields in the
@@ -101,14 +85,12 @@ class Config(object):
         """
         self.path = path
 
+        if not os.path.exists(path):
+            raise FileNotFoundError("Cannot open {}".format(path))
+
         with open(self.file_path) as config_file:
             logger.debug("Loading {}.".format(self.file_path))
-
-            try:
-                self.data = yaml.load(config_file)
-            except yaml.YAMLError:
-                raise self.__class__.EXCEPTION_CLASS("Cannot parse YAML")
-
+            self.data = yaml.load(config_file)
             logger.debug("Validating {}.".format(self.file_path))
             self.__class__._validate(self.data)
 
@@ -136,9 +118,6 @@ class GraderConfig(Config):
     YAML-formatted configuration files
 
     """
-
-    EXCEPTION_CLASS = GraderConfigError
-    """The exception to throw in the event of an error"""
 
     CONFIG_FILE_NAME = "grader.yml"
     """The name of the configuration file on disk"""
@@ -183,9 +162,6 @@ class AssignmentConfig(Config):
     YAML-formatted configuration files
 
     """
-
-    EXCEPTION_CLASS = AssignmentConfigError
-    """The exception to throw in the event of an error"""
 
     CONFIG_FILE_NAME = "assignment.yml"
     """The name of the configuration file on disk"""

@@ -3,10 +3,9 @@
 
 import logging
 import uuid
+import yaml
 
-from grader.models import (
-    Grader, GraderConfigError, ConfigValidationError
-)
+from grader.models import Grader, ConfigValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -40,16 +39,16 @@ def run(args):
         # Couldn't load. Check for force flag.
         if not args.force:
             logger.warn(
-                "Could not load grader configuration: {}\n"
+                "Could not validate grader configuration: {}\n"
                 "Use --force to force overwrite.".format(e)
             )
             raise SystemExit(1)
-    except GraderConfigError as e:
+    except yaml.YAMLError as e:
         # Something is wrong with the config itself
         logger.debug("Caught exception: {}".format(e))
         if not args.force:
             logger.warn(
-                "Could not load grader configuration: {}\n"
+                "Could not parse grader configuration: {}\n"
                 "Use --force to force overwrite.".format(e)
             )
             raise SystemExit(1)
