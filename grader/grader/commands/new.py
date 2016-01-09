@@ -2,7 +2,7 @@
 '''
 import logging
 
-from grader.models import Grader, GraderError
+from grader.models import Grader, ConfigValidationError, GradeSheetError
 from grader.utils.config import require_grader_config
 
 help = 'Create a new assignment'
@@ -24,10 +24,13 @@ def run(args):
         g.create_assignment(args.name, repo=args.repo)
     except FileNotFoundError as e:
         logger.warning(str(e))
-        raise SystemExit(1)
+        raise SystemExit(1) from e
     except FileExistsError as e:
         logger.warning(str(e))
-        raise SystemExit(1)
-    except GraderError as e:
+        raise SystemExit(1) from e
+    except ConfigValidationError as e:
         logger.warning(str(e))
-        raise SystemExit(1)
+        raise SystemExit(1) from e
+    except GradeSheetError as e:
+        logger.warning(str(e))
+        raise SystemExit(1) from e

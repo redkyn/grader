@@ -93,28 +93,9 @@ class Grader(object):
             logger.info("Creating assignment directory.")
             os.mkdir(self.assignment_dir)
 
-        try:
-            logger.debug("Creating assignment")
-            Assignment.new(self, name, repo)
-            logger.info("Created '{}'.".format(name))
-        except GradeSheetError as e:
-            # If we couldn't clone the gradesheet repo, we have to
-            # delete the assignment folder.
-            self.delete_assignment(name)
-            raise GraderError(
-                "Could not clone assignment: {}".format(str(e))
-            )
-        except ConfigValidationError as e:
-            # If we couldn't create gradesheet config file properly,
-            # we have to delete the assignment folder.
-            self.delete_assignment(name)
-            raise GraderError(
-                "Cannot create configuration: {}".format(str(e))
-            )
-        except AssignmentError as e:
-            raise GraderError(
-                "Cannot construct assignment: {}".format(str(e))
-            )
+        logger.debug("Creating assignment")
+        Assignment.new(self, name, repo)
+        logger.info("Created '{}'.".format(name))
 
     def build_assignment(self, name):
         """Builds an assignment's docker image using its Dockerfile

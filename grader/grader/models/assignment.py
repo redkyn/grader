@@ -2,6 +2,8 @@ import docker
 import itertools
 import logging
 import os
+import shutil
+import tempfile
 
 from .gradesheet import GradeSheet
 from .submission import Submission
@@ -96,9 +98,30 @@ class Assignment(object):
                 "{} exists. Cannot create assignment.".format(path)
             )
 
-        # Make assignment root and subdirs
-        logger.debug("Creating subdirectories for assignment.")
-        os.mkdir(path)
+        logger.debug("Creating assignment in temporary directory...")
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Setup all the files/folders for the assignment
+            cls._setup_grader(tmpdir, assignment_name, gradesheet_repo)
+
+            # If we have succeeded so far, copy everything over
+            shutil.copytree(tmpdir, path)
+
+        return cls(grader, assignment_name)
+
+    @classmethod
+    def _setup_grader(cls, path, assignment_name, gradesheet_repo=None):
+        """Creates necessary assignment files and folders within the provided
+        path. Does not check for correct setup and does clean up if
+        something goes wrong.
+
+        :param str path: The path of the directory in which to build
+            the assignment
+
+        :param str assignment_name: The name of the assignment
+
+        :param str gradesheet_repo: An optional gradesheet git repo URL
+
+        """
         os.mkdir(os.path.join(path, "submissions"))
         os.mkdir(os.path.join(path, "results"))
 
@@ -109,8 +132,6 @@ class Assignment(object):
             GradeSheet.from_repo(gradesheet_dir, gradesheet_repo)
         else:
             GradeSheet.new(gradesheet_dir, assignment_name)
-
-        return cls(grader, assignment_name)
 
     @property
     def image_tag(self):
