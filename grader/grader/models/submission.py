@@ -1,10 +1,16 @@
 import functools
+import git
+import hashlib
 import logging
 import os
 import re
 import shutil
 import tarfile
+import tempfile
 import uuid
+
+from contextlib import contextmanager
+from datetime import datetime
 
 from grader.utils.files import make_tarball
 
@@ -88,7 +94,8 @@ class Submission(object):
         return full_id
 
     @classmethod
-    def import_blackboard_zip(cls, assignment, zip_path, sid_pattern=r"(?P<id>.*)"):
+    def import_blackboard_zip(cls, assignment, zip_path,
+                              sid_pattern=r"(?P<id>.*)"):
         """Imports submissions from a ZIP downloaded from Blackboard
 
         :param str assignment: Assignment associated with this submission
@@ -187,6 +194,7 @@ class Submission(object):
         source = os.path.normpath(source)
 
         # Ditch all file extensions
+        # NOTE: source filenames cannot contain '.'
         basename, *_ = os.path.basename(source).split('.')
 
         # Get a unique ID for this submission
@@ -221,7 +229,8 @@ class Submission(object):
         return [cls(assignment, tar_name)]
 
     @classmethod
-    def import_repo(cls, assignment, repo_url, sid=None, sid_pattern=r"(?P<id>.*)"):
+    def import_repo(cls, assignment, repo_url, sid=None,
+                    sid_pattern=r"(?P<id>.*)"):
         """Imports a submission from a git repository
 
         :param str assignment: Assignment associated with this submission
@@ -243,6 +252,10 @@ class Submission(object):
 
     @classmethod
     def get_importers(cls):
+        """Returns a dict that maps nicknames for importers to classmethods.
+
+        :rtype: dict
+        """
         return {
             'blackboard': cls.import_blackboard_zip,
             'multiple': cls.import_multiple,
@@ -252,6 +265,16 @@ class Submission(object):
 
     @classmethod
     def get_importer(cls, submission_type):
+        """Returns an importer function for a given submission type. Refer to
+            the definition of :meth:`Submission.get_importers` for a
+            list of acceptable values for ``submission_type``.
+
+        :param str submission_type: The type of submission to import.
+
+        :return: a function that will import a submission into Grader
+
+        :raises SubmissionError: if no importer can be found
+        """
         try:
             return cls.get_importers()[submission_type]
         except KeyError as e:
@@ -259,7 +282,93 @@ class Submission(object):
                 'No importer for type "{}"'.format(submission_type)
             ) from e
 
+    @property
+    def import_time(self):
+        """The time stamp on the Submission (as a datetime object)"""
+        return datetime.fromtimestamp(int(os.path.getmtime(self.path)))
+
+    @property
+    def file_mtimes(self):
+        """A dict mapping file names (from the submission archive) a datetime
+        object indicating the last time that file was modified"""
+        with tarfile.open(self.path, "r:gz") as tar:
+            return {info.name: info.mtime for info in tar}
+
+    @property
+    def latest_mtime(self):
+        """The time stamp of the most recently modified file in the submission
+        archive (as a datetime object)
+
+        """
+        return datetime.fromtimestamp(max(self.file_mtimes.values()))
+
+    @property
+    def sha1sum(self):
+        """The SHA1 sum of the submission archive"""
+        sha1 = hashlib.sha1()
+        with open(self.path, 'rb') as f:
+            while True:
+                buf = f.read(1024)
+                if not buf:
+                    break
+                sha1.update(buf)
+        return sha1.hexdigest()
+
+    @property
+    @contextmanager
+    def unpacked_files(self):
+        """A context manager for working with unpacked submissions. Returns
+        the name of the directory where all files are unpacked. When
+        the context is exited, the directory and its contents are
+        deleted.
+
+        """
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with tarfile.open(self.path, "r:gz") as tar:
+                tar.extractall(tmpdir)
+            yield tmpdir
+
+    @property
+    @contextmanager
+    def unpacked_repo(self):
+        """A context manager for working with unpacked submission
+        repositories. Returns a git.Repo object corresponding to the
+        submission's repository.
+
+        If the submission is not a git repository, then "None" is
+        returned.
+
+        """
+        with self.unpacked_files as unpacked:
+            try:
+                subdir, = os.listdir(unpacked)
+                yield git.Repo(os.path.join(unpacked, subdir))
+            except ValueError:
+                yield None
+            except git.InvalidGitRepositoryError:
+                yield None
+
+    @property
+    def latest_commit(self):
+        """The time stamp of the default branch of the submission, or None if
+        the submission isn't a git repository.
+
+        """
+        with self.unpacked_repo as repo:
+            if repo:
+                time = repo.heads[0].commit.committed_date
+                return datetime.fromtimestamp(time)
+
     def __init__(self, assignment, tar_name):
+        """Instantiates a new Submission.
+
+        :param str assignment: The :class:`Assignment` object to which
+            this assignment belongs.
+
+        :param str tar_name: The name of the submission's .tar.gz file
+            (including extension)
+
+        """
         self.path = os.path.join(assignment.submissions_path, tar_name)
         self.assignment = assignment
 
@@ -275,4 +384,5 @@ class Submission(object):
         self.user_id, self.uuid = self.split_full_id(full_id)
 
     def __str__(self):
+        """String representation of a Submission"""
         return "Submission {} ({})".format(self.user_id, self.uuid)
