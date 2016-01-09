@@ -186,11 +186,6 @@ class Assignment(object):
         image is unique from the rest of the assignment images on a
         given machine.
 
-        .. todo::
-
-           Use configuration from grader.yml and assignment.yml to
-           pass additional options to ``docker build``
-
         :return: :obj:`None`
 
         """
@@ -217,6 +212,14 @@ class Assignment(object):
         # asynchronously
         for line in output:
             logger.debug(line)
+
+    def delete_image(self):
+        """Deletes an assignment's docker image based on its tag.
+        """
+        cli = docker.Client(base_url="unix://var/run/docker.sock",
+                            version="auto")
+        cli.remove_image(self.image_tag)
+
 
     def import_submission(self, path, submission_type):
         importer = Submission.get_importer(submission_type)

@@ -2,6 +2,8 @@ import os
 import pytest
 import shutil
 
+from grader.models import Grader
+
 
 hasdocker = pytest.mark.skipif(shutil.which("docker") is None,
                                reason="Docker must be installed.")
@@ -21,7 +23,13 @@ def test_build(parse_and_run):
     with open(dockerfile_path, 'w') as dockerfile:
         dockerfile.write("FROM ubuntu:12.04")
 
+    # Build the image
     parse_and_run(["build", "a1"])
+
+    # Remove the built image
+    g = Grader(path)
+    a, = g.assignments.values()
+    a.delete_image()
 
 
 @hasdocker
