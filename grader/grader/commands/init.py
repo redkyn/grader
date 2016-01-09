@@ -35,30 +35,19 @@ def run(args):
             )
             raise SystemExit(1)
         logger.info("Overwriting existing grader configuration")
-    except ConfigValidationError as e:
-        # Couldn't load. Check for force flag.
-        if not args.force:
-            logger.warn(
-                "Could not validate grader configuration: {}\n"
-                "Use --force to force overwrite.".format(e)
-            )
-            raise SystemExit(1)
-    except yaml.YAMLError as e:
-        # Something is wrong with the config itself
-        logger.debug("Caught exception: {}".format(e))
-        if not args.force:
-            logger.warn(
-                "Could not parse grader configuration: {}\n"
-                "Use --force to force overwrite.".format(e)
-            )
-            raise SystemExit(1)
     except FileNotFoundError:
         logger.debug("No existing config file found")
+    except (yaml.YAMLError, ConfigValidationError) as e:
+        # Couldn't load. Check for force flag.
+        if not args.force:
+            logger.error(str(e))
+            logger.info("Use --force to force overwrite.")
+            raise SystemExit(1)
 
     try:
         # Create the new grader
         g = Grader.new(args.path, args.name, args.course_id)
         logger.info("Wrote {}".format(g.config.file_path))
-    except ConfigValidationError as e:
+    except Exception as e:
         logger.warning(e)
-        raise SystemExit(1)
+        raise SystemExit(1) from e

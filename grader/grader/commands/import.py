@@ -26,13 +26,6 @@ def run(args):
         g = Grader(args.path)
         a = g.get_assignment(args.assignment)
         a.import_submission(args.submission_path, args.kind)
-    except AssignmentError as e:
-        logger.error(
-            "Couldn't find assignment: {}".format(e)
-        )
-        raise SystemExit(1)
-    except SubmissionError as e:
-        logger.error(
-            "Couldn't import submission(s): {}".format(e)
-        )
-        raise SystemExit(1)
+    except Exception as e:
+        logger.error(str(e))
+        raise SystemExit(1) from e

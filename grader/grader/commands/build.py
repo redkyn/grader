@@ -23,16 +23,6 @@ def run(args):
         g = Grader(args.path)
         a = g.get_assignment(args.assignment)
         a.build_image()
-
-    except AssignmentError as e:
+    except Exception as e:
         logger.error(str(e))
-        raise SystemExit(1)
-    except AssignmentNotFoundError as e:
-        logger.error(str(e))
-        raise SystemExit(1)
-    except FileNotFoundError as e:
-        logger.error(str(e))
-        raise SystemExit(1)
-    except FileExistsError as e:
-        logger.error(str(e))
-        raise SystemExit(1)
+        raise SystemExit(1) from e
