@@ -22,6 +22,12 @@ def run(args):
     try:
         g = Grader(args.path)
         g.create_assignment(args.name, repo=args.repo)
+    except FileNotFoundError as e:
+        logger.warning(str(e))
+        raise SystemExit(1)
+    except FileExistsError as e:
+        logger.warning(str(e))
+        raise SystemExit(1)
     except GraderError as e:
         logger.warning(str(e))
         raise SystemExit(1)

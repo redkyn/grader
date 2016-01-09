@@ -202,7 +202,7 @@ class Submission(object):
 
         # Compute the path to the completed .tar.gz
         tar_name = submission_id + ".tar.gz"
-        dest = os.path.join(assignment.submissions_path, tar_name)
+        dest = os.path.join(assignment.submissions_dir, tar_name)
 
         # Prepare the tarball (if necessary)
         tarball, temp_path = None, None
@@ -369,7 +369,7 @@ class Submission(object):
             (including extension)
 
         """
-        self.path = os.path.join(assignment.submissions_path, tar_name)
+        self.path = os.path.join(assignment.submissions_dir, tar_name)
         self.assignment = assignment
 
         if not os.path.isfile(self.path):

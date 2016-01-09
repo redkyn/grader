@@ -72,10 +72,6 @@ class Assignment(object):
         :return: The newly created Assignment
         :rtype: :class:`Assignment`
 
-        :raises AssignmentError: if the "assignments" directory
-            doesn't exist, if the directory for the new assignment
-            already exists, or if the name of the assignment.
-
         :raises GradeSheetError: if there was an error creating
             the GradeSheet
 
@@ -83,28 +79,36 @@ class Assignment(object):
             creating the GradeSheet's assignment-specific config file
 
         """
+        logger.debug("Creating assignment %s.", assignment_name)
         path = os.path.join(grader.assignment_dir, assignment_name)
 
         # Make sure the parent directory exists
-        if not os.path.exists(grader.assignment_dir):
-            raise AssignmentError(
-                "{} does not exist".format(grader.assignment_dir)
+        if not os.path.exists(grader.assignment_dir) \
+           or not os.path.isdir(grader.assignment_dir):
+            raise FileNotFoundError(
+                "{} does not exist. "
+                "Cannot create assignment.".format(grader.assignment_dir)
             )
 
         # Make sure the target directory doesn't exist
         if os.path.exists(path):
-            raise AssignmentError("{} exists".format(path))
+            raise FileExistsError(
+                "{} exists. Cannot create assignment.".format(path)
+            )
 
         # Make assignment root and subdirs
+        logger.debug("Creating subdirectories for assignment.")
         os.mkdir(path)
         os.mkdir(os.path.join(path, "submissions"))
         os.mkdir(os.path.join(path, "results"))
 
-        gradesheet_path = os.path.join(path, GradeSheet.SUB_DIR)
+        # Create the GradeSheet
+        logger.debug("Creating GradeSheet")
+        gradesheet_dir = os.path.join(path, GradeSheet.SUB_DIR)
         if gradesheet_repo:
-            GradeSheet.from_repo(gradesheet_path, gradesheet_repo)
+            GradeSheet.from_repo(gradesheet_dir, gradesheet_repo)
         else:
-            GradeSheet.new(gradesheet_path, assignment_name)
+            GradeSheet.new(gradesheet_dir, assignment_name)
 
         return cls(grader, assignment_name)
 
@@ -116,14 +120,14 @@ class Assignment(object):
                                  self.name)
 
     @property
-    def submissions_path(self):
+    def submissions_dir(self):
         """File path to the assignment's submissions directory"""
         return os.path.join(self.path, "submissions")
 
     @property
     def submissions(self):
         """All submissions for this assignment"""
-        tarballs = os.listdir(self.submissions_path)
+        tarballs = os.listdir(self.submissions_dir)
         return [Submission(self, p) for p in tarballs]
 
     @property
@@ -134,12 +138,12 @@ class Assignment(object):
         return {k: sorted(g, key=lambda x: x.import_time) for k, g in groups}
 
     @property
-    def results_path(self):
+    def results_dir(self):
         """File path to the assignment's results directory"""
         return os.path.join(self.path, "results")
 
     @property
-    def gradesheet_path(self):
+    def gradesheet_dir(self):
         """File path to the assignment's gradesheet repository"""
         return os.path.join(self.path, GradeSheet.SUB_DIR)
 
@@ -170,17 +174,26 @@ class Assignment(object):
 
         # Verify that paths exist like we expect
         if not os.path.exists(self.path):
-            raise AssignmentError("Assignment path doesn't exist")
-        if not os.path.exists(self.submissions_path):
-            raise AssignmentError("Submission path doesn't exist")
-        if not os.path.exists(self.results_path):
-            raise AssignmentError("Results path doesn't exist")
-        if not os.path.exists(self.gradesheet_path):
-            raise AssignmentError("GradeSheet path doesn't exist")
+            raise FileNotFoundError(
+                "%s has no assignment directory", self.name
+            )
+        if not os.path.exists(self.submissions_dir):
+            raise FileNotFoundError(
+                "%s has no submissions directory", self.name
+            )
+        if not os.path.exists(self.results_dir):
+            raise FileNotFoundError(
+                "%s has no results directory", self.name
+            )
+        if not os.path.exists(self.gradesheet_dir):
+            raise FileNotFoundError(
+                "%s has no gradesheet directory", self.name
+            )
 
         self.gradesheet = GradeSheet(self)
 
     def __str__(self):
+        """String representation of an Assignment (i.e., its name)"""
         return self.name
 
     def build_image(self):

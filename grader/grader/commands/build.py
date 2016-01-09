@@ -23,7 +23,11 @@ def run(args):
     try:
         g.build_assignment(args.assignment_name)
     except AssignmentError as e:
-        logger.error(
-            "Couldn't build assignment: {}".format(e)
-        )
+        logger.error(str(e))
+        raise SystemExit(1)
+    except FileNotFoundError as e:
+        logger.error(str(e))
+        raise SystemExit(1)
+    except FileExistsError as e:
+        logger.error(str(e))
         raise SystemExit(1)

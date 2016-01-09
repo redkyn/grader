@@ -104,7 +104,7 @@ class GradeSheet(object):
         :raises GradeSheetError: if the Dockefile can't be found
 
         """
-        self.path = assignment.gradesheet_path
+        self.path = assignment.gradesheet_dir
         self.assignment = assignment
         self.config = AssignmentConfig(self.path)
         self.repository = git.Repo(self.path)
