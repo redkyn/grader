@@ -258,7 +258,9 @@ class Assignment(DockerClientMixin):
             # Log output line-by-line to avoid running the build
             # asynchronously
             for line in output:
-                logger.debug(line)
+                print("building {}>".format(self.name),
+                      line.get('stream', ''),
+                      end="")
         except docker.errors.APIError as e:
             logger.debug(str(e))
             raise AssignmentBuildError(
