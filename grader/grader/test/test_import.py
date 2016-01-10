@@ -132,8 +132,10 @@ def test_import_single_tarball(clean_dir, parse_and_run):
     check_grader_tarfile(path, "jtd111")
 
 
-def test_import_bad_tarball(clean_dir, parse_and_run):
-    """Test importing a single tarball without a directory
+def test_import_tarball_with_file(clean_dir, parse_and_run):
+    """Test importing a single tarball that contains a file instead of a
+    directory.
+
     """
     # A place to store the tarball
     student_tarball = os.path.join(clean_dir, "jtd111.tar.gz")
@@ -148,8 +150,23 @@ def test_import_bad_tarball(clean_dir, parse_and_run):
         tar.add(temp, "jtd111")
     os.remove(temp)
 
-    with pytest.raises(SubmissionImportError):
+    with pytest.raises(SubmissionImportError) as err:
         parse_and_run(["import", "--kind=single",  "a1", student_tarball])
+
+    assert "should be a directory" in str(err)
+
+
+def test_import_tarball_bad_dirname(clean_dir, parse_and_run):
+    """Test importing a single tarball that contains a directory with a
+    bad name
+
+    """
+    # A place to store the tarball
+    student_tarball = os.path.join(clean_dir, "jtd111.tar.gz")
+
+    # Setup the grader
+    path = init_and_build_roster(parse_and_run)
+    parse_and_run(["new", "a1"])
 
     # Put a directory with a bad name in the tarball this time
     temp = tempfile.mkdtemp()
@@ -157,5 +174,47 @@ def test_import_bad_tarball(clean_dir, parse_and_run):
         tar.add(temp, "wrong")
     os.rmdir(temp)
 
-    with pytest.raises(SubmissionImportError):
+    with pytest.raises(SubmissionImportError) as err:
         parse_and_run(["import", "--kind=single",  "a1", student_tarball])
+
+    assert "Inner folder" in str(err)
+
+
+def test_import_tarball_bad_name(clean_dir, parse_and_run):
+    """Test importing a single tarball that has a bad name
+
+    """
+    # A place to store the tarball
+    student_tarball = make_student_tarball(clean_dir, "nope")
+
+    # Setup the grader
+    init_and_build_roster(parse_and_run)
+    parse_and_run(["new", "a1"])
+
+    with pytest.raises(SubmissionImportError) as err:
+        parse_and_run(["import", "--kind=single",  "a1", student_tarball])
+
+    assert "match a student id." in str(err)
+
+
+def test_import_tarball_name_mismatch(clean_dir, parse_and_run):
+    """Test importing a single tarball that contains a folder whose name
+    doesn't match the name of the tarball
+
+    """
+    student_tarball = make_student_tarball(clean_dir, "jtd111")
+
+    # Setup the grader
+    path = init_and_build_roster(parse_and_run)
+    parse_and_run(["new", "a1"])
+
+    # Put a directory with a mismatched student id in the tarball
+    temp = tempfile.mkdtemp()
+    with tarfile.open(student_tarball, "w:gz") as tar:
+        tar.add(temp, "fmm000")
+    os.rmdir(temp)
+
+    with pytest.raises(SubmissionImportError) as err:
+        parse_and_run(["import", "--kind=single",  "a1", student_tarball])
+
+    assert "Inner folder" in str(err)

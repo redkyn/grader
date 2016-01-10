@@ -126,7 +126,8 @@ class Submission(object):
 
             if name != student_id:
                 raise SubmissionImportError(
-                    'Could not find "{}" in the roster.'.format(name)
+                    'Inner folder name ({}) does not match '
+                    'tarball name ({}).'.format(name, student_id)
                 )
 
             if not os.path.isdir(os.path.join(tmpdir, name)):
@@ -166,7 +167,7 @@ class Submission(object):
         student_id = match.group(1)
         if student_id not in assignment.grader.student_ids:
             raise SubmissionImportError(
-                'Expected "{}" to match a student id.'.format(basename)
+                'Expected "{}" to match a student id.'.format(student_id)
             )
 
         if os.path.isfile(path) and tarfile.is_tarfile(path):
