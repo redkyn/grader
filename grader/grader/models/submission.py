@@ -13,6 +13,8 @@ from datetime import datetime
 
 from grader.utils.files import make_tarball
 
+from .mixins import DockerClientMixin
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,7 +39,7 @@ class SubmissionImportError(SubmissionError):
     pass
 
 
-class Submission(object):
+class Submission(DockerClientMixin):
     """An assignment submission.
 
     A Submission essentially represents a ``.tar.gz`` file on disk

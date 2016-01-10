@@ -6,6 +6,7 @@ import shutil
 import tempfile
 
 from .gradesheet import GradeSheet
+from .mixins import DockerClientMixin
 from .submission import Submission
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ class AssignmentBuildError(AssignmentError):
     pass
 
 
-class Assignment(object):
+class Assignment(DockerClientMixin):
     """An Assignment with several neato attributes:
 
     * A place (directory) for storing student submissions for the
@@ -236,9 +237,6 @@ class Assignment(object):
         :return: :obj:`None`
 
         """
-        cli = docker.Client(base_url="unix://var/run/docker.sock",
-                            version="auto")
-
         # Load build options from the config
         build_options = self.gradesheet.config.get('image-build-options', {})
 
@@ -254,7 +252,7 @@ class Assignment(object):
 
         # Build
         try:
-            output = cli.build(**build_options)
+            output = self.docker_cli.build(**build_options)
 
             # Log output line-by-line to avoid running the build
             # asynchronously
@@ -267,7 +265,7 @@ class Assignment(object):
             ) from e
 
         try:
-            return cli.inspect_image(self.image_tag)
+            return self.docker_cli.inspect_image(self.image_tag)
         except docker.errors.NotFound as e:
             logger.debug(str(e))
             raise AssignmentBuildError(
@@ -277,9 +275,7 @@ class Assignment(object):
     def delete_image(self):
         """Deletes an assignment's docker image based on its tag.
         """
-        cli = docker.Client(base_url="unix://var/run/docker.sock",
-                            version="auto")
-        cli.remove_image(self.image_tag)
+        self.docker_cli.remove_image(self.image_tag)
 
     def import_submission(self, path, submission_type):
         importer = Submission.get_importer(submission_type)
