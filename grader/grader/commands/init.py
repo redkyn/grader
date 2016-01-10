@@ -6,6 +6,7 @@ import uuid
 import yaml
 
 from grader.models import Grader, ConfigValidationError
+from grader.utils.config import is_grader_dir
 
 logger = logging.getLogger(__name__)
 
@@ -25,29 +26,12 @@ def run(args):
     logger.debug("Setting up grader in {}".format(args.path))
 
     # Check for existing config
-    try:
-        g = Grader(args.path)
+    if is_grader_dir(args.path) and not args.force:
+        logger.critical(
+            "grader already configured in {}. Abort!".format(args.path)
+        )
+        raise SystemExit(1)
 
-        # Successfully loaded. Check for force flag.
-        if not args.force:
-            logger.critical(
-                "grader already configured in {}. Abort!".format(g.config.path)
-            )
-            raise SystemExit(1)
-        logger.info("Overwriting existing grader configuration")
-    except FileNotFoundError:
-        logger.debug("No existing config file found")
-    except (yaml.YAMLError, ConfigValidationError) as e:
-        # Couldn't load. Check for force flag.
-        if not args.force:
-            logger.error(str(e))
-            logger.info("Use --force to force overwrite.")
-            raise SystemExit(1)
-
-    try:
-        # Create the new grader
-        g = Grader.new(args.path, args.name, args.course_id)
-        logger.info("Wrote {}".format(g.config.file_path))
-    except Exception as e:
-        logger.warning(e)
-        raise SystemExit(1) from e
+    # Create the new grader
+    g = Grader.new(args.path, args.name, args.course_id)
+    logger.info("Wrote {}".format(g.config.file_path))

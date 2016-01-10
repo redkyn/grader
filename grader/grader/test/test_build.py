@@ -3,6 +3,7 @@ import pytest
 import shutil
 
 from grader.models import Grader
+from grader.models.assignment import AssignmentBuildError
 
 
 hasdocker = pytest.mark.skipif(shutil.which("docker") is None,
@@ -36,8 +37,6 @@ def test_build(parse_and_run):
 def test_build_bad_dockerfile(parse_and_run):
     """Test building an image that has a bad Dockerfile
     """
-    pytest.xfail("Not handled properly, yet")
-
     path = parse_and_run(["init", "cpl"])
     parse_and_run(["new", "a1"])
 
@@ -46,7 +45,7 @@ def test_build_bad_dockerfile(parse_and_run):
     with open(dockerfile_path, 'w') as dockerfile:
         dockerfile.write("NOPE WHAT ubuntu:12.04")
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(AssignmentBuildError):
         parse_and_run(["build", "a1"])
 
 
@@ -74,7 +73,7 @@ def test_build_missing_assignment_dir(parse_and_run):
     """
     parse_and_run(["init", "cpl"])
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(FileNotFoundError):
         parse_and_run(["build", "a1"])
 
 
@@ -82,8 +81,12 @@ def test_build_missing_assignment_dir(parse_and_run):
 def test_build_missing_assignment_specific_dir(parse_and_run):
     """Test building an image without an assignment-specific dir
     """
-    parse_and_run(["init", "cpl"])
+    path = parse_and_run(["init", "cpl"])
     parse_and_run(["new", "a1"])
 
-    with pytest.raises(SystemExit):
-        parse_and_run(["build", "a2"])
+    g = Grader(path)
+    a = g.get_assignment("a1")
+    shutil.rmtree(a.submissions_dir)
+
+    with pytest.raises(FileNotFoundError):
+        parse_and_run(["build", "a1"])

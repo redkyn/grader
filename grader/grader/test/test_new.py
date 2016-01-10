@@ -2,6 +2,9 @@ import os
 import pytest
 import yaml
 
+from grader.models.gradesheet import GradeSheetError
+from grader.models.config import ConfigValidationError
+
 
 def test_new_without_repo(parse_and_run):
     """Test vanilla assignment initialization
@@ -65,7 +68,7 @@ def test_new_existing_assignment(parse_and_run):
     parse_and_run(["init", "cpl"])
     parse_and_run(["new", "assignment1"])
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(FileExistsError):
         parse_and_run(["new", "assignment1"])
 
 
@@ -74,7 +77,7 @@ def test_new_failed_clone(parse_and_run):
     """
     path = parse_and_run(["init", "cpl"])
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(GradeSheetError):
         parse_and_run(["new", "assignment1",
                        "git://github.com/michaelwisely/nope.git"])
 
@@ -87,7 +90,7 @@ def test_new_bad_assignment_name(parse_and_run):
     """
     path = parse_and_run(["init", "cpl"])
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(ConfigValidationError):
         parse_and_run(["new", "NOOO%%%OPE!"])
 
     a_path = os.path.join(path, "assignments", "assignment1")

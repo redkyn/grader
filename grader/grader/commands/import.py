@@ -22,10 +22,6 @@ def setup_parser(parser):
 
 @require_grader_config
 def run(args):
-    try:
-        g = Grader(args.path)
-        a = g.get_assignment(args.assignment)
-        a.import_submission(args.submission_path, args.kind)
-    except Exception as e:
-        logger.error(str(e))
-        raise SystemExit(1) from e
+    g = Grader(args.path)
+    a = g.get_assignment(args.assignment)
+    a.import_submission(args.submission_path, args.kind)

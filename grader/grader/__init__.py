@@ -60,7 +60,11 @@ def run():                      # pragma: no cover
     logging.getLogger().setLevel(args.verbosity)
 
     # Do it
-    args.run(args)
+    try:
+        args.run(args)
+    except Exception as e:
+        logger.error(str(e))
+        raise SystemExit(1) from e
 
 if __name__ == '__main__':      # pragma: no cover
     run()
