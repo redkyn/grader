@@ -610,7 +610,7 @@ class Submission(DockerClientMixin):
 
         for line in output:
             if show_output:
-                print(line.decode("utf-8"))
+                print(line.decode("utf-8"), end="")
 
         self.docker_cli.stop(
             container=c_id
