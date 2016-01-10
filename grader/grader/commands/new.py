@@ -2,7 +2,7 @@
 '''
 import logging
 
-from grader.models import Grader, GraderError
+from grader.models import Grader, ConfigValidationError, GradeSheetError
 from grader.utils.config import require_grader_config
 
 help = 'Create a new assignment'
@@ -22,6 +22,6 @@ def run(args):
     try:
         g = Grader(args.path)
         g.create_assignment(args.name, repo=args.repo)
-    except GraderError as e:
-        logger.warning(str(e))
-        raise SystemExit(1)
+    except Exception as e:
+        logger.error(str(e))
+        raise SystemExit(1) from e

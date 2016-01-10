@@ -22,17 +22,10 @@ def setup_parser(parser):
 
 @require_grader_config
 def run(args):
-    g = Grader(args.path)
-
     try:
-        g.import_submission(args.assignment, args.submission_path, args.kind)
-    except AssignmentError as e:
-        logger.error(
-            "Couldn't find assignment: {}".format(e)
-        )
-        raise SystemExit(1)
-    except SubmissionError as e:
-        logger.error(
-            "Couldn't import submission(s): {}".format(e)
-        )
-        raise SystemExit(1)
+        g = Grader(args.path)
+        a = g.get_assignment(args.assignment)
+        a.import_submission(args.submission_path, args.kind)
+    except Exception as e:
+        logger.error(str(e))
+        raise SystemExit(1) from e

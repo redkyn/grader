@@ -15,6 +15,12 @@ class GraderError(Exception):
     pass
 
 
+class AssignmentNotFoundError(GraderError):
+    """An exception thrown when we can't find an assignment.
+    """
+    pass
+
+
 class Grader(object):
     """A Grader.
 
@@ -72,7 +78,7 @@ class Grader(object):
 
         # Verify that paths exist like we expect
         if not os.path.exists(path):
-            raise GraderError("Grader path doesn't exist!")
+            raise FileNotFoundError("{} doesn't exist.".format(path))
 
         self.config = GraderConfig(self.path)
 
@@ -93,36 +99,24 @@ class Grader(object):
             logger.info("Creating assignment directory.")
             os.mkdir(self.assignment_dir)
 
-        try:
-            logger.debug("Creating assignment")
-            Assignment.new(self, name, repo)
-            logger.info("Created '{}'.".format(name))
-        except GradeSheetError as e:
-            # If we couldn't clone the gradesheet repo, we have to
-            # delete the assignment folder.
-            self.delete_assignment(name)
-            raise GraderError(
-                "Could not clone assignment: {}".format(str(e))
-            )
-        except ConfigValidationError as e:
-            # If we couldn't create gradesheet config file properly,
-            # we have to delete the assignment folder.
-            self.delete_assignment(name)
-            raise GraderError(
-                "Cannot create configuration: {}".format(str(e))
-            )
-        except AssignmentError as e:
-            raise GraderError(
-                "Cannot construct assignment: {}".format(str(e))
-            )
+        logger.debug("Creating assignment")
+        Assignment.new(self, name, repo)
+        logger.info("Created '{}'.".format(name))
 
-    def build_assignment(self, name):
-        """Builds an assignment's docker image using its Dockerfile
+    def get_assignment(self, name):
+        """Retrieves an assignment.
 
-        :param str name: The name of the assignment to build
+        :param str name: The name of the assignment to get
+
+        :raises AssignmentNotFoundError: if no such assignment exists
+
+        :return: The Assignment
+        :rtype: :class:`Assignment`
         """
-        assignment = Assignment(self, name)
-        assignment.build_image()
+        try:
+            return self.assignments[name]
+        except KeyError:
+            raise AssignmentNotFoundError("{} doesn't exist".format(name))
 
     def delete_assignment(self, name):
         """Deletes an assignment from the Grader's assignments directory.
@@ -131,13 +125,3 @@ class Grader(object):
         """
         assignment_dir = os.path.join(self.assignment_dir, name)
         shutil.rmtree(assignment_dir, ignore_errors=True)
-
-    def import_submission(self, name, path, submission_type):
-        """Imports an submission for an assignment
-
-        :param str name: The name of the assignment to associate the
-            submission with
-
-        """
-        assignment = Assignment(self, name)
-        assignment.import_submission(path, submission_type)

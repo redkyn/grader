@@ -87,10 +87,14 @@ def build_submission_info(assignments, full=False):
 
 @require_grader_config
 def run(args):
-    g = Grader(args.path)
-    assignments = g.assignments
-    a_info = build_assignment_info(assignments, full=args.full)
-    s_info = build_submission_info(assignments, full=args.full)
+    try:
+        g = Grader(args.path)
+        assignments = g.assignments
+        a_info = build_assignment_info(assignments, full=args.full)
+        s_info = build_submission_info(assignments, full=args.full)
+    except Exception as e:
+        logger.error(str(e))
+        raise SystemExit(1) from e
 
     columns = [
         "Assignment", "Total", "Graded", "Failed"
