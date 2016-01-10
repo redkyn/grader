@@ -565,7 +565,7 @@ class Submission(DockerClientMixin):
         )
 
         # Cleanup the return value
-        tmpdir = tmpdir.strip()
+        tmpdir = tmpdir.decode('ascii').strip()
         logger.debug("Adding submission files to %s", tmpdir)
 
         # Unpack the submission into tmpdir
@@ -575,6 +575,18 @@ class Submission(DockerClientMixin):
                 path=tmpdir,
                 data=tar.read()
             )
+
+        output = self.docker_cli.exec_start(
+            exec_id=self.docker_cli.exec_create(
+                container=c_id,
+                user="root",
+                cmd="chmod --recursive +r {}".format(tmpdir)
+            )
+        )
+
+        if output:
+            logger.debug("chmod says: %s", output)
+
         return tmpdir
 
     def grade(self, show_output=True):
