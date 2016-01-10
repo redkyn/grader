@@ -112,6 +112,10 @@ class Submission(DockerClientMixin):
         return full_id
 
     @classmethod
+    def _remove_extension(cls, basename):
+        return re.match(r'^(.*?)(?:\.tar\.gz)?$', basename).group(1)
+
+    @classmethod
     def _check_tarball(cls, assignment, path, student_id):
         with tempfile.TemporaryDirectory() as tmpdir:
             with tarfile.open(path, "r:gz") as tar:
@@ -284,9 +288,8 @@ class Submission(DockerClientMixin):
         # See if it's structured properly
         cls._check_submission_item(assignment, source)
 
-        # Ditch all file extensions
-        # NOTE: source filenames cannot contain '.'
-        basename, *_ = os.path.basename(source).split('.')
+        # Ditch ".tar.gz" file extension (if it's there)
+        basename = cls._remove_extension(os.path.basename(source))
 
         # Get a unique ID for this submission
         submission_id = cls.get_full_id(basename, sid, sid_pattern)
@@ -471,8 +474,8 @@ class Submission(DockerClientMixin):
             raise SubmissionError("Submission is screwed up...")
 
         self.basename = os.path.basename(self.path)
-        full_id, *_ = self.basename.split('.')
-        self.user_id, self.uuid = self.split_full_id(full_id)
+        self.full_id = self.__class__._remove_extension(self.basename)
+        self.user_id, self.uuid = self.split_full_id(self.full_id)
 
     def __str__(self):
         """String representation of a Submission"""
