@@ -1,4 +1,6 @@
+import docker
 import git
+import gzip
 import hashlib
 import logging
 import os
@@ -33,7 +35,15 @@ class SubmissionIDError(SubmissionError):
 
 
 class SubmissionImportError(SubmissionError):
-    """An exception throws for errors related to Submission import
+    """An exception thrown for errors related to Submission import
+
+    """
+    pass
+
+
+class SubmissionContainerError(SubmissionError):
+    """An exception thrown for errors related to Submission docker
+    containers
 
     """
     pass
@@ -453,6 +463,16 @@ class Submission(DockerClientMixin):
                 time = repo.heads[0].commit.committed_date
                 return datetime.fromtimestamp(time)
 
+    @property
+    def container_labels(self):
+        """The unique label to use for this submission's docker container
+
+        """
+        return {
+            "user_id": self.user_id,
+            "submission_uuid": self.uuid,
+        }
+
     def __init__(self, assignment, tar_name):
         """Instantiates a new Submission.
 
@@ -480,3 +500,106 @@ class Submission(DockerClientMixin):
     def __str__(self):
         """String representation of a Submission"""
         return "Submission {} ({})".format(self.user_id, self.uuid)
+
+    def _create_container(self):
+        # TODO pull in container config and hostconfig from
+        # assignment.yml
+
+        options = {
+            'image': self.assignment.image_tag,
+            'labels': self.container_labels,
+            'name': self.full_id,
+        }
+        logger.debug("Creating container with options %s", options)
+
+        try:
+            result = self.docker_cli.create_container(**options)
+            if result['Warnings']:
+                logger.warn(result['Warnings'])
+            return result['Id']
+        except docker.errors.NotFound as e:
+            msg = e.explanation.decode("utf-8")
+            if "No such image" in msg:
+                msg += " Did you build the assignment?"
+            raise SubmissionContainerError(msg) from e
+
+    def get_container_id(self):
+        # Filter the containers down to the one we want
+        filters = {
+            'label': 'submission_uuid={}'.format(self.uuid)
+        }
+        containers = self.docker_cli.containers(all=True, filters=filters)
+        logger.debug("Found matching containers: %s", containers)
+
+        container_id = None
+        if len(containers) < 1:
+            container_id = self._create_container()
+        elif len(containers) == 1:
+            container_id = containers[0]['Id']
+        elif len(containers) > 1:
+            raise SubmissionContainerError(
+                "Found multiple containers for submission. "
+                "Needs manual cleanup: {}".format(containers)
+            )
+        return container_id
+
+    def _add_submission_files(self, c_id):
+        """Unpacks this submission into a docker container with id
+        ``c_id``. The unpacked archive is stored in a temporary
+        directory.
+
+        :param str c_id: The ID of the docker container to store the
+            submission in
+
+        :return: The temporary path where the stuff was unpacked
+        :rtype: str
+
+        """
+        # Make a temporary directory in the container to store the
+        # unpacked submission
+        tmpdir = self.docker_cli.exec_start(
+            exec_id=self.docker_cli.exec_create(
+                container=c_id,
+                cmd="mktemp -d"
+            )
+        )
+
+        # Cleanup the return value
+        tmpdir = tmpdir.strip()
+        logger.debug("Adding submission files to %s", tmpdir)
+
+        # Unpack the submission into tmpdir
+        with gzip.open(self.path) as tar:
+            self.docker_cli.put_archive(
+                container=c_id,
+                path=tmpdir,
+                data=tar.read()
+            )
+        return tmpdir
+
+    def grade(self, show_output=True):
+        c_id = self.get_container_id()
+        logger.debug("Got container ID %s", c_id)
+
+        # Start the container
+        self.docker_cli.start(container=c_id)
+
+        # Add all submission files
+        submission_dir = self._add_submission_files(c_id)
+
+        # Grade the submission
+        output = self.docker_cli.exec_start(
+            exec_id=self.docker_cli.exec_create(
+                container=c_id,
+                cmd="grade-it {}".format(submission_dir)
+            ),
+            stream=True,
+        )
+
+        for line in output:
+            if show_output:
+                print(line.decode("utf-8"))
+
+        self.docker_cli.stop(
+            container=c_id
+        )

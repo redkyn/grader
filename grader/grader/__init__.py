@@ -15,7 +15,7 @@ subcommands = OrderedDict([
     ("build", "grader.commands.build"),
     ("import", "grader.commands.import"),
     ("list", "grader.commands.list"),
-    ("grade", "grader.grade"),
+    ("grade", "grader.commands.grade"),
 ])
 
 
