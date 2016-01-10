@@ -101,7 +101,7 @@ class Assignment(object):
         logger.debug("Creating assignment in temporary directory...")
         with tempfile.TemporaryDirectory() as tmpdir:
             # Setup all the files/folders for the assignment
-            cls._setup_grader(tmpdir, assignment_name, gradesheet_repo)
+            cls._setup_assignment(tmpdir, assignment_name, gradesheet_repo)
 
             # If we have succeeded so far, copy everything over
             shutil.copytree(tmpdir, path)
@@ -109,7 +109,7 @@ class Assignment(object):
         return cls(grader, assignment_name)
 
     @classmethod
-    def _setup_grader(cls, path, assignment_name, gradesheet_repo=None):
+    def _setup_assignment(cls, path, assignment_name, gradesheet_repo=None):
         """Creates necessary assignment files and folders within the provided
         path. Does not check for correct setup and does clean up if
         something goes wrong.
