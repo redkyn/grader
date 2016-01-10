@@ -262,7 +262,7 @@ class Assignment(DockerClientMixin):
         except docker.errors.APIError as e:
             logger.debug(str(e))
             raise AssignmentBuildError(
-                "Unable to build image... {}".format(e.explanation)
+                "Unable to build: {}".format(e.explanation.decode("utf-8"))
             ) from e
 
         try:
