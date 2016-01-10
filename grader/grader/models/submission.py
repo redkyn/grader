@@ -1,4 +1,3 @@
-import functools
 import git
 import hashlib
 import logging
@@ -104,6 +103,52 @@ class Submission(object):
         return full_id
 
     @classmethod
+    def _check_folder_structure(cls, assignment, path):
+        """Checks whether the submission item meets the following
+        requirements:
+
+        * The submission item contains a single folder
+
+        * The name of the single folder matches a student in the
+          grader's roster
+
+        :param str full_id: A full submission ID. See
+            :data:`SUBMISSSION_ID_RE`
+
+        :return: None
+
+        :raises SubmissionError: if the submission item doesn't meet
+            the requirements described above
+
+        """
+        # Make a temp directory
+        tmpdir = None
+        if os.path.isfile(path) and tarfile.is_tarfile(path):
+            tmpdir = tempfile.mkdtemp()
+
+            # Extract all the files to the temp directory
+            with tarfile.open(path, "r:gz") as tar:
+                tar.extractall(tmpdir)
+
+        try:
+            # Try to unpack our single folder
+            name, = os.listdir(tmpdir or path)
+            assert name in assignment.grader.student_ids
+        except ValueError:
+            raise SubmissionError(
+                'Expected exactly one item at the root. '
+                'Found {}.'.format(os.listdir(tmpdir or path))
+            )
+        except AssertionError:
+            raise SubmissionError(
+                'Could not find "{}" in the roster.'.format(path, name)
+            )
+        finally:
+            if tmpdir is not None:
+                logger.debug("Removing temp dir")
+                shutil.rmtree(tmpdir)
+
+    @classmethod
     def import_blackboard_zip(cls, assignment, zip_path,
                               sid_pattern=r"(?P<id>.*)"):
         """Imports submissions from a ZIP downloaded from Blackboard
@@ -152,7 +197,6 @@ class Submission(object):
         # Make sure we can import all the items in this folder
         for item in os.listdir(source):
             item = os.path.join(source, item)
-            print(item, os.path.isfile(item))
             if os.path.isfile(item) and tarfile.is_tarfile(item):
                 logger.debug("%s is a tarfile", item)
                 continue
@@ -165,10 +209,17 @@ class Submission(object):
                 )
 
         # Import the items
-        import_it = functools.partial(cls.import_single, assignment,
-                                      sid_pattern=sid_pattern)
-        return [import_it(os.path.join(source, p))[0]
-                for p in os.listdir(source)]
+        def import_it(path):
+            fullpath = os.path.join(source, path)
+            try:
+                submission, = cls.import_single(
+                    assignment, fullpath, sid_pattern=sid_pattern
+                )
+                return submission
+            except SubmissionError as e:
+                logger.info("Could not import %s. %s", path, e)
+
+        return [import_it(p) for p in os.listdir(source)]
 
     @classmethod
     def import_single(cls, assignment, source,
@@ -202,6 +253,9 @@ class Submission(object):
         """
         # Remove trailing slashes from the path
         source = os.path.normpath(source)
+
+        # See if it's structured properly
+        cls._check_folder_structure(assignment, source)
 
         # Ditch all file extensions
         # NOTE: source filenames cannot contain '.'

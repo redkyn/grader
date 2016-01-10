@@ -264,4 +264,5 @@ class Assignment(object):
         submissions = importer(self, path)
 
         for submission in submissions:
-            logger.info("Imported %s", submission)
+            if submission:
+                logger.info("Imported %s", submission)

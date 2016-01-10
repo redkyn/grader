@@ -62,6 +62,14 @@ class Grader(object):
         names = os.listdir(self.assignment_dir)
         return {name: Assignment(self, name) for name in names}
 
+    @property
+    def student_ids(self):
+        """All student IDs from the roster"""
+        try:
+            return [s['id'] for s in self.config['roster']]
+        except KeyError:
+            return []
+
     def __init__(self, path):
         """Instantiate a Grader.
 
