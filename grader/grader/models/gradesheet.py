@@ -54,8 +54,8 @@ class GradeSheet(object):
         try:
             git.Repo.clone_from(repo_url, gradesheet_path)
             logger.info("Successfully cloned {}".format(repo_url))
-        except git.exc.GitCommandError:
-            raise GradeSheetError("Could not clone {}".format(repo_url))
+        except git.exc.GitCommandError as e:
+            raise GradeSheetError("Could not clone {}".format(repo_url)) from e
 
         return None
 
@@ -101,7 +101,7 @@ class GradeSheet(object):
         :raises AssignmentConfigError: if the assignment-specific
             config file in the gradesheet cannot be loaded
 
-        :raises GradeSheetError: if the Dockefile can't be found
+        :raises GradeSheetError: if the Dockerfile can't be found
 
         """
         self.path = assignment.gradesheet_dir
@@ -111,4 +111,4 @@ class GradeSheet(object):
 
         # Verify that paths exist like we expect
         if not os.path.exists(self.dockerfile_path):
-            raise GradeSheetError("GradeSheet repo has no Dockerfile!")
+            raise FileNotFoundError("GradeSheet repo has no Dockerfile!")
