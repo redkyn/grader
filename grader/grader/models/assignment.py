@@ -244,6 +244,7 @@ class Assignment(DockerClientMixin):
         build_options.update({
             "path": self.gradesheet.path,
             "tag": self.image_tag,
+            "forcerm": True,
             "decode": True
         })
 
