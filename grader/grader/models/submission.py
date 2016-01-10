@@ -18,6 +18,16 @@ logger = logging.getLogger(__name__)
 
 
 class SubmissionError(Exception):
+    """A general-purpose exception thrown by the Submission class
+
+    """
+    pass
+
+
+class SubmissionIDError(Exception):
+    """An exception thrown for errors related to Submission IDs
+
+    """
     pass
 
 
@@ -30,7 +40,7 @@ class Submission(object):
     """
 
     SUBMISSION_ID_RE = re.compile(
-        r"^(?P<student_id>\w+)--(?P<uuid>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"  # noqa
+        r"^(?P<student_id>\w+)--(?P<uuid>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$"  # NOQA
     )
     """Full submission IDs must match this pattern"""
 
@@ -48,7 +58,7 @@ class Submission(object):
         """
         match = cls.SUBMISSION_ID_RE.match(full_id)
         if match is None:
-            raise SubmissionError("Bad id: {}".format(full_id))
+            raise SubmissionIDError("Bad id: {}".format(full_id))
         return (match.group("student_id"), match.group("uuid"))
 
     @classmethod
@@ -135,7 +145,7 @@ class Submission(object):
         """
         # Make sure this is actually a folder
         if not os.path.isdir(source):
-            raise SubmissionError(
+            raise NotADirectoryError(
                 "{} is not a directory. Cannot import.".format(source)
             )
 
@@ -374,7 +384,7 @@ class Submission(object):
 
         if not os.path.isfile(self.path):
             logger.debug("Cannot find %s", self.path)
-            raise SubmissionError("Submission doesn't exist.")
+            raise FileNotFoundError("Submission doesn't exist.")
         if not tarfile.is_tarfile(self.path):
             logger.debug("%s is not a tarball", self.path)
             raise SubmissionError("Submission is screwed up...")
