@@ -253,12 +253,18 @@ class Assignment(object):
         logger.debug("Image options: {}".format(build_options))
 
         # Build
-        output = cli.build(**build_options)
+        try:
+            output = cli.build(**build_options)
 
-        # Log output line-by-line to avoid running the build
-        # asynchronously
-        for line in output:
-            logger.debug(line)
+            # Log output line-by-line to avoid running the build
+            # asynchronously
+            for line in output:
+                logger.debug(line)
+        except docker.errors.APIError as e:
+            logger.debug(str(e))
+            raise AssignmentBuildError(
+                "Unable to build image... {}".format(e.explanation)
+            ) from e
 
         try:
             return cli.inspect_image(self.image_tag)

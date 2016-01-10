@@ -53,8 +53,6 @@ def test_build_bad_dockerfile(parse_and_run):
 def test_build_empty_dockerfile(parse_and_run):
     """Test building an image that has an empty Dockerfile
     """
-    pytest.xfail("Not handled properly, yet")
-
     path = parse_and_run(["init", "cpl"])
     parse_and_run(["new", "a1"])
 
@@ -63,7 +61,7 @@ def test_build_empty_dockerfile(parse_and_run):
     with open(dockerfile_path, 'w') as dockerfile:
         dockerfile.write("")
 
-    with pytest.raises(SystemExit):
+    with pytest.raises(AssignmentBuildError):
         parse_and_run(["build", "a1"])
 
 
