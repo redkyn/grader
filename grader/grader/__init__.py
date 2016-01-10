@@ -25,6 +25,8 @@ def make_parser():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--path', default=os.getcwd(),
                         help='Path to the root of a grader')
+    parser.add_argument('--tracebacks', action='store_true',
+                        help='Show full tracebacks')
     parser.add_argument('--verbosity', default="INFO",
                         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
                         help='Desired log level')
@@ -63,6 +65,8 @@ def run():                      # pragma: no cover
     try:
         args.run(args)
     except Exception as e:
+        if args.tracebacks:
+            raise e
         logger.error(str(e))
         raise SystemExit(1) from e
 
