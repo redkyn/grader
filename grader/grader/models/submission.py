@@ -23,8 +23,15 @@ class SubmissionError(Exception):
     pass
 
 
-class SubmissionIDError(Exception):
+class SubmissionIDError(SubmissionError):
     """An exception thrown for errors related to Submission IDs
+
+    """
+    pass
+
+
+class SubmissionImportError(SubmissionError):
+    """An exception throws for errors related to Submission import
 
     """
     pass
@@ -103,14 +110,41 @@ class Submission(object):
         return full_id
 
     @classmethod
-    def _check_folder_structure(cls, assignment, path):
+    def _check_tarball(cls, assignment, path, student_id):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with tarfile.open(path, "r:gz") as tar:
+                tar.extractall(tmpdir)
+
+            try:
+                # Try to unpack our single folder
+                name, = os.listdir(tmpdir)
+            except ValueError:
+                raise SubmissionImportError(
+                    'Expected exactly one item at the root. '
+                    'Found {}.'.format(os.listdir(tmpdir))
+                )
+
+            if name != student_id:
+                raise SubmissionImportError(
+                    'Could not find "{}" in the roster.'.format(name)
+                )
+
+            if not os.path.isdir(os.path.join(tmpdir, name)):
+                raise SubmissionImportError(
+                    '"{}" in {} should be a directory, '
+                    'not a file.'.format(name, path)
+                )
+
+    @classmethod
+    def _check_submission_item(cls, assignment, path):
         """Checks whether the submission item meets the following
         requirements:
 
-        * The submission item contains a single folder
+        * Its name (minus extensions) matches a student ID from the
+          grader's roster.
 
-        * The name of the single folder matches a student in the
-          grader's roster
+        * If the submission item is a .tar.gz, it contains a single
+          directory.
 
         :param str full_id: A full submission ID. See
             :data:`SUBMISSSION_ID_RE`
@@ -121,32 +155,22 @@ class Submission(object):
             the requirements described above
 
         """
-        # Make a temp directory
-        tmpdir = None
+        # Check the name of the item
+        basename = os.path.basename(path)
+        match = re.match(r"(.*?)(?:\.tar\.gz)?$", basename)
+        if match is None:
+            raise SubmissionImportError(
+                'Unsure how to handle basename "{}".'.format(basename)
+            )
+
+        student_id = match.group(1)
+        if student_id not in assignment.grader.student_ids:
+            raise SubmissionImportError(
+                'Expected "{}" to match a student id.'.format(basename)
+            )
+
         if os.path.isfile(path) and tarfile.is_tarfile(path):
-            tmpdir = tempfile.mkdtemp()
-
-            # Extract all the files to the temp directory
-            with tarfile.open(path, "r:gz") as tar:
-                tar.extractall(tmpdir)
-
-        try:
-            # Try to unpack our single folder
-            name, = os.listdir(tmpdir or path)
-            assert name in assignment.grader.student_ids
-        except ValueError:
-            raise SubmissionError(
-                'Expected exactly one item at the root. '
-                'Found {}.'.format(os.listdir(tmpdir or path))
-            )
-        except AssertionError:
-            raise SubmissionError(
-                'Could not find "{}" in the roster.'.format(path, name)
-            )
-        finally:
-            if tmpdir is not None:
-                logger.debug("Removing temp dir")
-                shutil.rmtree(tmpdir)
+            cls._check_tarball(assignment, path, student_id)
 
     @classmethod
     def import_blackboard_zip(cls, assignment, zip_path,
@@ -255,7 +279,7 @@ class Submission(object):
         source = os.path.normpath(source)
 
         # See if it's structured properly
-        cls._check_folder_structure(assignment, source)
+        cls._check_submission_item(assignment, source)
 
         # Ditch all file extensions
         # NOTE: source filenames cannot contain '.'
