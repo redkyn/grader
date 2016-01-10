@@ -17,6 +17,14 @@ class AssignmentError(Exception):
     pass
 
 
+class AssignmentBuildError(AssignmentError):
+    """An exception thrown when there's an issue building the docker
+    image.
+
+    """
+    pass
+
+
 class Assignment(object):
     """An Assignment with several neato attributes:
 
@@ -251,6 +259,14 @@ class Assignment(object):
         # asynchronously
         for line in output:
             logger.debug(line)
+
+        try:
+            return cli.inspect_image(self.image_tag)
+        except docker.errors.NotFound as e:
+            logger.debug(str(e))
+            raise AssignmentBuildError(
+                "Unable to build image. Check your Dockerfile."
+            ) from e
 
     def delete_image(self):
         """Deletes an assignment's docker image based on its tag.
