@@ -5,6 +5,12 @@ This program uses Docker and Python to easily grade many assignments in an encap
 
 This project is setup using [buildout](http://www.buildout.org/en/latest/). It's super easy to get `grader` up and running:
 
+You'll probably need the following libraries...
+
+* build-essential
+* libncurses-dev
+* python3-dev
+
 ```shell
 # Bootstrap buildout
 python3 bin/bootstrap-buildout.py
