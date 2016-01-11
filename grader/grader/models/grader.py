@@ -2,9 +2,8 @@ import logging
 import os
 import shutil
 
-from .assignment import Assignment, AssignmentError
-from .config import GraderConfig, ConfigValidationError
-from .gradesheet import GradeSheetError
+from .assignment import Assignment
+from .config import GraderConfig
 
 logger = logging.getLogger(__name__)
 

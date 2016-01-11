@@ -270,7 +270,7 @@ class Assignment(DockerClientMixin):
             # asynchronously
             prompt = "building {}>".format(self.name)
             for line in output:
-                error = 'Error: "{}"\n'.format(line.get('error', '') )
+                error = 'Error: "{}"\n'.format(line.get('error', ''))
                 stream = line.get('stream', '')
                 print(prompt, stream or error, end="")
         except docker.errors.APIError as e:

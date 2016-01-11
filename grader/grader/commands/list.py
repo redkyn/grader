@@ -105,14 +105,12 @@ def run(args):
         rows = s_info
         rows = sort_by_assignment(rows, args.sortby)
 
-
     if args.assignment:
         try:
             a = assignments[args.assignment]
             rows = [r for r in rows if r['Assignment'] == a.name]
         except KeyError:
             rows = []
-
 
     t = PrettyTable(columns)
     for row in rows:

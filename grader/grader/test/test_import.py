@@ -141,7 +141,7 @@ def test_import_tarball_with_file(clean_dir, parse_and_run):
     student_tarball = os.path.join(clean_dir, "jtd111.tar.gz")
 
     # Setup the grader
-    path = init_and_build_roster(parse_and_run)
+    init_and_build_roster(parse_and_run)
     parse_and_run(["new", "a1"])
 
     # Put a file in the .tar.gz instead of a directory
@@ -165,7 +165,7 @@ def test_import_tarball_bad_dirname(clean_dir, parse_and_run):
     student_tarball = os.path.join(clean_dir, "jtd111.tar.gz")
 
     # Setup the grader
-    path = init_and_build_roster(parse_and_run)
+    init_and_build_roster(parse_and_run)
     parse_and_run(["new", "a1"])
 
     # Put a directory with a bad name in the tarball this time
@@ -205,7 +205,7 @@ def test_import_tarball_name_mismatch(clean_dir, parse_and_run):
     student_tarball = make_student_tarball(clean_dir, "jtd111")
 
     # Setup the grader
-    path = init_and_build_roster(parse_and_run)
+    init_and_build_roster(parse_and_run)
     parse_and_run(["new", "a1"])
 
     # Put a directory with a mismatched student id in the tarball

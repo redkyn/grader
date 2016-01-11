@@ -3,9 +3,8 @@
 
 import logging
 import uuid
-import yaml
 
-from grader.models import Grader, ConfigValidationError
+from grader.models import Grader
 from grader.utils.config import is_grader_dir
 
 logger = logging.getLogger(__name__)

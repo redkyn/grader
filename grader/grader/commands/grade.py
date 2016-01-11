@@ -2,7 +2,7 @@
 '''
 import logging
 
-from grader.models import Grader, AssignmentError, AssignmentNotFoundError
+from grader.models import Grader
 from grader.utils.config import require_grader_config
 
 logger = logging.getLogger(__name__)

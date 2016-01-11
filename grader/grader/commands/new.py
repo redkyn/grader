@@ -2,7 +2,7 @@
 '''
 import logging
 
-from grader.models import Grader, ConfigValidationError, GradeSheetError
+from grader.models import Grader
 from grader.utils.config import require_grader_config
 
 help = 'Create a new assignment'
