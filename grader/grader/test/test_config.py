@@ -141,7 +141,7 @@ def test_bad_roster_id(clean_dir):
         "course-name": "cs2001",
         "course-id": str(uuid.uuid4()),
         "roster": [
-            {"name": "Finn Mertens", "id": "NOOOO%%%OPE!"},
+            {"name": "Finn Mertens", "id": "no.periods"},
             {"name": "Jake the Dog", "id": "jtdbb9"}
         ],
     })

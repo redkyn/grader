@@ -2,15 +2,20 @@ import logging
 import os
 import shutil
 
-from .assignment import Assignment, AssignmentError
-from .config import GraderConfig, ConfigValidationError
-from .gradesheet import GradeSheetError
+from .assignment import Assignment
+from .config import GraderConfig
 
 logger = logging.getLogger(__name__)
 
 
 class GraderError(Exception):
     """A general-purpose exception thrown by the Assignment class.
+    """
+    pass
+
+
+class AssignmentNotFoundError(GraderError):
+    """An exception thrown when we can't find an assignment.
     """
     pass
 
@@ -50,6 +55,20 @@ class Grader(object):
         """The path to the Grader's assignment directory."""
         return os.path.join(self.path, Assignment.SUB_DIR)
 
+    @property
+    def assignments(self):
+        """All assignments associated with this grader"""
+        names = os.listdir(self.assignment_dir)
+        return {name: Assignment(self, name) for name in names}
+
+    @property
+    def student_ids(self):
+        """All student IDs from the roster"""
+        try:
+            return [s['id'] for s in self.config['roster']]
+        except KeyError:
+            return []
+
     def __init__(self, path):
         """Instantiate a Grader.
 
@@ -66,7 +85,7 @@ class Grader(object):
 
         # Verify that paths exist like we expect
         if not os.path.exists(path):
-            raise GraderError("Grader path doesn't exist!")
+            raise FileNotFoundError("{} doesn't exist.".format(path))
 
         self.config = GraderConfig(self.path)
 
@@ -87,36 +106,24 @@ class Grader(object):
             logger.info("Creating assignment directory.")
             os.mkdir(self.assignment_dir)
 
-        try:
-            logger.debug("Creating assignment")
-            Assignment.new(self, name, repo)
-            logger.info("Created '{}'.".format(name))
-        except GradeSheetError as e:
-            # If we couldn't clone the gradesheet repo, we have to
-            # delete the assignment folder.
-            self.delete_assignment(name)
-            raise GraderError(
-                "Could not clone assignment: {}".format(str(e))
-            )
-        except ConfigValidationError as e:
-            # If we couldn't create gradesheet config file properly,
-            # we have to delete the assignment folder.
-            self.delete_assignment(name)
-            raise GraderError(
-                "Cannot create configuration: {}".format(str(e))
-            )
-        except AssignmentError as e:
-            raise GraderError(
-                "Cannot construct assignment: {}".format(str(e))
-            )
+        logger.debug("Creating assignment")
+        Assignment.new(self, name, repo)
+        logger.info("Created '{}'.".format(name))
 
-    def build_assignment(self, name):
-        """Builds an assignment's docker image using its Dockerfile
+    def get_assignment(self, name):
+        """Retrieves an assignment.
 
+        :param str name: The name of the assignment to get
+
+        :raises AssignmentNotFoundError: if no such assignment exists
+
+        :return: The Assignment
+        :rtype: :class:`Assignment`
         """
-        logger.debug("Loading assignment.")
-        assignment = Assignment(self, name)
-        assignment.build_image()
+        try:
+            return self.assignments[name]
+        except KeyError:
+            raise AssignmentNotFoundError("{} doesn't exist".format(name))
 
     def delete_assignment(self, name):
         """Deletes an assignment from the Grader's assignments directory.

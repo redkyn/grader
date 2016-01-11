@@ -1,14 +1,17 @@
 '''TODO: Build command docs
 '''
+import logging
 
 from grader.models import Grader
 from grader.utils.config import require_grader_config
+
+logger = logging.getLogger(__name__)
 
 help = "Build an assignment's docker image"
 
 
 def setup_parser(parser):
-    parser.add_argument('assignment_name',
+    parser.add_argument('assignment',
                         help='Name of the assignment to build.')
     parser.set_defaults(run=run)
 
@@ -16,4 +19,5 @@ def setup_parser(parser):
 @require_grader_config
 def run(args):
     g = Grader(args.path)
-    g.build_assignment(args.assignment_name)
+    a = g.get_assignment(args.assignment)
+    a.build_image()

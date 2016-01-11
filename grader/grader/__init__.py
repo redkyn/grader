@@ -13,7 +13,9 @@ subcommands = OrderedDict([
     ("init", "grader.commands.init"),
     ("new", "grader.commands.new"),
     ("build", "grader.commands.build"),
-    ("grade", "grader.grade"),
+    ("import", "grader.commands.import"),
+    ("list", "grader.commands.list"),
+    ("grade", "grader.commands.grade"),
 ])
 
 
@@ -23,6 +25,8 @@ def make_parser():
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument('--path', default=os.getcwd(),
                         help='Path to the root of a grader')
+    parser.add_argument('--tracebacks', action='store_true',
+                        help='Show full tracebacks')
     parser.add_argument('--verbosity', default="INFO",
                         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
                         help='Desired log level')
@@ -58,7 +62,13 @@ def run():                      # pragma: no cover
     logging.getLogger().setLevel(args.verbosity)
 
     # Do it
-    args.run(args)
+    try:
+        args.run(args)
+    except Exception as e:
+        if args.tracebacks:
+            raise e
+        logger.error(str(e))
+        raise SystemExit(1) from e
 
 if __name__ == '__main__':      # pragma: no cover
     run()

@@ -3,6 +3,8 @@ import pytest
 import re
 import yaml
 
+from grader.models.config import ConfigValidationError
+
 UUID_RE = r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
 
 
@@ -45,7 +47,7 @@ def test_init_noforce(parse_and_run):
 def test_bad_course_name(parse_and_run):
     """Test enforcement of bad course names
     """
-    with pytest.raises(SystemExit):
+    with pytest.raises(ConfigValidationError):
         parse_and_run(["init", "NOOO%%%%OOPE!"])
 
 

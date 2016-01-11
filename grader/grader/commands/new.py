@@ -2,7 +2,7 @@
 '''
 import logging
 
-from grader.models import Grader, GraderError
+from grader.models import Grader
 from grader.utils.config import require_grader_config
 
 help = 'Create a new assignment'
@@ -19,9 +19,5 @@ def setup_parser(parser):
 
 @require_grader_config
 def run(args):
-    try:
-        g = Grader(args.path)
-        g.create_assignment(args.name, repo=args.repo)
-    except GraderError as e:
-        logger.warning(str(e))
-        raise SystemExit(1)
+    g = Grader(args.path)
+    g.create_assignment(args.name, repo=args.repo)

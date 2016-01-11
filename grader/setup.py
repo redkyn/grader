@@ -13,6 +13,7 @@ setup(  # pragma: no cover
         'docker-py==1.6.0',
         'PyYAML==3.11',
         'jsonschema==2.5.1',
+        'prettytable==0.7.2',
     ],
     entry_points={
         'console_scripts': ['grader = grader:run'],
