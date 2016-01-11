@@ -4,6 +4,7 @@ import logging
 import os
 
 from collections import OrderedDict
+from colorlog import ColoredFormatter
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +18,39 @@ subcommands = OrderedDict([
     ("list", "grader.commands.list"),
     ("grade", "grader.commands.grade"),
 ])
+
+
+def configure_logging():
+    # Get the root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+
+    # Create console handler. It'll write everything that's DEBUG or
+    # better. However, it's only going to write what the logger passes
+    # to it.
+    console = logging.StreamHandler()
+    console.setLevel(logging.DEBUG)
+
+    # Create a colorized formatter
+    formatter = ColoredFormatter(
+        "%(log_color)s%(levelname)-8s%(reset)s %(blue)s%(message)s",
+        datefmt=None,
+        reset=True,
+        log_colors={
+                'DEBUG':    'cyan',
+                'INFO':     'green',
+                'WARNING':  'yellow',
+                'ERROR':    'red',
+                'CRITICAL': 'red,bg_white',
+        },
+        secondary_log_colors={},
+        style='%'
+    )
+
+    # Add the formatter to the console handler, and the console
+    # handler to the root logger.
+    console.setFormatter(formatter)
+    root_logger.addHandler(console)
 
 
 def make_parser():
@@ -51,8 +85,8 @@ def make_parser():
 def run():                      # pragma: no cover
     """Script entry point
     """
-    # Configure logging
-    logging.basicConfig(level=logging.INFO)
+    # Configure logging (obvi)
+    configure_logging()
 
     # Parse CLI args
     parser = make_parser()
