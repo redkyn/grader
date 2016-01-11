@@ -11,6 +11,8 @@ You'll probably need the following libraries...
 * libncurses-dev
 * python3-dev
 
+And, of course, you'll want Docker if you plan to do anything interesting at all. Grader requires docker with **API version >= 1.20**. We use `put_archive` (`PUT /containers/(id)/archive`) from docker-py.
+
 ```shell
 # Bootstrap buildout
 python3 bin/bootstrap-buildout.py
