@@ -150,6 +150,17 @@ class Assignment(DockerClientMixin):
                                  self.name)
 
     @property
+    def image_id(self):
+        """Unique ID for an assignment's docker image"""
+        try:
+            return self.docker_cli.inspect_image(self.image_tag)['Id']
+        except docker.errors.NotFound as e:
+            logger.debug(str(e))
+            raise AssignmentBuildError(
+                "{}'s image was not built.".format(self.name)
+            ) from e
+
+    @property
     def submissions_dir(self):
         """File path to the assignment's submissions directory"""
         return os.path.join(self.path, "submissions")
@@ -268,13 +279,7 @@ class Assignment(DockerClientMixin):
                 "Unable to build: {}".format(e.explanation.decode("utf-8"))
             ) from e
 
-        try:
-            return self.docker_cli.inspect_image(self.image_tag)
-        except docker.errors.NotFound as e:
-            logger.debug(str(e))
-            raise AssignmentBuildError(
-                "Unable to build image. Check your Dockerfile."
-            ) from e
+        return self.image_id
 
     def delete_image(self):
         """Deletes an assignment's docker image based on its tag.
