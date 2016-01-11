@@ -541,6 +541,15 @@ class Submission(DockerClientMixin):
                 "Found multiple containers for submission. "
                 "Needs manual cleanup: {}".format(containers)
             )
+
+        image_id = self.docker_cli.inspect_container(container_id)['Image']
+        if image_id != self.assignment.image_id:
+            logger.warning(
+                "This container is based on an old image (%s instead of %s). "
+                "You may want to delete it and start over.",
+                image_id[:5], self.assignment.image_id[:5]
+            )
+
         return container_id
 
     def _add_submission_files(self, c_id):
