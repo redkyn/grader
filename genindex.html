@@ -24,6 +24,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="Grader 0.0.1 documentation" href="index.html" />
    
   
@@ -45,31 +46,24 @@
  | <a href="#A"><strong>A</strong></a>
  | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
+ | <a href="#D"><strong>D</strong></a>
  | <a href="#F"><strong>F</strong></a>
  | <a href="#G"><strong>G</strong></a>
  | <a href="#I"><strong>I</strong></a>
+ | <a href="#L"><strong>L</strong></a>
  | <a href="#N"><strong>N</strong></a>
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
+ | <a href="#U"><strong>U</strong></a>
  
 </div>
 <h2 id="_">_</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="models.html#grader.models.AssignmentConfig.__getitem__">__getitem__() (grader.models.AssignmentConfig method)</a>
+  <dt><a href="models.html#grader.models.config.Config.__getitem__">__getitem__() (grader.models.config.Config method)</a>
   </dt>
 
-      <dd><dl>
-        
-  <dt><a href="models.html#grader.models.GraderConfig.__getitem__">(grader.models.GraderConfig method)</a>
-  </dt>
-
-        
-  <dt><a href="models.html#grader.models.config.Config.__getitem__">(grader.models.config.Config method)</a>
-  </dt>
-
-      </dl></dd>
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
@@ -78,11 +72,19 @@
 
       <dd><dl>
         
-  <dt><a href="models.html#grader.models.AssignmentConfig.__init__">(grader.models.AssignmentConfig method)</a>
+  <dt><a href="models.html#grader.models.GradeSheet.__init__">(grader.models.GradeSheet method)</a>
   </dt>
 
         
-  <dt><a href="models.html#grader.models.GraderConfig.__init__">(grader.models.GraderConfig method)</a>
+  <dt><a href="models.html#grader.models.Grader.__init__">(grader.models.Grader method)</a>
+  </dt>
+
+        
+  <dt><a href="models.html#grader.models.Submission.__init__">(grader.models.Submission method)</a>
+  </dt>
+
+        
+  <dt><a href="models.html#grader.models.config.Config.__init__">(grader.models.config.Config method)</a>
   </dt>
 
       </dl></dd>
@@ -97,17 +99,29 @@
   </dt>
 
       
+  <dt><a href="models.html#grader.models.Grader.assignment_dir">assignment_dir (grader.models.Grader attribute)</a>
+  </dt>
+
+      
+  <dt><a href="exceptions.html#grader.models.assignment.AssignmentBuildError">AssignmentBuildError (class in grader.models.assignment)</a>
+  </dt>
+
+      
   <dt><a href="models.html#grader.models.AssignmentConfig">AssignmentConfig (class in grader.models)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="exceptions.html#grader.models.AssignmentConfigException">AssignmentConfigException (class in grader.models)</a>
+  <dt><a href="exceptions.html#grader.models.assignment.AssignmentError">AssignmentError (class in grader.models.assignment)</a>
   </dt>
 
       
-  <dt><a href="exceptions.html#grader.models.AssignmentException">AssignmentException (class in grader.models)</a>
+  <dt><a href="exceptions.html#grader.models.grader.AssignmentNotFoundError">AssignmentNotFoundError (class in grader.models.grader)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Grader.assignments">assignments (grader.models.Grader attribute)</a>
   </dt>
 
   </dl></td>
@@ -130,8 +144,6 @@
   <dt><a href="models.html#grader.models.config.Config">Config (class in grader.models.config)</a>
   </dt>
 
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="models.html#grader.models.AssignmentConfig.CONFIG_FILE_NAME">CONFIG_FILE_NAME (grader.models.AssignmentConfig attribute)</a>
   </dt>
@@ -142,6 +154,48 @@
   </dt>
 
       </dl></dd>
+      
+  <dt><a href="exceptions.html#grader.models.config.ConfigValidationError">ConfigValidationError (class in grader.models.config)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="models.html#grader.models.Submission.container_labels">container_labels (grader.models.Submission attribute)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Grader.create_assignment">create_assignment() (grader.models.Grader method)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="D">D</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="models.html#grader.models.Grader.delete_assignment">delete_assignment() (grader.models.Grader method)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Assignment.delete_image">delete_image() (grader.models.Assignment method)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.mixins.DockerClientMixin.docker_cli">docker_cli (grader.models.mixins.DockerClientMixin attribute)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="models.html#grader.models.mixins.DockerClientMixin">DockerClientMixin (class in grader.models.mixins)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.GradeSheet.dockerfile_path">dockerfile_path (grader.models.GradeSheet attribute)</a>
+  </dt>
+
   </dl></td>
 </tr></table>
 
@@ -149,19 +203,19 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="models.html#grader.models.AssignmentConfig.file_path">file_path (grader.models.AssignmentConfig attribute)</a>
+  <dt><a href="models.html#grader.models.Submission.file_mtimes">file_mtimes (grader.models.Submission attribute)</a>
   </dt>
 
-      <dd><dl>
-        
-  <dt><a href="models.html#grader.models.GraderConfig.file_path">(grader.models.GraderConfig attribute)</a>
+      
+  <dt><a href="models.html#grader.models.config.Config.file_path">file_path (grader.models.config.Config attribute)</a>
   </dt>
 
-        
-  <dt><a href="models.html#grader.models.config.Config.file_path">(grader.models.config.Config attribute)</a>
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="models.html#grader.models.GradeSheet.from_repo">from_repo() (grader.models.GradeSheet class method)</a>
   </dt>
 
-      </dl></dd>
   </dl></td>
 </tr></table>
 
@@ -169,33 +223,49 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="models.html#grader.models.config.Config.get">get() (grader.models.config.Config method)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Grader.get_assignment">get_assignment() (grader.models.Grader method)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Submission.get_full_id">get_full_id() (grader.models.Submission class method)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Submission.get_importer">get_importer() (grader.models.Submission class method)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Submission.get_importers">get_importers() (grader.models.Submission class method)</a>
+  </dt>
+
+      
   <dt><a href="models.html#grader.models.Grader">Grader (class in grader.models)</a>
-  </dt>
-
-      
-  <dt><a href="models.html#grader.models.GraderConfig">GraderConfig (class in grader.models)</a>
-  </dt>
-
-      
-  <dt><a href="exceptions.html#grader.models.GraderConfigException">GraderConfigException (class in grader.models)</a>
-  </dt>
-
-      
-  <dt><a href="exceptions.html#grader.models.GraderException">GraderException (class in grader.models)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="models.html#grader.models.GraderConfig">GraderConfig (class in grader.models)</a>
+  </dt>
+
+      
+  <dt><a href="exceptions.html#grader.models.grader.GraderError">GraderError (class in grader.models.grader)</a>
+  </dt>
+
+      
   <dt><a href="models.html#grader.models.GradeSheet">GradeSheet (class in grader.models)</a>
   </dt>
 
       
-  <dt><a href="models.html#grader.models.Assignment.gradesheet_path">gradesheet_path (grader.models.Assignment attribute)</a>
+  <dt><a href="models.html#grader.models.Assignment.gradesheet_dir">gradesheet_dir (grader.models.Assignment attribute)</a>
   </dt>
 
       
-  <dt><a href="exceptions.html#grader.models.GradeSheetException">GradeSheetException (class in grader.models)</a>
+  <dt><a href="exceptions.html#grader.models.gradesheet.GradeSheetError">GradeSheetError (class in grader.models.gradesheet)</a>
   </dt>
 
   </dl></td>
@@ -205,7 +275,49 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="models.html#grader.models.Assignment.image_id">image_id (grader.models.Assignment attribute)</a>
+  </dt>
+
+      
   <dt><a href="models.html#grader.models.Assignment.image_tag">image_tag (grader.models.Assignment attribute)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Submission.import_blackboard_zip">import_blackboard_zip() (grader.models.Submission class method)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Submission.import_multiple">import_multiple() (grader.models.Submission class method)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="models.html#grader.models.Submission.import_repo">import_repo() (grader.models.Submission class method)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Submission.import_single">import_single() (grader.models.Submission class method)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Submission.import_time">import_time (grader.models.Submission attribute)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="L">L</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="models.html#grader.models.Submission.latest_commit">latest_commit (grader.models.Submission attribute)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="models.html#grader.models.Submission.latest_mtime">latest_mtime (grader.models.Submission attribute)</a>
   </dt>
 
   </dl></td>
@@ -215,22 +327,20 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="models.html#grader.models.Assignment.NAME_RE">NAME_RE (grader.models.Assignment attribute)</a>
-  </dt>
-
-  </dl></td>
-  <td style="width: 33%" valign="top"><dl>
-      
   <dt><a href="models.html#grader.models.Assignment.new">new() (grader.models.Assignment class method)</a>
   </dt>
 
       <dd><dl>
         
-  <dt><a href="models.html#grader.models.AssignmentConfig.new">(grader.models.AssignmentConfig class method)</a>
+  <dt><a href="models.html#grader.models.GradeSheet.new">(grader.models.GradeSheet class method)</a>
   </dt>
 
         
-  <dt><a href="models.html#grader.models.GraderConfig.new">(grader.models.GraderConfig class method)</a>
+  <dt><a href="models.html#grader.models.Grader.new">(grader.models.Grader class method)</a>
+  </dt>
+
+        
+  <dt><a href="models.html#grader.models.config.Config.new">(grader.models.config.Config class method)</a>
   </dt>
 
       </dl></dd>
@@ -241,7 +351,7 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="models.html#grader.models.Assignment.results_path">results_path (grader.models.Assignment attribute)</a>
+  <dt><a href="models.html#grader.models.Assignment.results_dir">results_dir (grader.models.Assignment attribute)</a>
   </dt>
 
   </dl></td>
@@ -251,13 +361,89 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="models.html#grader.models.AssignmentConfig.SCHEMA">SCHEMA (grader.models.AssignmentConfig attribute)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="models.html#grader.models.GraderConfig.SCHEMA">(grader.models.GraderConfig attribute)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="models.html#grader.models.Submission.sha1sum">sha1sum (grader.models.Submission attribute)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Submission.split_full_id">split_full_id() (grader.models.Submission class method)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Grader.student_ids">student_ids (grader.models.Grader attribute)</a>
+  </dt>
+
+      
   <dt><a href="models.html#grader.models.Assignment.SUB_DIR">SUB_DIR (grader.models.Assignment attribute)</a>
+  </dt>
+
+      <dd><dl>
+        
+  <dt><a href="models.html#grader.models.GradeSheet.SUB_DIR">(grader.models.GradeSheet attribute)</a>
+  </dt>
+
+      </dl></dd>
+      
+  <dt><a href="models.html#grader.models.Submission">Submission (class in grader.models)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Submission.SUBMISSION_ID_RE">SUBMISSION_ID_RE (grader.models.Submission attribute)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="models.html#grader.models.Assignment.submissions_path">submissions_path (grader.models.Assignment attribute)</a>
+  <dt><a href="exceptions.html#grader.models.submission.SubmissionContainerError">SubmissionContainerError (class in grader.models.submission)</a>
+  </dt>
+
+      
+  <dt><a href="exceptions.html#grader.models.submission.SubmissionError">SubmissionError (class in grader.models.submission)</a>
+  </dt>
+
+      
+  <dt><a href="exceptions.html#grader.models.submission.SubmissionIDError">SubmissionIDError (class in grader.models.submission)</a>
+  </dt>
+
+      
+  <dt><a href="exceptions.html#grader.models.submission.SubmissionImportError">SubmissionImportError (class in grader.models.submission)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Assignment.submissions">submissions (grader.models.Assignment attribute)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Assignment.submissions_by_user">submissions_by_user (grader.models.Assignment attribute)</a>
+  </dt>
+
+      
+  <dt><a href="models.html#grader.models.Assignment.submissions_dir">submissions_dir (grader.models.Assignment attribute)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="U">U</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="models.html#grader.models.Submission.unpacked_files">unpacked_files (grader.models.Submission attribute)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="models.html#grader.models.Submission.unpacked_repo">unpacked_repo (grader.models.Submission attribute)</a>
   </dt>
 
   </dl></td>
@@ -272,9 +458,13 @@
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">Table Of Contents</a></h3>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About Grader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="todo.html">TODO Items</a></li>
 </ul>
 
 <div id="searchbox" style="display: none" role="search">

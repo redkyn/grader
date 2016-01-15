@@ -23,8 +23,8 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="Grader 0.0.1 documentation" href="index.html" />
-    <link rel="next" title="TODO Items" href="todo.html" />
     <link rel="prev" title="Models" href="models.html" />
    
   
@@ -41,31 +41,65 @@
   <div class="section" id="exceptions">
 <h1>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
-<dt id="grader.models.GraderException">
-<em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">GraderException</code><a class="reference internal" href="_modules/grader/models/grader.html#GraderException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.GraderException" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="class">
-<dt id="grader.models.AssignmentException">
-<em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">AssignmentException</code><a class="reference internal" href="_modules/grader/models/assignment.html#AssignmentException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.AssignmentException" title="Permalink to this definition">¶</a></dt>
+<dt id="grader.models.grader.GraderError">
+<em class="property">class </em><code class="descclassname">grader.models.grader.</code><code class="descname">GraderError</code><a class="reference internal" href="_modules/grader/models/grader.html#GraderError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.grader.GraderError" title="Permalink to this definition">¶</a></dt>
 <dd><p>A general-purpose exception thrown by the Assignment class.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="grader.models.GradeSheetException">
-<em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">GradeSheetException</code><a class="reference internal" href="_modules/grader/models/gradesheet.html#GradeSheetException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.GradeSheetException" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="class">
-<dt id="grader.models.GraderConfigException">
-<em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">GraderConfigException</code><a class="reference internal" href="_modules/grader/models/config.html#GraderConfigException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.GraderConfigException" title="Permalink to this definition">¶</a></dt>
-<dd><p>A general-purpose exception thrown by the GraderConfig class.</p>
+<dt id="grader.models.grader.AssignmentNotFoundError">
+<em class="property">class </em><code class="descclassname">grader.models.grader.</code><code class="descname">AssignmentNotFoundError</code><a class="reference internal" href="_modules/grader/models/grader.html#AssignmentNotFoundError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.grader.AssignmentNotFoundError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An exception thrown when we can&#8217;t find an assignment.</p>
 </dd></dl>
 
 <dl class="class">
-<dt id="grader.models.AssignmentConfigException">
-<em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">AssignmentConfigException</code><a class="reference internal" href="_modules/grader/models/config.html#AssignmentConfigException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.AssignmentConfigException" title="Permalink to this definition">¶</a></dt>
-<dd><p>A general-purpose exception thrown by the AssignmentConfig class.</p>
+<dt id="grader.models.assignment.AssignmentError">
+<em class="property">class </em><code class="descclassname">grader.models.assignment.</code><code class="descname">AssignmentError</code><a class="reference internal" href="_modules/grader/models/assignment.html#AssignmentError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.assignment.AssignmentError" title="Permalink to this definition">¶</a></dt>
+<dd><p>A general-purpose exception thrown by the Assignment class.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="grader.models.assignment.AssignmentBuildError">
+<em class="property">class </em><code class="descclassname">grader.models.assignment.</code><code class="descname">AssignmentBuildError</code><a class="reference internal" href="_modules/grader/models/assignment.html#AssignmentBuildError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.assignment.AssignmentBuildError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An exception thrown when there&#8217;s an issue building the docker
+image.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="grader.models.gradesheet.GradeSheetError">
+<em class="property">class </em><code class="descclassname">grader.models.gradesheet.</code><code class="descname">GradeSheetError</code><a class="reference internal" href="_modules/grader/models/gradesheet.html#GradeSheetError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.gradesheet.GradeSheetError" title="Permalink to this definition">¶</a></dt>
+<dd><p>A general-purpose exception thrown by the Assignment class.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="grader.models.submission.SubmissionError">
+<em class="property">class </em><code class="descclassname">grader.models.submission.</code><code class="descname">SubmissionError</code><a class="reference internal" href="_modules/grader/models/submission.html#SubmissionError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.submission.SubmissionError" title="Permalink to this definition">¶</a></dt>
+<dd><p>A general-purpose exception thrown by the Submission class</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="grader.models.submission.SubmissionIDError">
+<em class="property">class </em><code class="descclassname">grader.models.submission.</code><code class="descname">SubmissionIDError</code><a class="reference internal" href="_modules/grader/models/submission.html#SubmissionIDError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.submission.SubmissionIDError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An exception thrown for errors related to Submission IDs</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="grader.models.submission.SubmissionImportError">
+<em class="property">class </em><code class="descclassname">grader.models.submission.</code><code class="descname">SubmissionImportError</code><a class="reference internal" href="_modules/grader/models/submission.html#SubmissionImportError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.submission.SubmissionImportError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An exception thrown for errors related to Submission import</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="grader.models.submission.SubmissionContainerError">
+<em class="property">class </em><code class="descclassname">grader.models.submission.</code><code class="descname">SubmissionContainerError</code><a class="reference internal" href="_modules/grader/models/submission.html#SubmissionContainerError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.submission.SubmissionContainerError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An exception thrown for errors related to Submission docker
+containers</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="grader.models.config.ConfigValidationError">
+<em class="property">class </em><code class="descclassname">grader.models.config.</code><code class="descname">ConfigValidationError</code><a class="reference internal" href="_modules/grader/models/config.html#ConfigValidationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.config.ConfigValidationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An exception thrown when a config file cannot be validated</p>
 </dd></dl>
 
 </div>
@@ -77,10 +111,14 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About Grader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a></li>
+</ul>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="models.html">Models</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Exceptions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="todo.html">TODO Items</a></li>
 </ul>
 
   <div role="note" aria-label="source link">

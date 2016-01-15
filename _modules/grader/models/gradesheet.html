@@ -23,6 +23,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="top" title="Grader 0.0.1 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" />
    
@@ -43,37 +44,79 @@
 <span class="kn">import</span> <span class="nn">os</span>
 
 <span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">AssignmentConfig</span>
-<span class="kn">from</span> <span class="nn">grader.utils.utils</span> <span class="kn">import</span> <span class="n">touch</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="GradeSheetException"><a class="viewcode-back" href="../../../exceptions.html#grader.models.GradeSheetException">[docs]</a><span class="k">class</span> <span class="nc">GradeSheetException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="GradeSheetError"><a class="viewcode-back" href="../../../exceptions.html#grader.models.gradesheet.GradeSheetError">[docs]</a><span class="k">class</span> <span class="nc">GradeSheetError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A general-purpose exception thrown by the Assignment class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="GradeSheet"><a class="viewcode-back" href="../../../models.html#grader.models.GradeSheet">[docs]</a><span class="k">class</span> <span class="nc">GradeSheet</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="GradeSheet"><a class="viewcode-back" href="../../../models.html#grader.models.gradesheet.GradeSheet">[docs]</a><span class="k">class</span> <span class="nc">GradeSheet</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A gradesheet for an assignment. Gradesheets are git</span>
+<span class="sd">    repositories. They have the following attributes...</span>
+
+<span class="sd">    A configuration file</span>
+<span class="sd">        Assignment-specific configuration information (refer to</span>
+<span class="sd">        :class:`AssignmentConfig`)</span>
+
+<span class="sd">    A Dockerfile</span>
+<span class="sd">        Used to build a docker image. That image will be used to</span>
+<span class="sd">        create containers for running student submissions</span>
+
+<span class="sd">    Grading scripts</span>
+<span class="sd">        The assignment-specific configuration details how to run</span>
+<span class="sd">        grading scripts. The gradesheet repository must have the</span>
+<span class="sd">        scripts in order to run them.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">SUB_DIR</span> <span class="o">=</span> <span class="s">&quot;gradesheet&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The name to use when creating a new gradesheet directory on disk.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_repo</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">gradesheet_path</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
+<div class="viewcode-block" id="GradeSheet.from_repo"><a class="viewcode-back" href="../../../models.html#grader.models.gradesheet.GradeSheet.from_repo">[docs]</a>    <span class="k">def</span> <span class="nf">from_repo</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">gradesheet_path</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clone a gradesheet from a remote git repository.</span>
+
+<span class="sd">        :param str gradesheet_path: The path to the directory into</span>
+<span class="sd">            which the gradesheet repository will be cloned.</span>
+
+<span class="sd">        :param str repo_url: A URL pointing to a gradesheet repository</span>
+<span class="sd">            to clone.</span>
+
+<span class="sd">        :raises GradeSheetError: if there was a problem cloning</span>
+<span class="sd">            the repo</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">git</span><span class="o">.</span><span class="n">Repo</span><span class="o">.</span><span class="n">clone_from</span><span class="p">(</span><span class="n">repo_url</span><span class="p">,</span> <span class="n">gradesheet_path</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Successfully cloned {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">))</span>
-        <span class="k">except</span> <span class="n">git</span><span class="o">.</span><span class="n">exc</span><span class="o">.</span><span class="n">GitCommandError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">GradeSheetException</span><span class="p">(</span><span class="s">&quot;Could not clone {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">))</span>
+        <span class="k">except</span> <span class="n">git</span><span class="o">.</span><span class="n">exc</span><span class="o">.</span><span class="n">GitCommandError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">GradeSheetError</span><span class="p">(</span><span class="s">&quot;Could not clone {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repo_url</span><span class="p">))</span> <span class="kn">from</span> <span class="nn">e</span>
 
-        <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="bp">None</span></div>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">gradesheet_path</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">):</span>
+<div class="viewcode-block" id="GradeSheet.new"><a class="viewcode-back" href="../../../models.html#grader.models.gradesheet.GradeSheet.new">[docs]</a>    <span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">gradesheet_path</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initializes a new gradesheet repository with default files</span>
+
+<span class="sd">        :param str gradesheet_path: The path to the directory into</span>
+<span class="sd">            which the gradesheet repository will be cloned.</span>
+
+<span class="sd">        :param str assignment_name: The name of the assignment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">gradesheet_path</span>
 
         <span class="c"># Initialize a new gradesheet repo</span>
         <span class="n">repo</span> <span class="o">=</span> <span class="n">git</span><span class="o">.</span><span class="n">Repo</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 
         <span class="c"># Create a default assignment config</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="n">AssignmentConfig</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">)</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">AssignmentConfig</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">path</span><span class="p">,</span>
+                                      <span class="p">{</span><span class="s">&#39;assignment-name&#39;</span><span class="p">:</span> <span class="n">assignment_name</span><span class="p">})</span>
 
         <span class="c"># Create a default Dockerfile</span>
         <span class="n">dockerfile_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;Dockerfile&#39;</span><span class="p">)</span>
@@ -83,21 +126,33 @@
         <span class="n">repo</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">add</span><span class="p">([</span><span class="n">config</span><span class="o">.</span><span class="n">file_path</span><span class="p">,</span> <span class="n">dockerfile_path</span><span class="p">])</span>
         <span class="n">repo</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="s">&quot;Add default assignment.yml and Dockerfile&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">return</span> <span class="bp">None</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">dockerfile_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The path to this gradesheet&#39;s Dockerfile&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&quot;Dockerfile&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">assignment</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">gradesheet_path</span>
+<div class="viewcode-block" id="GradeSheet.__init__"><a class="viewcode-back" href="../../../models.html#grader.models.gradesheet.GradeSheet.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">assignment</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Instantiates a GradeSheet.</span>
+
+<span class="sd">        :param Assignment assignment: The assignment to which this</span>
+<span class="sd">            gradesheet belongs.</span>
+
+<span class="sd">        :raises AssignmentConfigError: if the assignment-specific</span>
+<span class="sd">            config file in the gradesheet cannot be loaded</span>
+
+<span class="sd">        :raises GradeSheetError: if the Dockerfile can&#39;t be found</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">assignment</span><span class="o">.</span><span class="n">gradesheet_dir</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assignment</span> <span class="o">=</span> <span class="n">assignment</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">AssignmentConfig</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">repository</span> <span class="o">=</span> <span class="n">git</span><span class="o">.</span><span class="n">Repo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
 
         <span class="c"># Verify that paths exist like we expect</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dockerfile_path</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">GradeSheetException</span><span class="p">(</span><span class="s">&quot;GradeSheet repo has no Dockerfile!&quot;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="n">FileNotFoundError</span><span class="p">(</span><span class="s">&quot;GradeSheet repo has no Dockerfile!&quot;</span><span class="p">)</span></div></div>
 </pre></div>
 
           </div>
@@ -107,9 +162,13 @@
         <div class="sphinxsidebarwrapper">
 <h3><a href="../../../index.html">Table Of Contents</a></h3>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About Grader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../commands.html">Commands</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../exceptions.html">Exceptions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../todo.html">TODO Items</a></li>
 </ul>
 
 <div id="searchbox" style="display: none" role="search">

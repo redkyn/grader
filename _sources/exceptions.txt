@@ -1,17 +1,32 @@
 Exceptions
 ==========
 
-.. autoclass:: grader.models.GraderException
+.. autoclass:: grader.models.grader.GraderError
    :members:
 
-.. autoclass:: grader.models.AssignmentException
+.. autoclass:: grader.models.grader.AssignmentNotFoundError
    :members:
 
-.. autoclass:: grader.models.GradeSheetException
+.. autoclass:: grader.models.assignment.AssignmentError
    :members:
 
-.. autoclass:: grader.models.GraderConfigException
+.. autoclass:: grader.models.assignment.AssignmentBuildError
    :members:
 
-.. autoclass:: grader.models.AssignmentConfigException
+.. autoclass:: grader.models.gradesheet.GradeSheetError
+   :members:
+
+.. autoclass:: grader.models.submission.SubmissionError
+   :members:
+
+.. autoclass:: grader.models.submission.SubmissionIDError
+   :members:
+
+.. autoclass:: grader.models.submission.SubmissionImportError
+   :members:
+
+.. autoclass:: grader.models.submission.SubmissionContainerError
+   :members:
+
+.. autoclass:: grader.models.config.ConfigValidationError
    :members:

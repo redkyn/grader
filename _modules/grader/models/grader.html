@@ -23,6 +23,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="top" title="Grader 0.0.1 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" />
    
@@ -40,86 +41,138 @@
   <h1>Source code for grader.models.grader</h1><div class="highlight"><pre>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
 
-<span class="kn">from</span> <span class="nn">.assignment</span> <span class="kn">import</span> <span class="n">Assignment</span><span class="p">,</span> <span class="n">AssignmentException</span>
+<span class="kn">from</span> <span class="nn">.assignment</span> <span class="kn">import</span> <span class="n">Assignment</span>
 <span class="kn">from</span> <span class="nn">.config</span> <span class="kn">import</span> <span class="n">GraderConfig</span>
-<span class="kn">from</span> <span class="nn">.gradesheet</span> <span class="kn">import</span> <span class="n">GradeSheetException</span>
-
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="GraderException"><a class="viewcode-back" href="../../../exceptions.html#grader.models.GraderException">[docs]</a><span class="k">class</span> <span class="nc">GraderException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="GraderError"><a class="viewcode-back" href="../../../exceptions.html#grader.models.grader.GraderError">[docs]</a><span class="k">class</span> <span class="nc">GraderError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A general-purpose exception thrown by the Assignment class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="Grader"><a class="viewcode-back" href="../../../models.html#grader.models.Grader">[docs]</a><span class="k">class</span> <span class="nc">Grader</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="n">COURSE_NAME_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&quot;^[A-Za-z0-9_.-]+$&quot;</span><span class="p">)</span>
-    <span class="n">COURSE_ID_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&quot;^[A-Za-z0-9_.-]+$&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="AssignmentNotFoundError"><a class="viewcode-back" href="../../../exceptions.html#grader.models.grader.AssignmentNotFoundError">[docs]</a><span class="k">class</span> <span class="nc">AssignmentNotFoundError</span><span class="p">(</span><span class="n">GraderError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An exception thrown when we can&#39;t find an assignment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Grader"><a class="viewcode-back" href="../../../models.html#grader.models.grader.Grader">[docs]</a><span class="k">class</span> <span class="nc">Grader</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A Grader.</span>
+
+<span class="sd">    This object can be used to perform all of the actions that a</span>
+<span class="sd">    Grader can perform.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">course_name</span><span class="p">,</span> <span class="n">course_id</span><span class="p">):</span>
-        <span class="c"># Check the course name</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">cls</span><span class="o">.</span><span class="n">COURSE_NAME_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">course_name</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">GraderException</span><span class="p">(</span>
-                <span class="s">&quot;Bad course name {}. &quot;</span>
-                <span class="s">&quot;Must match {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">course_name</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">COURSE_NAME_RE</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>
-            <span class="p">)</span>
+<div class="viewcode-block" id="Grader.new"><a class="viewcode-back" href="../../../models.html#grader.models.grader.Grader.new">[docs]</a>    <span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">course_name</span><span class="p">,</span> <span class="n">course_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new Grader instance and sets up its operating</span>
+<span class="sd">        environment. This includes creating associated files on disk.</span>
 
-        <span class="c"># Check the course id</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">cls</span><span class="o">.</span><span class="n">COURSE_ID_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">course_id</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">GraderException</span><span class="p">(</span>
-                <span class="s">&quot;Bad course id {}. &quot;</span>
-                <span class="s">&quot;Must match {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">course_id</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">COURSE_ID_RE</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>
-            <span class="p">)</span>
+<span class="sd">        :param str path: The path to the directory that will contain</span>
+<span class="sd">            the Grader</span>
 
-        <span class="n">GraderConfig</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">course_name</span><span class="p">,</span> <span class="n">course_id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="sd">        :param str course_name: The name of the course. It must comply with</span>
+<span class="sd">            :data:`GraderConfig.SCHEMA`</span>
+
+<span class="sd">        :param str course_id: The unique ID for the course. It must</span>
+<span class="sd">            comply with :data:`GraderConfig.SCHEMA`</span>
+
+<span class="sd">        :raises GraderConfigError: if ``course_name`` or</span>
+<span class="sd">            ``course_id`` don&#39;t comply with the configuration schema</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">GraderConfig</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;course-name&#39;</span><span class="p">:</span> <span class="n">course_name</span><span class="p">,</span>
+                                <span class="s">&#39;course-id&#39;</span><span class="p">:</span> <span class="n">course_id</span><span class="p">})</span>
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">assignment_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The path to the Grader&#39;s assignment directory.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">Assignment</span><span class="o">.</span><span class="n">SUB_DIR</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">assignments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;All assignments associated with this grader&quot;&quot;&quot;</span>
+        <span class="n">names</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">assignment_dir</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">Assignment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">student_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;All student IDs from the roster&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">s</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s">&#39;roster&#39;</span><span class="p">]]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="Grader.__init__"><a class="viewcode-back" href="../../../models.html#grader.models.grader.Grader.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate a Grader.</span>
+
+<span class="sd">        :param str path: The path to the grader on disk. The path</span>
+<span class="sd">            should contain the configuration file for the grader.</span>
+
+<span class="sd">        :raises GraderError: if the provided path doesn&#39;t exist</span>
+
+<span class="sd">        :raises GraderConfigError: if the grader config file</span>
+<span class="sd">            cannot be read</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
 
         <span class="c"># Verify that paths exist like we expect</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">GraderException</span><span class="p">(</span><span class="s">&quot;Grader path doesn&#39;t exist!&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">FileNotFoundError</span><span class="p">(</span><span class="s">&quot;{} doesn&#39;t exist.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">GraderConfig</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">GraderConfig</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span></div>
 
-    <span class="k">def</span> <span class="nf">create_assignment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Grader.create_assignment"><a class="viewcode-back" href="../../../models.html#grader.models.grader.Grader.create_assignment">[docs]</a>    <span class="k">def</span> <span class="nf">create_assignment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new assignment directory on disk as well as an associated</span>
+<span class="sd">        gradesheet and subdirectories.</span>
+
+<span class="sd">        :param str name: The name of the assignment. Must comply with</span>
+<span class="sd">            :data:`AssignmentConfig.SCHEMA`</span>
+
+<span class="sd">        :param str repo: An optional URL to a gradesheet</span>
+<span class="sd">            repository. Read more about it in :meth:`Assignment.new`</span>
+
+<span class="sd">        :return: None</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">assignment_dir</span><span class="p">):</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Creating assignment directory.&quot;</span><span class="p">)</span>
             <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">assignment_dir</span><span class="p">)</span>
 
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Creating assignment&quot;</span><span class="p">)</span>
+        <span class="n">Assignment</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Created &#39;{}&#39;.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Grader.get_assignment"><a class="viewcode-back" href="../../../models.html#grader.models.grader.Grader.get_assignment">[docs]</a>    <span class="k">def</span> <span class="nf">get_assignment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Retrieves an assignment.</span>
+
+<span class="sd">        :param str name: The name of the assignment to get</span>
+
+<span class="sd">        :raises AssignmentNotFoundError: if no such assignment exists</span>
+
+<span class="sd">        :return: The Assignment</span>
+<span class="sd">        :rtype: :class:`Assignment`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Creating assignment&quot;</span><span class="p">)</span>
-            <span class="n">assignment</span> <span class="o">=</span> <span class="n">Assignment</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">repo</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Created &#39;{}&#39;.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">assignments</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">AssignmentNotFoundError</span><span class="p">(</span><span class="s">&quot;{} doesn&#39;t exist&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span></div>
 
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">repo</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Skipping build. Dockerfile needs to be completed.&quot;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Building assignment...&quot;</span><span class="p">)</span>
-                <span class="n">assignment</span><span class="o">.</span><span class="n">build_image</span><span class="p">()</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Build complete.&quot;</span><span class="p">)</span>
-            <span class="k">return</span>
-        <span class="k">except</span> <span class="n">GradeSheetException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="c"># If we couldn&#39;t clone the gradesheet properly, we have to</span>
-            <span class="c"># clean up the assignment folder.</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&quot;Cannot construct assignment.&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">delete_assignment</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">AssignmentException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+<div class="viewcode-block" id="Grader.delete_assignment"><a class="viewcode-back" href="../../../models.html#grader.models.grader.Grader.delete_assignment">[docs]</a>    <span class="k">def</span> <span class="nf">delete_assignment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deletes an assignment from the Grader&#39;s assignments directory.</span>
 
-    <span class="k">def</span> <span class="nf">delete_assignment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<span class="sd">        :param str name: The name of the assignment.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">assignment_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">assignment_dir</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">assignment_dir</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span></div>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">assignment_dir</span><span class="p">,</span> <span class="n">ignore_errors</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span></div></div>
 </pre></div>
 
           </div>
@@ -129,9 +182,13 @@
         <div class="sphinxsidebarwrapper">
 <h3><a href="../../../index.html">Table Of Contents</a></h3>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About Grader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../commands.html">Commands</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../exceptions.html">Exceptions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../todo.html">TODO Items</a></li>
 </ul>
 
 <div id="searchbox" style="display: none" role="search">

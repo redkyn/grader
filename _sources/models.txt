@@ -29,6 +29,8 @@ Grader
 .. autoclass:: Grader
    :members:
 
+   .. automethod:: __init__
+
 
 Assignment
 ----------
@@ -39,12 +41,22 @@ Assignment
    .. automethod:: __init__
 
 
-
 GradeSheet
 ----------
 
 .. autoclass:: GradeSheet
    :members:
+
+   .. automethod:: __init__
+
+
+Submission
+----------
+
+.. autoclass:: Submission
+   :members:
+
+   .. automethod:: __init__
 
 
 Configuration
@@ -53,18 +65,19 @@ Configuration
 .. autoclass:: grader.models.config.Config
    :members:
 
+    .. automethod:: grader.models.config.Config.__init__
     .. automethod:: grader.models.config.Config.__getitem__
+
 
 .. autoclass:: GraderConfig
    :members:
-   :inherited-members:
-
-   .. automethod:: __init__
-   .. automethod:: __getitem__
 
 .. autoclass:: AssignmentConfig
    :members:
-   :inherited-members:
 
-   .. automethod:: __init__
-   .. automethod:: __getitem__
+
+Mixins
+------
+
+.. autoclass:: grader.models.mixins.DockerClientMixin
+   :members:

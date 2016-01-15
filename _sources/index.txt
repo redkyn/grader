@@ -6,19 +6,29 @@
 Welcome to Grader's documentation!
 ==================================
 
-Contents:
+User's Guide
+------------
+
+.. toctree::
+   :maxdepth: 2
+
+   about
+   tutorial
+   commands
+
+
+API Reference
+-------------
 
 .. toctree::
    :maxdepth: 2
 
    models
    exceptions
-   todo
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`

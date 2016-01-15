@@ -23,9 +23,10 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="about.html" />
     <link rel="top" title="Grader 0.0.1 documentation" href="index.html" />
     <link rel="next" title="Exceptions" href="exceptions.html" />
-    <link rel="prev" title="Welcome to Grader’s documentation!" href="index.html" />
+    <link rel="prev" title="Commands" href="commands.html" />
    
   
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
@@ -70,7 +71,138 @@ evaluating submitted assignments.</li>
 <dl class="class">
 <dt id="grader.models.Grader">
 <em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">Grader</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/grader.html#Grader"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Grader" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>A Grader.</p>
+<p>This object can be used to perform all of the actions that a
+Grader can perform.</p>
+<dl class="method">
+<dt id="grader.models.Grader.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/grader.html#Grader.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Grader.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate a Grader.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>path</strong> (<em>str</em>) &#8211; The path to the grader on disk. The path
+should contain the configuration file for the grader.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>GraderError</strong> &#8211; if the provided path doesn&#8217;t exist</li>
+<li><strong>GraderConfigError</strong> &#8211; if the grader config file
+cannot be read</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="grader.models.Grader.new">
+<em class="property">classmethod </em><code class="descname">new</code><span class="sig-paren">(</span><em>path</em>, <em>course_name</em>, <em>course_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/grader.html#Grader.new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Grader.new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new Grader instance and sets up its operating
+environment. This includes creating associated files on disk.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>path</strong> (<em>str</em>) &#8211; The path to the directory that will contain
+the Grader</li>
+<li><strong>course_name</strong> (<em>str</em>) &#8211; The name of the course. It must comply with
+<a class="reference internal" href="#grader.models.GraderConfig.SCHEMA" title="grader.models.GraderConfig.SCHEMA"><code class="xref py py-data docutils literal"><span class="pre">GraderConfig.SCHEMA</span></code></a></li>
+<li><strong>course_id</strong> (<em>str</em>) &#8211; The unique ID for the course. It must
+comply with <a class="reference internal" href="#grader.models.GraderConfig.SCHEMA" title="grader.models.GraderConfig.SCHEMA"><code class="xref py py-data docutils literal"><span class="pre">GraderConfig.SCHEMA</span></code></a></li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises GraderConfigError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last">if <code class="docutils literal"><span class="pre">course_name</span></code> or
+<code class="docutils literal"><span class="pre">course_id</span></code> don&#8217;t comply with the configuration schema</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Grader.assignment_dir">
+<code class="descname">assignment_dir</code><a class="headerlink" href="#grader.models.Grader.assignment_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>The path to the Grader&#8217;s assignment directory.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Grader.assignments">
+<code class="descname">assignments</code><a class="headerlink" href="#grader.models.Grader.assignments" title="Permalink to this definition">¶</a></dt>
+<dd><p>All assignments associated with this grader</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Grader.student_ids">
+<code class="descname">student_ids</code><a class="headerlink" href="#grader.models.Grader.student_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>All student IDs from the roster</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grader.models.Grader.create_assignment">
+<code class="descname">create_assignment</code><span class="sig-paren">(</span><em>name</em>, <em>repo=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/grader.html#Grader.create_assignment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Grader.create_assignment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new assignment directory on disk as well as an associated
+gradesheet and subdirectories.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>name</strong> (<em>str</em>) &#8211; The name of the assignment. Must comply with
+<a class="reference internal" href="#grader.models.AssignmentConfig.SCHEMA" title="grader.models.AssignmentConfig.SCHEMA"><code class="xref py py-data docutils literal"><span class="pre">AssignmentConfig.SCHEMA</span></code></a></li>
+<li><strong>repo</strong> (<em>str</em>) &#8211; An optional URL to a gradesheet
+repository. Read more about it in <a class="reference internal" href="#grader.models.Assignment.new" title="grader.models.Assignment.new"><code class="xref py py-meth docutils literal"><span class="pre">Assignment.new()</span></code></a></li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="grader.models.Grader.get_assignment">
+<code class="descname">get_assignment</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/grader.html#Grader.get_assignment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Grader.get_assignment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves an assignment.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em>) &#8211; The name of the assignment to get</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises AssignmentNotFoundError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body">if no such assignment exists</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The Assignment</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#grader.models.Assignment" title="grader.models.Assignment"><code class="xref py py-class docutils literal"><span class="pre">Assignment</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="grader.models.Grader.delete_assignment">
+<code class="descname">delete_assignment</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/grader.html#Grader.delete_assignment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Grader.delete_assignment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes an assignment from the Grader&#8217;s assignments directory.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em>) &#8211; The name of the assignment.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="assignment">
@@ -104,13 +236,13 @@ little easier. Creating new assignments, grading them, etc.</p>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
-<li><strong>AssignmentException</strong> &#8211; if the assignment path
+<li><strong>AssignmentError</strong> &#8211; if the assignment path
 (<code class="docutils literal"><span class="pre">Assignment.SUB_DIR/assignment_name</span></code>) doesn&#8217;t exist, if
 the submission path doesn&#8217;t exist with in the assignment
 path, if the results path doesn&#8217;t exist within the
 assignment path, or if the directory for the gradesheet
 repository doesn&#8217;t exist</li>
-<li><strong>GradeSheetException</strong> &#8211; if there was an error
+<li><strong>GradeSheetError</strong> &#8211; if there was an error
 constructing the Assignment&#8217;s <a class="reference internal" href="#grader.models.GradeSheet" title="grader.models.GradeSheet"><code class="xref py py-class docutils literal"><span class="pre">GradeSheet</span></code></a></li>
 </ul>
 </td>
@@ -119,27 +251,10 @@ constructing the Assignment&#8217;s <a class="reference internal" href="#grader.
 </table>
 </dd></dl>
 
-<dl class="method">
-<dt id="grader.models.Assignment.build_image">
-<code class="descname">build_image</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/assignment.html#Assignment.build_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Assignment.build_image" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build&#8217;s an assignment&#8217;s docker image using the Dockerfile from its
-<a class="reference internal" href="#grader.models.GradeSheet" title="grader.models.GradeSheet"><code class="xref py py-class docutils literal"><span class="pre">GradeSheet</span></code></a>.</p>
-<p>The docker image will be tagged, so that this assignment&#8217;s
-image is unique from the rest of the assignment images on a
-given machine.</p>
-<div class="admonition-todo admonition" id="index-0">
-<p class="first admonition-title">Todo</p>
-<p class="last">Use configuration from grader.yml and assignment.yml to
-pass additional options to <code class="docutils literal"><span class="pre">docker</span> <span class="pre">build</span></code></p>
-</div>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="xref py py-obj docutils literal"><span class="pre">None</span></code></td>
-</tr>
-</tbody>
-</table>
+<dl class="attribute">
+<dt id="grader.models.Assignment.SUB_DIR">
+<code class="descname">SUB_DIR</code><em class="property"> = 'assignments'</em><a class="headerlink" href="#grader.models.Assignment.SUB_DIR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the subdirectory for assignments</p>
 </dd></dl>
 
 <dl class="classmethod">
@@ -158,6 +273,11 @@ within the assignment directory</li>
 </ul>
 </li>
 </ul>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If you provide a repository URL, the Assignment will
+attempt to clone the repo. You will need pull access to it.</p>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -165,7 +285,7 @@ within the assignment directory</li>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>grader</strong> (<a class="reference internal" href="#grader.models.Grader" title="grader.models.Grader"><code class="xref py py-class docutils literal"><span class="pre">Grader</span></code></a>) &#8211; The Grader this assignment belongs to</li>
 <li><strong>assignment_name</strong> (<em>str</em>) &#8211; The name of this assignment. Must
-match <code class="xref py py-data docutils literal"><span class="pre">Grader.NAME_RE</span></code></li>
+comply with <a class="reference internal" href="#grader.models.AssignmentConfig.SCHEMA" title="grader.models.AssignmentConfig.SCHEMA"><code class="xref py py-data docutils literal"><span class="pre">AssignmentConfig.SCHEMA</span></code></a></li>
 <li><strong>gradesheet_repo</strong> (<em>str</em>) &#8211; The URL of a git repository to clone
 for the gradesheet. If set to None, a repository with
 default values will be created.</li>
@@ -178,32 +298,16 @@ default values will be created.</li>
 <tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference internal" href="#grader.models.Assignment" title="grader.models.Assignment"><code class="xref py py-class docutils literal"><span class="pre">Assignment</span></code></a></p>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name" colspan="2">Raises AssignmentException:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last">if the &#8220;assignments&#8221; directory
-doesn&#8217;t exist, if the directory for the new assignment
-already exists, or if the name of the assignment.</p>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>GradeSheetError</strong> &#8211; if there was an error creating
+the GradeSheet</li>
+<li><strong>ConfigValidationError</strong> &#8211; if there was an error
+creating the GradeSheet&#8217;s assignment-specific config file</li>
+</ul>
 </td>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="grader.models.Assignment.NAME_RE">
-<code class="descname">NAME_RE</code><em class="property"> = re.compile('^[A-Za-z0-9_.-]+$')</em><a class="headerlink" href="#grader.models.Assignment.NAME_RE" title="Permalink to this definition">¶</a></dt>
-<dd><p>Regular expression for assignment names</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="grader.models.Assignment.SUB_DIR">
-<code class="descname">SUB_DIR</code><em class="property"> = 'assignments'</em><a class="headerlink" href="#grader.models.Assignment.SUB_DIR" title="Permalink to this definition">¶</a></dt>
-<dd><p>Name of the subdirectory for assignments</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="grader.models.Assignment.gradesheet_path">
-<code class="descname">gradesheet_path</code><a class="headerlink" href="#grader.models.Assignment.gradesheet_path" title="Permalink to this definition">¶</a></dt>
-<dd><p>File path to the assignment&#8217;s gradesheet repository</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -213,15 +317,63 @@ already exists, or if the name of the assignment.</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="grader.models.Assignment.results_path">
-<code class="descname">results_path</code><a class="headerlink" href="#grader.models.Assignment.results_path" title="Permalink to this definition">¶</a></dt>
+<dt id="grader.models.Assignment.image_id">
+<code class="descname">image_id</code><a class="headerlink" href="#grader.models.Assignment.image_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unique ID for an assignment&#8217;s docker image</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Assignment.submissions_dir">
+<code class="descname">submissions_dir</code><a class="headerlink" href="#grader.models.Assignment.submissions_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>File path to the assignment&#8217;s submissions directory</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Assignment.submissions">
+<code class="descname">submissions</code><a class="headerlink" href="#grader.models.Assignment.submissions" title="Permalink to this definition">¶</a></dt>
+<dd><p>All submissions for this assignment</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Assignment.submissions_by_user">
+<code class="descname">submissions_by_user</code><a class="headerlink" href="#grader.models.Assignment.submissions_by_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>All submissions for this assignment grouped by user</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Assignment.results_dir">
+<code class="descname">results_dir</code><a class="headerlink" href="#grader.models.Assignment.results_dir" title="Permalink to this definition">¶</a></dt>
 <dd><p>File path to the assignment&#8217;s results directory</p>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="grader.models.Assignment.submissions_path">
-<code class="descname">submissions_path</code><a class="headerlink" href="#grader.models.Assignment.submissions_path" title="Permalink to this definition">¶</a></dt>
-<dd><p>File path to the assignment&#8217;s submissions directory</p>
+<dt id="grader.models.Assignment.gradesheet_dir">
+<code class="descname">gradesheet_dir</code><a class="headerlink" href="#grader.models.Assignment.gradesheet_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>File path to the assignment&#8217;s gradesheet repository</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="grader.models.Assignment.build_image">
+<code class="descname">build_image</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/assignment.html#Assignment.build_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Assignment.build_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build&#8217;s an assignment&#8217;s docker image using the Dockerfile from its
+<a class="reference internal" href="#grader.models.GradeSheet" title="grader.models.GradeSheet"><code class="xref py py-class docutils literal"><span class="pre">GradeSheet</span></code></a>.</p>
+<p>The docker image will be tagged, so that this assignment&#8217;s
+image is unique from the rest of the assignment images on a
+given machine.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="xref py py-obj docutils literal"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="grader.models.Assignment.delete_image">
+<code class="descname">delete_image</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/assignment.html#Assignment.delete_image"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Assignment.delete_image" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deletes an assignment&#8217;s docker image based on its tag.</p>
 </dd></dl>
 
 </dd></dl>
@@ -232,14 +384,411 @@ already exists, or if the name of the assignment.</p>
 <dl class="class">
 <dt id="grader.models.GradeSheet">
 <em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">GradeSheet</code><span class="sig-paren">(</span><em>assignment</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/gradesheet.html#GradeSheet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.GradeSheet" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>A gradesheet for an assignment. Gradesheets are git
+repositories. They have the following attributes...</p>
+<dl class="docutils">
+<dt>A configuration file</dt>
+<dd>Assignment-specific configuration information (refer to
+<a class="reference internal" href="#grader.models.AssignmentConfig" title="grader.models.AssignmentConfig"><code class="xref py py-class docutils literal"><span class="pre">AssignmentConfig</span></code></a>)</dd>
+<dt>A Dockerfile</dt>
+<dd>Used to build a docker image. That image will be used to
+create containers for running student submissions</dd>
+<dt>Grading scripts</dt>
+<dd>The assignment-specific configuration details how to run
+grading scripts. The gradesheet repository must have the
+scripts in order to run them.</dd>
+</dl>
+<dl class="method">
+<dt id="grader.models.GradeSheet.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>assignment</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/gradesheet.html#GradeSheet.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.GradeSheet.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiates a GradeSheet.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>assignment</strong> (<a class="reference internal" href="#grader.models.Assignment" title="grader.models.Assignment"><em>Assignment</em></a>) &#8211; The assignment to which this
+gradesheet belongs.</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><strong>AssignmentConfigError</strong> &#8211; if the assignment-specific
+config file in the gradesheet cannot be loaded</li>
+<li><strong>GradeSheetError</strong> &#8211; if the Dockerfile can&#8217;t be found</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.GradeSheet.SUB_DIR">
+<code class="descname">SUB_DIR</code><em class="property"> = 'gradesheet'</em><a class="headerlink" href="#grader.models.GradeSheet.SUB_DIR" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name to use when creating a new gradesheet directory on disk.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="grader.models.GradeSheet.from_repo">
+<em class="property">classmethod </em><code class="descname">from_repo</code><span class="sig-paren">(</span><em>gradesheet_path</em>, <em>repo_url</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/gradesheet.html#GradeSheet.from_repo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.GradeSheet.from_repo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clone a gradesheet from a remote git repository.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>gradesheet_path</strong> (<em>str</em>) &#8211; The path to the directory into
+which the gradesheet repository will be cloned.</li>
+<li><strong>repo_url</strong> (<em>str</em>) &#8211; A URL pointing to a gradesheet repository
+to clone.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises GradeSheetError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last">if there was a problem cloning
+the repo</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="grader.models.GradeSheet.new">
+<em class="property">classmethod </em><code class="descname">new</code><span class="sig-paren">(</span><em>gradesheet_path</em>, <em>assignment_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/gradesheet.html#GradeSheet.new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.GradeSheet.new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes a new gradesheet repository with default files</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>gradesheet_path</strong> (<em>str</em>) &#8211; The path to the directory into
+which the gradesheet repository will be cloned.</li>
+<li><strong>assignment_name</strong> (<em>str</em>) &#8211; The name of the assignment.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.GradeSheet.dockerfile_path">
+<code class="descname">dockerfile_path</code><a class="headerlink" href="#grader.models.GradeSheet.dockerfile_path" title="Permalink to this definition">¶</a></dt>
+<dd><p>The path to this gradesheet&#8217;s Dockerfile</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="submission">
+<h2>Submission<a class="headerlink" href="#submission" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="grader.models.Submission">
+<em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">Submission</code><span class="sig-paren">(</span><em>assignment</em>, <em>tar_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/submission.html#Submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>An assignment submission.</p>
+<p>A Submission essentially represents a <code class="docutils literal"><span class="pre">.tar.gz</span></code> file on disk
+that contains a student assignment submission.</p>
+<dl class="method">
+<dt id="grader.models.Submission.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>assignment</em>, <em>tar_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/submission.html#Submission.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Submission.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiates a new Submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>assignment</strong> (<em>str</em>) &#8211; The <a class="reference internal" href="#grader.models.Assignment" title="grader.models.Assignment"><code class="xref py py-class docutils literal"><span class="pre">Assignment</span></code></a> object to which
+this assignment belongs.</li>
+<li><strong>tar_name</strong> (<em>str</em>) &#8211; The name of the submission&#8217;s .tar.gz file
+(including extension)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Submission.SUBMISSION_ID_RE">
+<code class="descname">SUBMISSION_ID_RE</code><em class="property"> = re.compile('^(?P&lt;student_id&gt;\\w+)--(?P&lt;uuid&gt;[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$')</em><a class="headerlink" href="#grader.models.Submission.SUBMISSION_ID_RE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Full submission IDs must match this pattern</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="grader.models.Submission.split_full_id">
+<em class="property">classmethod </em><code class="descname">split_full_id</code><span class="sig-paren">(</span><em>full_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/submission.html#Submission.split_full_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Submission.split_full_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Splits a full Submission ID into the student&#8217;s ID, and the
+submission&#8217;s UUID</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>full_id</strong> (<em>str</em>) &#8211; A full submission ID. See
+<code class="xref py py-data docutils literal"><span class="pre">SUBMISSSION_ID_RE</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">The student&#8217;s id, and the submission&#8217;s UUID</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">(str, str)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="grader.models.Submission.get_full_id">
+<em class="property">classmethod </em><code class="descname">get_full_id</code><span class="sig-paren">(</span><em>basename</em>, <em>sid=None</em>, <em>sid_pattern='(?P&lt;id&gt;.*)'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/submission.html#Submission.get_full_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Submission.get_full_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a full Submission ID based on the student&#8217;s ID</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>basename</strong> (<em>str</em>) &#8211; The basename of a file to use for
+generating the submisison id. This string should contain
+the student&#8217;s ID in some way.</li>
+<li><strong>sid</strong> (<em>str</em>) &#8211; If provided, this will be used as the
+student&#8217;s ID.</li>
+<li><strong>sid_pattern</strong> (<em>str</em>) &#8211; If provided, this will be used to pull
+the student&#8217;s ID out of <code class="docutils literal"><span class="pre">basename</span></code>. The match group
+named &#8220;id&#8221; (i.e., <code class="docutils literal"><span class="pre">match.group('id')</span></code>) will be used as
+the student&#8217;s id.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Raises SubmissionError:</th></tr>
+<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">If there was an issue with matching
+basename against <code class="docutils literal"><span class="pre">sid_pattern</span></code></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">The full submission id (for filenames)</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">str</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="grader.models.Submission.import_blackboard_zip">
+<em class="property">classmethod </em><code class="descname">import_blackboard_zip</code><span class="sig-paren">(</span><em>assignment</em>, <em>zip_path</em>, <em>sid_pattern='(?P&lt;id&gt;.*)'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/submission.html#Submission.import_blackboard_zip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Submission.import_blackboard_zip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imports submissions from a ZIP downloaded from Blackboard</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>assignment</strong> (<em>str</em>) &#8211; Assignment associated with this submission</li>
+<li><strong>zip_path</strong> (<em>str</em>) &#8211; Path to the Blackboard ZIP to import</li>
+<li><strong>sid_pattern</strong> (<em>str</em>) &#8211; An optional pattern to use to convert
+the name of a submission to a submission id</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list of Submissions</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="grader.models.Submission.import_multiple">
+<em class="property">classmethod </em><code class="descname">import_multiple</code><span class="sig-paren">(</span><em>assignment</em>, <em>source</em>, <em>sid_pattern='(?P&lt;id&gt;.*)'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/submission.html#Submission.import_multiple"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Submission.import_multiple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imports multiple submissions from a folder of <code class="docutils literal"><span class="pre">.tar.gz</span></code>&#8216;s or
+folders of submission material.</p>
+<p>By default, the names of the <code class="docutils literal"><span class="pre">.tar.gz</span></code> files (minus
+extensions) will be used as the ID for each submission. For
+example, if a folder contains <code class="docutils literal"><span class="pre">hsimpson.tar.gz</span></code>, a new
+Submission with id <code class="docutils literal"><span class="pre">hsimpson</span></code> will be created.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>assignment</strong> (<em>str</em>) &#8211; Assignment associated with this submission</li>
+<li><strong>source</strong> (<em>str</em>) &#8211; Path to the folder of
+<a href="#id1"><span class="problematic" id="id2">``</span></a>.tar.gz``s/folders to import</li>
+<li><strong>sid_pattern</strong> (<em>str</em>) &#8211; An optional pattern to use to convert
+the name of a submission to a submission id</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list of Submissions</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="grader.models.Submission.import_single">
+<em class="property">classmethod </em><code class="descname">import_single</code><span class="sig-paren">(</span><em>assignment</em>, <em>source</em>, <em>sid=None</em>, <em>sid_pattern='(?P&lt;id&gt;.*)'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/submission.html#Submission.import_single"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Submission.import_single" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imports a single submission.</p>
+<p>The submission may be:</p>
+<ul class="simple">
+<li>A <code class="docutils literal"><span class="pre">.tar.gz</span></code> file.</li>
+<li>A folder containing files to submit. The folder will be
+compressed as a <code class="docutils literal"><span class="pre">.tar.gz</span></code> then imported.</li>
+</ul>
+<p>By default the name of the submission (minus extensions) will
+be used as its ID. For example, if a folder is named
+<code class="docutils literal"><span class="pre">hsimpson/</span></code>, the new Submission with id <code class="docutils literal"><span class="pre">hsimpson</span></code> will be
+created.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>assignment</strong> (<em>str</em>) &#8211; Assignment associated with this submission</li>
+<li><strong>source</strong> (<em>str</em>) &#8211; Path to the submission item</li>
+<li><strong>sid</strong> (<em>str</em>) &#8211; The submission id to use. If None, the
+basename of <code class="docutils literal"><span class="pre">source</span></code> will be used.</li>
+<li><strong>sid_pattern</strong> (<em>str</em>) &#8211; An optional pattern to use to convert
+the name of a submission to a submission id</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A list containing a single item: the new Submission</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="grader.models.Submission.import_repo">
+<em class="property">classmethod </em><code class="descname">import_repo</code><span class="sig-paren">(</span><em>assignment</em>, <em>repo_url</em>, <em>sid=None</em>, <em>sid_pattern='(?P&lt;id&gt;.*)'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/submission.html#Submission.import_repo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Submission.import_repo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Imports a submission from a git repository</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>assignment</strong> (<em>str</em>) &#8211; Assignment associated with this submission</li>
+<li><strong>repo_url</strong> (<em>str</em>) &#8211; URL to a clone-able git repository.</li>
+<li><strong>sid</strong> (<em>str</em>) &#8211; The submission ID for the new submission. If
+None, the name of the repository (sans <code class="docutils literal"><span class="pre">.git</span></code>) will be
+used.</li>
+<li><strong>sid_pattern</strong> (<em>str</em>) &#8211; An optional pattern to use to convert
+the name of a submission to a submission id</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the new submission</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#grader.models.Submission" title="grader.models.Submission">Submission</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="grader.models.Submission.get_importers">
+<em class="property">classmethod </em><code class="descname">get_importers</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/submission.html#Submission.get_importers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Submission.get_importers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a dict that maps nicknames for importers to classmethods.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="grader.models.Submission.get_importer">
+<em class="property">classmethod </em><code class="descname">get_importer</code><span class="sig-paren">(</span><em>submission_type</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/submission.html#Submission.get_importer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.Submission.get_importer" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt>Returns an importer function for a given submission type. Refer to</dt>
+<dd>the definition of <a class="reference internal" href="#grader.models.Submission.get_importers" title="grader.models.Submission.get_importers"><code class="xref py py-meth docutils literal"><span class="pre">Submission.get_importers()</span></code></a> for a
+list of acceptable values for <code class="docutils literal"><span class="pre">submission_type</span></code>.</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>submission_type</strong> (<em>str</em>) &#8211; The type of submission to import.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a function that will import a submission into Grader</td>
+</tr>
+<tr class="field-odd field"><th class="field-name" colspan="2">Raises SubmissionError:</th></tr>
+<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">if no importer can be found</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Submission.import_time">
+<code class="descname">import_time</code><a class="headerlink" href="#grader.models.Submission.import_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>The time stamp on the Submission (as a datetime object)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Submission.file_mtimes">
+<code class="descname">file_mtimes</code><a class="headerlink" href="#grader.models.Submission.file_mtimes" title="Permalink to this definition">¶</a></dt>
+<dd><p>A dict mapping file names (from the submission archive) a datetime
+object indicating the last time that file was modified</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Submission.latest_mtime">
+<code class="descname">latest_mtime</code><a class="headerlink" href="#grader.models.Submission.latest_mtime" title="Permalink to this definition">¶</a></dt>
+<dd><p>The time stamp of the most recently modified file in the submission
+archive (as a datetime object)</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Submission.sha1sum">
+<code class="descname">sha1sum</code><a class="headerlink" href="#grader.models.Submission.sha1sum" title="Permalink to this definition">¶</a></dt>
+<dd><p>The SHA1 sum of the submission archive</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Submission.unpacked_files">
+<code class="descname">unpacked_files</code><a class="headerlink" href="#grader.models.Submission.unpacked_files" title="Permalink to this definition">¶</a></dt>
+<dd><p>A context manager for working with unpacked submissions. Returns
+the name of the directory where all files are unpacked. When
+the context is exited, the directory and its contents are
+deleted.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Submission.unpacked_repo">
+<code class="descname">unpacked_repo</code><a class="headerlink" href="#grader.models.Submission.unpacked_repo" title="Permalink to this definition">¶</a></dt>
+<dd><p>A context manager for working with unpacked submission
+repositories. Returns a git.Repo object corresponding to the
+submission&#8217;s repository.</p>
+<p>If the submission is not a git repository, then &#8220;None&#8221; is
+returned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Submission.latest_commit">
+<code class="descname">latest_commit</code><a class="headerlink" href="#grader.models.Submission.latest_commit" title="Permalink to this definition">¶</a></dt>
+<dd><p>The time stamp of the default branch of the submission, or None if
+the submission isn&#8217;t a git repository.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="grader.models.Submission.container_labels">
+<code class="descname">container_labels</code><a class="headerlink" href="#grader.models.Submission.container_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>The unique label to use for this submission&#8217;s docker container</p>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 <div class="section" id="configuration">
 <h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="grader.models.config.Config">
-<em class="property">class </em><code class="descclassname">grader.models.config.</code><code class="descname">Config</code><a class="reference internal" href="_modules/grader/models/config.html#Config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.config.Config" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">grader.models.config.</code><code class="descname">Config</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/config.html#Config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.config.Config" title="Permalink to this definition">¶</a></dt>
 <dd><p>A base class for configuration objects. Provides two vaguely-useful
 methods to subclasses.</p>
 <p>Requirements:</p>
@@ -247,6 +796,9 @@ methods to subclasses.</p>
 <li>The class must have a class-wide <code class="docutils literal"><span class="pre">CONFIG_FILE_NAME</span></code> variable,
 which corresponds to the name of the configuration file (e.g.,
 <code class="docutils literal"><span class="pre">&quot;config.yml&quot;</span></code>)</li>
+<li>The class must have a class-wide <code class="docutils literal"><span class="pre">SCHEMA</span></code> variable, which is a
+valid JSONSchema that can be used to validate the fields in the
+Config.</li>
 <li>Instances of the class must have an attribute <code class="docutils literal"><span class="pre">path</span></code>, which is
 the file path to the directory containing the corresponding
 configuration file.</li>
@@ -256,13 +808,60 @@ configuration file.</li>
 </ul>
 <blockquote>
 <div><dl class="method">
+<dt id="grader.models.config.Config.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/config.html#Config.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.config.Config.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiates a Config by reading a YAML file</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<em>str</em>) &#8211; The path to the directory containing the
+YAML-formatted configuration file.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="grader.models.config.Config.__getitem__">
 <code class="descname">__getitem__</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/config.html#Config.__getitem__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.config.Config.__getitem__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the configuration item for key <code class="docutils literal"><span class="pre">name</span></code>
-:param str name: The key to fetch</p>
+<dd><p>Returns the configuration item for key <code class="docutils literal"><span class="pre">name</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em>) &#8211; The key to fetch</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div></blockquote>
+<dl class="classmethod">
+<dt id="grader.models.config.Config.new">
+<em class="property">classmethod </em><code class="descname">new</code><span class="sig-paren">(</span><em>path</em>, <em>config</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/config.html#Config.new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.config.Config.new" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new GraderConfig object and corresponding config file on
+disk.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>path</strong> (<em>str</em>) &#8211; The path to the directory in which the config
+file will be saved</li>
+<li><strong>config</strong> (<em>dict</em>) &#8211; A dict of default configurations to store
+in the new configuration file.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">if <code class="docutils literal"><span class="pre">config</span></code> doesn&#8217;t meet the requirements of the
+Config&#8217;s <code class="xref py py-data docutils literal"><span class="pre">SCHEMA</span></code></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="grader.models.config.Config.file_path">
 <code class="descname">file_path</code><a class="headerlink" href="#grader.models.config.Config.file_path" title="Permalink to this definition">¶</a></dt>
@@ -279,49 +878,18 @@ configuration file.</li>
 </table>
 </dd></dl>
 
-</dd></dl>
-
-<dl class="class">
-<dt id="grader.models.GraderConfig">
-<em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">GraderConfig</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/config.html#GraderConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.GraderConfig" title="Permalink to this definition">¶</a></dt>
-<dd><p>A class for creating, loading, and accessing grader-wide,
-YAML-formatted configuration files</p>
 <dl class="method">
-<dt id="grader.models.GraderConfig.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/config.html#GraderConfig.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.GraderConfig.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiates a GraderConfig by reading a YAML file</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<em>str</em>) &#8211; The path to the directory containing the
-YAML-formatted configuration file.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="grader.models.GraderConfig.__getitem__">
-<code class="descname">__getitem__</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#grader.models.GraderConfig.__getitem__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the configuration item for key <code class="docutils literal"><span class="pre">name</span></code>
-:param str name: The key to fetch</p>
-</dd></dl>
-
-<dl class="classmethod">
-<dt id="grader.models.GraderConfig.new">
-<em class="property">classmethod </em><code class="descname">new</code><span class="sig-paren">(</span><em>path</em>, <em>course_name</em>, <em>course_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/config.html#GraderConfig.new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.GraderConfig.new" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a new GraderConfig object and corresponding config file on
-disk.</p>
+<dt id="grader.models.config.Config.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>name</em>, <em>default=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/config.html#Config.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.config.Config.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the configuration item for key <code class="docutils literal"><span class="pre">name</span></code>, defaulting to
+<code class="docutils literal"><span class="pre">default</span></code></p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>path</strong> (<em>str</em>) &#8211; The path to the directory in which the config
-file will be saved</li>
-<li><strong>course_name</strong> (<em>str</em>) &#8211; The name of the course</li>
-<li><strong>course_id</strong> (<em>str</em>) &#8211; The unique ID of the course</li>
+<li><strong>name</strong> (<em>str</em>) &#8211; The key to fetch</li>
+<li><strong>default</strong> &#8211; The item to return if the key is not found</li>
 </ul>
 </td>
 </tr>
@@ -329,6 +897,13 @@ file will be saved</li>
 </table>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="class">
+<dt id="grader.models.GraderConfig">
+<em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">GraderConfig</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/config.html#GraderConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.GraderConfig" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class for creating, loading, and accessing grader-wide,
+YAML-formatted configuration files</p>
 <dl class="attribute">
 <dt id="grader.models.GraderConfig.CONFIG_FILE_NAME">
 <code class="descname">CONFIG_FILE_NAME</code><em class="property"> = 'grader.yml'</em><a class="headerlink" href="#grader.models.GraderConfig.CONFIG_FILE_NAME" title="Permalink to this definition">¶</a></dt>
@@ -336,19 +911,9 @@ file will be saved</li>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="grader.models.GraderConfig.file_path">
-<code class="descname">file_path</code><a class="headerlink" href="#grader.models.GraderConfig.file_path" title="Permalink to this definition">¶</a></dt>
-<dd><p>The full file path to the corresponding configuration file.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The path to the configuration file</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
+<dt id="grader.models.GraderConfig.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'additionalProperties': False, 'required': ['course-id', 'course-name'], '$schema': 'http://json-schema.org/schema#', 'type': 'object', 'properties': {'course-name': {'type': 'string', 'pattern': '^[\\w-]+$'}, 'course-id': {'type': 'string', 'pattern': '^[\\w-]+$'}, 'roster': {'items': {'additionalProperties': False, 'required': ['name', 'id'], 'type': 'object', 'properties': {'name': {'type': 'string'}, 'id': {'type': 'string', 'pattern': '^\\w+$'}}}, 'type': 'array'}}}</em><a class="headerlink" href="#grader.models.GraderConfig.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd><p>The schema for a Grader-wide configuration file</p>
 </dd></dl>
 
 </dd></dl>
@@ -358,48 +923,6 @@ file will be saved</li>
 <em class="property">class </em><code class="descclassname">grader.models.</code><code class="descname">AssignmentConfig</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/config.html#AssignmentConfig"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.AssignmentConfig" title="Permalink to this definition">¶</a></dt>
 <dd><p>A class for creating, loading, and accessing assignment-specific,
 YAML-formatted configuration files</p>
-<dl class="method">
-<dt id="grader.models.AssignmentConfig.__init__">
-<code class="descname">__init__</code><span class="sig-paren">(</span><em>path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/config.html#AssignmentConfig.__init__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.AssignmentConfig.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiates an AssignmentConfig by reading a YAML file</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<em>str</em>) &#8211; The path to the directory containing the
-YAML-formatted configuration file.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="grader.models.AssignmentConfig.__getitem__">
-<code class="descname">__getitem__</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#grader.models.AssignmentConfig.__getitem__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns the configuration item for key <code class="docutils literal"><span class="pre">name</span></code>
-:param str name: The key to fetch</p>
-</dd></dl>
-
-<dl class="classmethod">
-<dt id="grader.models.AssignmentConfig.new">
-<em class="property">classmethod </em><code class="descname">new</code><span class="sig-paren">(</span><em>path</em>, <em>assignment_name</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/grader/models/config.html#AssignmentConfig.new"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.AssignmentConfig.new" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a new AssignmentConfig object and corresponding config file
-on disk.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>path</strong> (<em>str</em>) &#8211; The path to the directory in which the config
-file will be saved</li>
-<li><strong>assignment_name</strong> (<em>str</em>) &#8211; The name of the assignment</li>
-</ul>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 <dl class="attribute">
 <dt id="grader.models.AssignmentConfig.CONFIG_FILE_NAME">
 <code class="descname">CONFIG_FILE_NAME</code><em class="property"> = 'assignment.yml'</em><a class="headerlink" href="#grader.models.AssignmentConfig.CONFIG_FILE_NAME" title="Permalink to this definition">¶</a></dt>
@@ -407,19 +930,25 @@ file will be saved</li>
 </dd></dl>
 
 <dl class="attribute">
-<dt id="grader.models.AssignmentConfig.file_path">
-<code class="descname">file_path</code><a class="headerlink" href="#grader.models.AssignmentConfig.file_path" title="Permalink to this definition">¶</a></dt>
-<dd><p>The full file path to the corresponding configuration file.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The path to the configuration file</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">str</td>
-</tr>
-</tbody>
-</table>
+<dt id="grader.models.AssignmentConfig.SCHEMA">
+<code class="descname">SCHEMA</code><em class="property"> = {'additionalProperties': False, 'required': ['assignment-name'], '$schema': 'http://json-schema.org/schema#', 'type': 'object', 'properties': {'assignment-name': {'type': 'string', 'pattern': '^[\\w-]+$'}, 'image-build-options': {'type': 'object'}}}</em><a class="headerlink" href="#grader.models.AssignmentConfig.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<dd><p>The schema for a Assignment-wide configuration file</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="mixins">
+<h2>Mixins<a class="headerlink" href="#mixins" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="grader.models.mixins.DockerClientMixin">
+<em class="property">class </em><code class="descclassname">grader.models.mixins.</code><code class="descname">DockerClientMixin</code><a class="reference internal" href="_modules/grader/models/mixins.html#DockerClientMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#grader.models.mixins.DockerClientMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>A mixin class that gives subclasses access to a docker Client
+object.</p>
+<dl class="attribute">
+<dt id="grader.models.mixins.DockerClientMixin.docker_cli">
+<code class="descname">docker_cli</code><a class="headerlink" href="#grader.models.mixins.DockerClientMixin.docker_cli" title="Permalink to this definition">¶</a></dt>
+<dd><p>A docker Client object. Always returns the same one.</p>
 </dd></dl>
 
 </dd></dl>
@@ -434,16 +963,22 @@ file will be saved</li>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
 <h3><a href="index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="about.html">About Grader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a></li>
+</ul>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="">Models</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#grader">Grader</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#assignment">Assignment</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#gradesheet">GradeSheet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#submission">Submission</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mixins">Mixins</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="exceptions.html">Exceptions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="todo.html">TODO Items</a></li>
 </ul>
 
   <div role="note" aria-label="source link">

@@ -23,6 +23,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="top" title="Grader 0.0.1 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" />
    
@@ -38,24 +39,35 @@
           <div class="body" role="main">
             
   <h1>Source code for grader.models.assignment</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">docker</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">re</span>
-
-<span class="kn">from</span> <span class="nn">docker</span> <span class="kn">import</span> <span class="n">Client</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
 
 <span class="kn">from</span> <span class="nn">.gradesheet</span> <span class="kn">import</span> <span class="n">GradeSheet</span>
+<span class="kn">from</span> <span class="nn">.mixins</span> <span class="kn">import</span> <span class="n">DockerClientMixin</span>
+<span class="kn">from</span> <span class="nn">.submission</span> <span class="kn">import</span> <span class="n">Submission</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="AssignmentException"><a class="viewcode-back" href="../../../exceptions.html#grader.models.AssignmentException">[docs]</a><span class="k">class</span> <span class="nc">AssignmentException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="AssignmentError"><a class="viewcode-back" href="../../../exceptions.html#grader.models.assignment.AssignmentError">[docs]</a><span class="k">class</span> <span class="nc">AssignmentError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A general-purpose exception thrown by the Assignment class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="Assignment"><a class="viewcode-back" href="../../../models.html#grader.models.Assignment">[docs]</a><span class="k">class</span> <span class="nc">Assignment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="AssignmentBuildError"><a class="viewcode-back" href="../../../exceptions.html#grader.models.assignment.AssignmentBuildError">[docs]</a><span class="k">class</span> <span class="nc">AssignmentBuildError</span><span class="p">(</span><span class="n">AssignmentError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An exception thrown when there&#39;s an issue building the docker</span>
+<span class="sd">    image.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Assignment"><a class="viewcode-back" href="../../../models.html#grader.models.assignment.Assignment">[docs]</a><span class="k">class</span> <span class="nc">Assignment</span><span class="p">(</span><span class="n">DockerClientMixin</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;An Assignment with several neato attributes:</span>
 
 <span class="sd">    * A place (directory) for storing student submissions for the</span>
@@ -75,11 +87,8 @@
     <span class="n">SUB_DIR</span> <span class="o">=</span> <span class="s">&quot;assignments&quot;</span>
     <span class="sd">&quot;&quot;&quot;Name of the subdirectory for assignments&quot;&quot;&quot;</span>
 
-    <span class="n">NAME_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">r&quot;^[A-Za-z0-9_.-]+$&quot;</span><span class="p">)</span>
-    <span class="sd">&quot;&quot;&quot;Regular expression for assignment names&quot;&quot;&quot;</span>
-
     <span class="nd">@classmethod</span>
-<div class="viewcode-block" id="Assignment.new"><a class="viewcode-back" href="../../../models.html#grader.models.Assignment.new">[docs]</a>    <span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">grader</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">,</span> <span class="n">gradesheet_repo</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Assignment.new"><a class="viewcode-back" href="../../../models.html#grader.models.assignment.Assignment.new">[docs]</a>    <span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">grader</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">,</span> <span class="n">gradesheet_repo</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Creates a new Assignment for a Grader. This includes...</span>
 
 <span class="sd">        * Creating a directory to hold assignments, if necessary.</span>
@@ -95,11 +104,16 @@
 
 <span class="sd">          * Initializing a repository with default files</span>
 
+<span class="sd">        .. note::</span>
+
+<span class="sd">           If you provide a repository URL, the Assignment will</span>
+<span class="sd">           attempt to clone the repo. You will need pull access to it.</span>
+
 <span class="sd">        :param grader: The Grader this assignment belongs to</span>
 <span class="sd">        :type grader: :class:`Grader`</span>
 
 <span class="sd">        :param assignment_name: The name of this assignment. Must</span>
-<span class="sd">               match :data:`Grader.NAME_RE`</span>
+<span class="sd">               comply with :data:`AssignmentConfig.SCHEMA`</span>
 <span class="sd">        :type assignment_name: str</span>
 
 <span class="sd">        :param gradesheet_repo: The URL of a git repository to clone</span>
@@ -110,42 +124,64 @@
 <span class="sd">        :return: The newly created Assignment</span>
 <span class="sd">        :rtype: :class:`Assignment`</span>
 
-<span class="sd">        :raises AssignmentException: if the &quot;assignments&quot; directory</span>
-<span class="sd">            doesn&#39;t exist, if the directory for the new assignment</span>
-<span class="sd">            already exists, or if the name of the assignment.</span>
+<span class="sd">        :raises GradeSheetError: if there was an error creating</span>
+<span class="sd">            the GradeSheet</span>
+
+<span class="sd">        :raises ConfigValidationError: if there was an error</span>
+<span class="sd">            creating the GradeSheet&#39;s assignment-specific config file</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Creating assignment </span><span class="si">%s</span><span class="s">.&quot;</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">)</span>
         <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">grader</span><span class="o">.</span><span class="n">assignment_dir</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">)</span>
 
         <span class="c"># Make sure the parent directory exists</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">grader</span><span class="o">.</span><span class="n">assignment_dir</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">AssignmentException</span><span class="p">(</span>
-                <span class="s">&quot;{} does not exist&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">grader</span><span class="o">.</span><span class="n">assignment_dir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">grader</span><span class="o">.</span><span class="n">assignment_dir</span><span class="p">)</span> \
+           <span class="ow">or</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">grader</span><span class="o">.</span><span class="n">assignment_dir</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FileNotFoundError</span><span class="p">(</span>
+                <span class="s">&quot;{} does not exist. &quot;</span>
+                <span class="s">&quot;Cannot create assignment.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">grader</span><span class="o">.</span><span class="n">assignment_dir</span><span class="p">)</span>
             <span class="p">)</span>
 
         <span class="c"># Make sure the target directory doesn&#39;t exist</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">AssignmentException</span><span class="p">(</span><span class="s">&quot;{} exists&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
-
-        <span class="c"># Check the assignment name</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">cls</span><span class="o">.</span><span class="n">NAME_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">assignment_name</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">AssignmentException</span><span class="p">(</span>
-                <span class="s">&quot;Bad assignment name {}. &quot;</span>
-                <span class="s">&quot;Must match {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">assignment_name</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">NAME_RE</span><span class="o">.</span><span class="n">pattern</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">FileExistsError</span><span class="p">(</span>
+                <span class="s">&quot;{} exists. Cannot create assignment.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
             <span class="p">)</span>
 
-        <span class="c"># Make assignment root and subdirs</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Creating assignment in temporary directory...&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+            <span class="c"># Setup all the files/folders for the assignment</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">_setup_assignment</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">,</span> <span class="n">gradesheet_repo</span><span class="p">)</span>
+
+            <span class="c"># If we have succeeded so far, copy everything over</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">grader</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_setup_assignment</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">,</span> <span class="n">gradesheet_repo</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates necessary assignment files and folders within the provided</span>
+<span class="sd">        path. Does not check for correct setup and does clean up if</span>
+<span class="sd">        something goes wrong.</span>
+
+<span class="sd">        :param str path: The path of the directory in which to build</span>
+<span class="sd">            the assignment</span>
+
+<span class="sd">        :param str assignment_name: The name of the assignment</span>
+
+<span class="sd">        :param str gradesheet_repo: An optional gradesheet git repo URL</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&quot;submissions&quot;</span><span class="p">))</span>
         <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&quot;results&quot;</span><span class="p">))</span>
 
-        <span class="n">gradesheet_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">GradeSheet</span><span class="o">.</span><span class="n">SUB_DIR</span><span class="p">)</span>
+        <span class="c"># Create the GradeSheet</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Creating GradeSheet&quot;</span><span class="p">)</span>
+        <span class="n">gradesheet_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">GradeSheet</span><span class="o">.</span><span class="n">SUB_DIR</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">gradesheet_repo</span><span class="p">:</span>
-            <span class="n">GradeSheet</span><span class="o">.</span><span class="n">from_repo</span><span class="p">(</span><span class="n">gradesheet_path</span><span class="p">,</span> <span class="n">gradesheet_repo</span><span class="p">)</span>
+            <span class="n">GradeSheet</span><span class="o">.</span><span class="n">from_repo</span><span class="p">(</span><span class="n">gradesheet_dir</span><span class="p">,</span> <span class="n">gradesheet_repo</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">GradeSheet</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">gradesheet_path</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">grader</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">)</span></div>
+            <span class="n">GradeSheet</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="n">gradesheet_dir</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">image_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -155,21 +191,45 @@
                                  <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">submissions_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">image_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unique ID for an assignment&#39;s docker image&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">docker_cli</span><span class="o">.</span><span class="n">inspect_image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_tag</span><span class="p">)[</span><span class="s">&#39;Id&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="n">docker</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">NotFound</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">AssignmentBuildError</span><span class="p">(</span>
+                <span class="s">&quot;{}&#39;s image was not built.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">submissions_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;File path to the assignment&#39;s submissions directory&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&quot;submissions&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">results_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">submissions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;All submissions for this assignment&quot;&quot;&quot;</span>
+        <span class="n">tarballs</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submissions_dir</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">tarballs</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">submissions_by_user</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;All submissions for this assignment grouped by user&quot;&quot;&quot;</span>
+        <span class="n">submissions</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submissions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+        <span class="n">groups</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="n">submissions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">import_time</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">groups</span><span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">results_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;File path to the assignment&#39;s results directory&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&quot;results&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">gradesheet_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">gradesheet_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;File path to the assignment&#39;s gradesheet repository&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">GradeSheet</span><span class="o">.</span><span class="n">SUB_DIR</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Assignment.__init__"><a class="viewcode-back" href="../../../models.html#grader.models.Assignment.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grader</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">):</span>
+<div class="viewcode-block" id="Assignment.__init__"><a class="viewcode-back" href="../../../models.html#grader.models.assignment.Assignment.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grader</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Instantiate a new Assignment</span>
 
 <span class="sd">        :param grader: The grader with which this assignment is associated</span>
@@ -178,34 +238,47 @@
 <span class="sd">        :param assignment_name: The name of the assignment</span>
 <span class="sd">        :type assignment_name: str</span>
 
-<span class="sd">        :raises AssignmentException: if the assignment path</span>
+<span class="sd">        :raises AssignmentError: if the assignment path</span>
 <span class="sd">            (``Assignment.SUB_DIR/assignment_name``) doesn&#39;t exist, if</span>
 <span class="sd">            the submission path doesn&#39;t exist with in the assignment</span>
 <span class="sd">            path, if the results path doesn&#39;t exist within the</span>
 <span class="sd">            assignment path, or if the directory for the gradesheet</span>
 <span class="sd">            repository doesn&#39;t exist</span>
 
-<span class="sd">        :raises GradeSheetException: if there was an error</span>
+<span class="sd">        :raises GradeSheetError: if there was an error</span>
 <span class="sd">            constructing the Assignment&#39;s :class:`GradeSheet`</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Loading assignment.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">grader</span><span class="o">.</span><span class="n">assignment_dir</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">assignment_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">grader</span> <span class="o">=</span> <span class="n">grader</span>
 
         <span class="c"># Verify that paths exist like we expect</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">AssignmentException</span><span class="p">(</span><span class="s">&quot;Assignment path doesn&#39;t exist&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submissions_path</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">AssignmentException</span><span class="p">(</span><span class="s">&quot;Submission path doesn&#39;t exist&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_path</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">AssignmentException</span><span class="p">(</span><span class="s">&quot;Results path doesn&#39;t exist&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gradesheet_path</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">AssignmentException</span><span class="p">(</span><span class="s">&quot;GradeSheet path doesn&#39;t exist&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">FileNotFoundError</span><span class="p">(</span>
+                <span class="s">&quot;</span><span class="si">%s</span><span class="s"> has no assignment directory&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submissions_dir</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FileNotFoundError</span><span class="p">(</span>
+                <span class="s">&quot;</span><span class="si">%s</span><span class="s"> has no submissions directory&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_dir</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FileNotFoundError</span><span class="p">(</span>
+                <span class="s">&quot;</span><span class="si">%s</span><span class="s"> has no results directory&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gradesheet_dir</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FileNotFoundError</span><span class="p">(</span>
+                <span class="s">&quot;</span><span class="si">%s</span><span class="s"> has no gradesheet directory&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">gradesheet</span> <span class="o">=</span> <span class="n">GradeSheet</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Assignment.build_image"><a class="viewcode-back" href="../../../models.html#grader.models.Assignment.build_image">[docs]</a>    <span class="k">def</span> <span class="nf">build_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;String representation of an Assignment (i.e., its name)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+<div class="viewcode-block" id="Assignment.build_image"><a class="viewcode-back" href="../../../models.html#grader.models.assignment.Assignment.build_image">[docs]</a>    <span class="k">def</span> <span class="nf">build_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Build&#39;s an assignment&#39;s docker image using the Dockerfile from its</span>
 <span class="sd">        :class:`GradeSheet`.</span>
 
@@ -213,23 +286,54 @@
 <span class="sd">        image is unique from the rest of the assignment images on a</span>
 <span class="sd">        given machine.</span>
 
-<span class="sd">        .. todo::</span>
-
-<span class="sd">           Use configuration from grader.yml and assignment.yml to</span>
-<span class="sd">           pass additional options to ``docker build``</span>
-
 <span class="sd">        :return: :obj:`None`</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">cli</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="s">&quot;unix://var/run/docker.sock&quot;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="s">&quot;auto&quot;</span><span class="p">)</span>
-        <span class="n">output</span> <span class="o">=</span> <span class="n">cli</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
-            <span class="n">path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gradesheet</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
-            <span class="n">tag</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">image_tag</span><span class="p">,</span>
-            <span class="n">decode</span><span class="o">=</span><span class="bp">True</span>
-        <span class="p">)</span>
+        <span class="c"># Load build options from the config</span>
+        <span class="n">build_options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradesheet</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;image-build-options&#39;</span><span class="p">,</span> <span class="p">{})</span>
 
-        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">line</span><span class="p">)</span></div></div>
+        <span class="c"># Override required build options</span>
+        <span class="n">build_options</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s">&quot;path&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">gradesheet</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+            <span class="s">&quot;tag&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_tag</span><span class="p">,</span>
+            <span class="s">&quot;forcerm&quot;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span>
+            <span class="s">&quot;decode&quot;</span><span class="p">:</span> <span class="bp">True</span>
+        <span class="p">})</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Building image...&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Image options: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">build_options</span><span class="p">))</span>
+
+        <span class="c"># Build</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">docker_cli</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="o">**</span><span class="n">build_options</span><span class="p">)</span>
+
+            <span class="c"># Log output line-by-line to avoid running the build</span>
+            <span class="c"># asynchronously</span>
+            <span class="n">prompt</span> <span class="o">=</span> <span class="s">&quot;building {}&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+                <span class="n">error</span> <span class="o">=</span> <span class="s">&#39;Error: &quot;{}&quot;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;error&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">))</span>
+                <span class="n">stream</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;stream&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">prompt</span><span class="p">,</span> <span class="n">stream</span> <span class="ow">or</span> <span class="n">error</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">docker</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">APIError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="n">AssignmentBuildError</span><span class="p">(</span>
+                <span class="s">&quot;Unable to build: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">explanation</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&quot;utf-8&quot;</span><span class="p">))</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">image_id</span></div>
+
+<div class="viewcode-block" id="Assignment.delete_image"><a class="viewcode-back" href="../../../models.html#grader.models.assignment.Assignment.delete_image">[docs]</a>    <span class="k">def</span> <span class="nf">delete_image</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Deletes an assignment&#39;s docker image based on its tag.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">docker_cli</span><span class="o">.</span><span class="n">remove_image</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">image_tag</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">import_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">submission_type</span><span class="p">):</span>
+        <span class="n">importer</span> <span class="o">=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">get_importer</span><span class="p">(</span><span class="n">submission_type</span><span class="p">)</span>
+        <span class="n">submissions</span> <span class="o">=</span> <span class="n">importer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">submission</span> <span class="ow">in</span> <span class="n">submissions</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">submission</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Imported </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span></div>
 </pre></div>
 
           </div>
@@ -239,9 +343,13 @@
         <div class="sphinxsidebarwrapper">
 <h3><a href="../../../index.html">Table Of Contents</a></h3>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About Grader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../commands.html">Commands</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../exceptions.html">Exceptions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../todo.html">TODO Items</a></li>
 </ul>
 
 <div id="searchbox" style="display: none" role="search">

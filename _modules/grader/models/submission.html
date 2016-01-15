@@ -1,0 +1,716 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>grader.models.submission &mdash; Grader 0.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
+    <link rel="top" title="Grader 0.0.1 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for grader.models.submission</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">docker</span>
+<span class="kn">import</span> <span class="nn">git</span>
+<span class="kn">import</span> <span class="nn">gzip</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">tarfile</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">contextmanager</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="kn">from</span> <span class="nn">grader.utils.files</span> <span class="kn">import</span> <span class="n">make_tarball</span>
+
+<span class="kn">from</span> <span class="nn">.mixins</span> <span class="kn">import</span> <span class="n">DockerClientMixin</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SubmissionError"><a class="viewcode-back" href="../../../exceptions.html#grader.models.submission.SubmissionError">[docs]</a><span class="k">class</span> <span class="nc">SubmissionError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A general-purpose exception thrown by the Submission class</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="SubmissionIDError"><a class="viewcode-back" href="../../../exceptions.html#grader.models.submission.SubmissionIDError">[docs]</a><span class="k">class</span> <span class="nc">SubmissionIDError</span><span class="p">(</span><span class="n">SubmissionError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An exception thrown for errors related to Submission IDs</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="SubmissionImportError"><a class="viewcode-back" href="../../../exceptions.html#grader.models.submission.SubmissionImportError">[docs]</a><span class="k">class</span> <span class="nc">SubmissionImportError</span><span class="p">(</span><span class="n">SubmissionError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An exception thrown for errors related to Submission import</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="SubmissionContainerError"><a class="viewcode-back" href="../../../exceptions.html#grader.models.submission.SubmissionContainerError">[docs]</a><span class="k">class</span> <span class="nc">SubmissionContainerError</span><span class="p">(</span><span class="n">SubmissionError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An exception thrown for errors related to Submission docker</span>
+<span class="sd">    containers</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="Submission"><a class="viewcode-back" href="../../../models.html#grader.models.submission.Submission">[docs]</a><span class="k">class</span> <span class="nc">Submission</span><span class="p">(</span><span class="n">DockerClientMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An assignment submission.</span>
+
+<span class="sd">    A Submission essentially represents a ``.tar.gz`` file on disk</span>
+<span class="sd">    that contains a student assignment submission.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SUBMISSION_ID_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+        <span class="s">r&quot;^(?P&lt;student_id&gt;\w+)--(?P&lt;uuid&gt;[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$&quot;</span>  <span class="c"># NOQA</span>
+    <span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;Full submission IDs must match this pattern&quot;&quot;&quot;</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Submission.split_full_id"><a class="viewcode-back" href="../../../models.html#grader.models.submission.Submission.split_full_id">[docs]</a>    <span class="k">def</span> <span class="nf">split_full_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">full_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Splits a full Submission ID into the student&#39;s ID, and the</span>
+<span class="sd">        submission&#39;s UUID</span>
+
+<span class="sd">        :param str full_id: A full submission ID. See</span>
+<span class="sd">            :data:`SUBMISSSION_ID_RE`</span>
+
+<span class="sd">        :return: The student&#39;s id, and the submission&#39;s UUID</span>
+<span class="sd">        :rtype: (str, str)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">SUBMISSION_ID_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">full_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SubmissionIDError</span><span class="p">(</span><span class="s">&quot;Bad id: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">full_id</span><span class="p">))</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&quot;student_id&quot;</span><span class="p">),</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&quot;uuid&quot;</span><span class="p">))</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Submission.get_full_id"><a class="viewcode-back" href="../../../models.html#grader.models.submission.Submission.get_full_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_full_id</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">basename</span><span class="p">,</span> <span class="n">sid</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">sid_pattern</span><span class="o">=</span><span class="s">r&quot;(?P&lt;id&gt;.*)&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generates a full Submission ID based on the student&#39;s ID</span>
+
+<span class="sd">        :param str basename: The basename of a file to use for</span>
+<span class="sd">            generating the submisison id. This string should contain</span>
+<span class="sd">            the student&#39;s ID in some way.</span>
+
+<span class="sd">        :param str sid: If provided, this will be used as the</span>
+<span class="sd">            student&#39;s ID.</span>
+
+<span class="sd">        :param str sid_pattern: If provided, this will be used to pull</span>
+<span class="sd">            the student&#39;s ID out of ``basename``. The match group</span>
+<span class="sd">            named &quot;id&quot; (i.e., ``match.group(&#39;id&#39;)``) will be used as</span>
+<span class="sd">            the student&#39;s id.</span>
+
+<span class="sd">        :raises SubmissionError: If there was an issue with matching</span>
+<span class="sd">            basename against ``sid_pattern``</span>
+
+<span class="sd">        :return: The full submission id (for filenames)</span>
+<span class="sd">        :rtype: str</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">sid_pattern</span><span class="p">,</span> <span class="n">basename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sid</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">match</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sid</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SubmissionError</span><span class="p">(</span>
+                    <span class="s">&quot;{} is missing &#39;id&#39; group.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sid_pattern</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">sid</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SubmissionError</span><span class="p">(</span>
+                <span class="s">&#39;Submission ID pattern &quot;{}&quot; does not &#39;</span>
+                <span class="s">&#39;match file name &quot;{}&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sid_pattern</span><span class="p">,</span> <span class="n">basename</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">full_id</span> <span class="o">=</span> <span class="s">&quot;{}--{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">sid</span><span class="p">,</span> <span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">split_full_id</span><span class="p">(</span><span class="n">full_id</span><span class="p">)</span>  <span class="c"># Make sure we don&#39;t raise an error</span>
+        <span class="k">return</span> <span class="n">full_id</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_remove_extension</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">basename</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s">r&#39;^(.*?)(?:\.tar\.gz)?$&#39;</span><span class="p">,</span> <span class="n">basename</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_check_tarball</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">assignment</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">student_id</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s">&quot;r:gz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
+                <span class="n">tar</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="c"># Try to unpack our single folder</span>
+                <span class="n">name</span><span class="p">,</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SubmissionImportError</span><span class="p">(</span>
+                    <span class="s">&#39;Expected exactly one item at the root. &#39;</span>
+                    <span class="s">&#39;Found {}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">))</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">name</span> <span class="o">!=</span> <span class="n">student_id</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SubmissionImportError</span><span class="p">(</span>
+                    <span class="s">&#39;Inner folder name ({}) does not match &#39;</span>
+                    <span class="s">&#39;tarball name ({}).&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">student_id</span><span class="p">)</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="n">name</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="n">SubmissionImportError</span><span class="p">(</span>
+                    <span class="s">&#39;&quot;{}&quot; in {} should be a directory, &#39;</span>
+                    <span class="s">&#39;not a file.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+                <span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_check_submission_item</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">assignment</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks whether the submission item meets the following</span>
+<span class="sd">        requirements:</span>
+
+<span class="sd">        * Its name (minus extensions) matches a student ID from the</span>
+<span class="sd">          grader&#39;s roster.</span>
+
+<span class="sd">        * If the submission item is a .tar.gz, it contains a single</span>
+<span class="sd">          directory.</span>
+
+<span class="sd">        :param str full_id: A full submission ID. See</span>
+<span class="sd">            :data:`SUBMISSSION_ID_RE`</span>
+
+<span class="sd">        :return: None</span>
+
+<span class="sd">        :raises SubmissionError: if the submission item doesn&#39;t meet</span>
+<span class="sd">            the requirements described above</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Check the name of the item</span>
+        <span class="n">basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s">r&quot;(.*?)(?:\.tar\.gz)?$&quot;</span><span class="p">,</span> <span class="n">basename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SubmissionImportError</span><span class="p">(</span>
+                <span class="s">&#39;Unsure how to handle basename &quot;{}&quot;.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">basename</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">student_id</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">student_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">assignment</span><span class="o">.</span><span class="n">grader</span><span class="o">.</span><span class="n">student_ids</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SubmissionImportError</span><span class="p">(</span>
+                <span class="s">&#39;Expected &quot;{}&quot; to match a student id.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">student_id</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="ow">and</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">is_tarfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">cls</span><span class="o">.</span><span class="n">_check_tarball</span><span class="p">(</span><span class="n">assignment</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">student_id</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Submission.import_blackboard_zip"><a class="viewcode-back" href="../../../models.html#grader.models.submission.Submission.import_blackboard_zip">[docs]</a>    <span class="k">def</span> <span class="nf">import_blackboard_zip</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">assignment</span><span class="p">,</span> <span class="n">zip_path</span><span class="p">,</span>
+                              <span class="n">sid_pattern</span><span class="o">=</span><span class="s">r&quot;(?P&lt;id&gt;.*)&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Imports submissions from a ZIP downloaded from Blackboard</span>
+
+<span class="sd">        :param str assignment: Assignment associated with this submission</span>
+
+<span class="sd">        :param str zip_path: Path to the Blackboard ZIP to import</span>
+
+<span class="sd">        :param str sid_pattern: An optional pattern to use to convert</span>
+<span class="sd">            the name of a submission to a submission id</span>
+
+<span class="sd">        :return: A list of Submissions</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># TODO figure out how Blackboard names and organizes the items</span>
+        <span class="c"># in the assignment ZIP.</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Blackboard import isn&#39;t implemented yet :/&quot;</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Submission.import_multiple"><a class="viewcode-back" href="../../../models.html#grader.models.submission.Submission.import_multiple">[docs]</a>    <span class="k">def</span> <span class="nf">import_multiple</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">assignment</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">sid_pattern</span><span class="o">=</span><span class="s">r&quot;(?P&lt;id&gt;.*)&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Imports multiple submissions from a folder of ``.tar.gz``&#39;s or</span>
+<span class="sd">        folders of submission material.</span>
+
+<span class="sd">        By default, the names of the ``.tar.gz`` files (minus</span>
+<span class="sd">        extensions) will be used as the ID for each submission. For</span>
+<span class="sd">        example, if a folder contains ``hsimpson.tar.gz``, a new</span>
+<span class="sd">        Submission with id ``hsimpson`` will be created.</span>
+
+<span class="sd">        :param str assignment: Assignment associated with this submission</span>
+
+<span class="sd">        :param str source: Path to the folder of</span>
+<span class="sd">            ``.tar.gz``s/folders to import</span>
+
+<span class="sd">        :param str sid_pattern: An optional pattern to use to convert</span>
+<span class="sd">            the name of a submission to a submission id</span>
+
+<span class="sd">        :return: A list of Submissions</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Make sure this is actually a folder</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">NotADirectoryError</span><span class="p">(</span>
+                <span class="s">&quot;{} is not a directory. Cannot import.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c"># Make sure we can import all the items in this folder</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">item</span><span class="p">)</span> <span class="ow">and</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">is_tarfile</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> is a tarfile&quot;</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">item</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> is a directory&quot;</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">SubmissionError</span><span class="p">(</span>
+                    <span class="s">&quot;{} is neither a directory nor a tarball&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="c"># Import the items</span>
+        <span class="k">def</span> <span class="nf">import_it</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">fullpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">submission</span><span class="p">,</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">import_single</span><span class="p">(</span>
+                    <span class="n">assignment</span><span class="p">,</span> <span class="n">fullpath</span><span class="p">,</span> <span class="n">sid_pattern</span><span class="o">=</span><span class="n">sid_pattern</span>
+                <span class="p">)</span>
+                <span class="k">return</span> <span class="n">submission</span>
+            <span class="k">except</span> <span class="n">SubmissionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;Could not import </span><span class="si">%s</span><span class="s">. </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">import_it</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">source</span><span class="p">)]</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Submission.import_single"><a class="viewcode-back" href="../../../models.html#grader.models.submission.Submission.import_single">[docs]</a>    <span class="k">def</span> <span class="nf">import_single</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">assignment</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span>
+                      <span class="n">sid</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">sid_pattern</span><span class="o">=</span><span class="s">r&quot;(?P&lt;id&gt;.*)&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Imports a single submission.</span>
+
+<span class="sd">        The submission may be:</span>
+
+<span class="sd">        * A ``.tar.gz`` file.</span>
+
+<span class="sd">        * A folder containing files to submit. The folder will be</span>
+<span class="sd">          compressed as a ``.tar.gz`` then imported.</span>
+
+<span class="sd">        By default the name of the submission (minus extensions) will</span>
+<span class="sd">        be used as its ID. For example, if a folder is named</span>
+<span class="sd">        ``hsimpson/``, the new Submission with id ``hsimpson`` will be</span>
+<span class="sd">        created.</span>
+
+<span class="sd">        :param str assignment: Assignment associated with this submission</span>
+
+<span class="sd">        :param str source: Path to the submission item</span>
+
+<span class="sd">        :param str sid: The submission id to use. If None, the</span>
+<span class="sd">            basename of ``source`` will be used.</span>
+
+<span class="sd">        :param str sid_pattern: An optional pattern to use to convert</span>
+<span class="sd">            the name of a submission to a submission id</span>
+
+<span class="sd">        :return: A list containing a single item: the new Submission</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Remove trailing slashes from the path</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">normpath</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+
+        <span class="c"># See if it&#39;s structured properly</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_check_submission_item</span><span class="p">(</span><span class="n">assignment</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
+
+        <span class="c"># Ditch &quot;.tar.gz&quot; file extension (if it&#39;s there)</span>
+        <span class="n">basename</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_remove_extension</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">source</span><span class="p">))</span>
+
+        <span class="c"># Get a unique ID for this submission</span>
+        <span class="n">submission_id</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_full_id</span><span class="p">(</span><span class="n">basename</span><span class="p">,</span> <span class="n">sid</span><span class="p">,</span> <span class="n">sid_pattern</span><span class="p">)</span>
+
+        <span class="c"># Compute the path to the completed .tar.gz</span>
+        <span class="n">tar_name</span> <span class="o">=</span> <span class="n">submission_id</span> <span class="o">+</span> <span class="s">&quot;.tar.gz&quot;</span>
+        <span class="n">dest</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">submissions_dir</span><span class="p">,</span> <span class="n">tar_name</span><span class="p">)</span>
+
+        <span class="c"># Prepare the tarball (if necessary)</span>
+        <span class="n">tarball</span><span class="p">,</span> <span class="n">temp_path</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Importing a single directory: </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
+            <span class="n">tarball</span><span class="p">,</span> <span class="n">temp_path</span> <span class="o">=</span> <span class="n">make_tarball</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">submission_id</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="ow">and</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">is_tarfile</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Importing a single tarball: </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">source</span><span class="p">)</span>
+            <span class="n">tarball</span> <span class="o">=</span> <span class="n">source</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Cannot import this thing.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">SubmissionError</span><span class="p">(</span>
+                <span class="s">&quot;{} is neither a directory nor a tarball.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c"># Copy it</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">tarball</span><span class="p">,</span> <span class="n">dest</span><span class="p">)</span>
+
+        <span class="c"># Clean up if necessary</span>
+        <span class="k">if</span> <span class="n">temp_path</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Removing </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">temp_path</span><span class="p">)</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">temp_path</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">cls</span><span class="p">(</span><span class="n">assignment</span><span class="p">,</span> <span class="n">tar_name</span><span class="p">)]</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Submission.import_repo"><a class="viewcode-back" href="../../../models.html#grader.models.submission.Submission.import_repo">[docs]</a>    <span class="k">def</span> <span class="nf">import_repo</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">assignment</span><span class="p">,</span> <span class="n">repo_url</span><span class="p">,</span> <span class="n">sid</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+                    <span class="n">sid_pattern</span><span class="o">=</span><span class="s">r&quot;(?P&lt;id&gt;.*)&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Imports a submission from a git repository</span>
+
+<span class="sd">        :param str assignment: Assignment associated with this submission</span>
+
+<span class="sd">        :param str repo_url: URL to a clone-able git repository.</span>
+
+<span class="sd">        :param str sid: The submission ID for the new submission. If</span>
+<span class="sd">            None, the name of the repository (sans ``.git``) will be</span>
+<span class="sd">            used.</span>
+
+<span class="sd">        :param str sid_pattern: An optional pattern to use to convert</span>
+<span class="sd">            the name of a submission to a submission id</span>
+
+<span class="sd">        :return: the new submission</span>
+<span class="sd">        :rtype: Submission</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s">&quot;Git import isn&#39;t implemented yet :/&quot;</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Submission.get_importers"><a class="viewcode-back" href="../../../models.html#grader.models.submission.Submission.get_importers">[docs]</a>    <span class="k">def</span> <span class="nf">get_importers</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a dict that maps nicknames for importers to classmethods.</span>
+
+<span class="sd">        :rtype: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s">&#39;blackboard&#39;</span><span class="p">:</span> <span class="n">cls</span><span class="o">.</span><span class="n">import_blackboard_zip</span><span class="p">,</span>
+            <span class="s">&#39;multiple&#39;</span><span class="p">:</span> <span class="n">cls</span><span class="o">.</span><span class="n">import_multiple</span><span class="p">,</span>
+            <span class="s">&#39;single&#39;</span><span class="p">:</span> <span class="n">cls</span><span class="o">.</span><span class="n">import_single</span><span class="p">,</span>
+            <span class="s">&#39;repo&#39;</span><span class="p">:</span> <span class="n">cls</span><span class="o">.</span><span class="n">import_repo</span><span class="p">,</span>
+        <span class="p">}</span></div>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Submission.get_importer"><a class="viewcode-back" href="../../../models.html#grader.models.submission.Submission.get_importer">[docs]</a>    <span class="k">def</span> <span class="nf">get_importer</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">submission_type</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns an importer function for a given submission type. Refer to</span>
+<span class="sd">            the definition of :meth:`Submission.get_importers` for a</span>
+<span class="sd">            list of acceptable values for ``submission_type``.</span>
+
+<span class="sd">        :param str submission_type: The type of submission to import.</span>
+
+<span class="sd">        :return: a function that will import a submission into Grader</span>
+
+<span class="sd">        :raises SubmissionError: if no importer can be found</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">get_importers</span><span class="p">()[</span><span class="n">submission_type</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SubmissionError</span><span class="p">(</span>
+                <span class="s">&#39;No importer for type &quot;{}&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">submission_type</span><span class="p">)</span>
+            <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">import_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The time stamp on the Submission (as a datetime object)&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getmtime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">file_mtimes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A dict mapping file names (from the submission archive) a datetime</span>
+<span class="sd">        object indicating the last time that file was modified&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&quot;r:gz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{</span><span class="n">info</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">info</span><span class="o">.</span><span class="n">mtime</span> <span class="k">for</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">tar</span><span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">latest_mtime</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The time stamp of the most recently modified file in the submission</span>
+<span class="sd">        archive (as a datetime object)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_mtimes</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sha1sum</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The SHA1 sum of the submission archive&quot;&quot;&quot;</span>
+        <span class="n">sha1</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha1</span><span class="p">()</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                <span class="n">buf</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">buf</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="n">sha1</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sha1</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@contextmanager</span>
+    <span class="k">def</span> <span class="nf">unpacked_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A context manager for working with unpacked submissions. Returns</span>
+<span class="sd">        the name of the directory where all files are unpacked. When</span>
+<span class="sd">        the context is exited, the directory and its contents are</span>
+<span class="sd">        deleted.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s">&quot;r:gz&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
+                <span class="n">tar</span><span class="o">.</span><span class="n">extractall</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span>
+            <span class="k">yield</span> <span class="n">tmpdir</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@contextmanager</span>
+    <span class="k">def</span> <span class="nf">unpacked_repo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A context manager for working with unpacked submission</span>
+<span class="sd">        repositories. Returns a git.Repo object corresponding to the</span>
+<span class="sd">        submission&#39;s repository.</span>
+
+<span class="sd">        If the submission is not a git repository, then &quot;None&quot; is</span>
+<span class="sd">        returned.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">unpacked_files</span> <span class="k">as</span> <span class="n">unpacked</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">subdir</span><span class="p">,</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">unpacked</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">git</span><span class="o">.</span><span class="n">Repo</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">unpacked</span><span class="p">,</span> <span class="n">subdir</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="bp">None</span>
+            <span class="k">except</span> <span class="n">git</span><span class="o">.</span><span class="n">InvalidGitRepositoryError</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="bp">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">latest_commit</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The time stamp of the default branch of the submission, or None if</span>
+<span class="sd">        the submission isn&#39;t a git repository.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">unpacked_repo</span> <span class="k">as</span> <span class="n">repo</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">repo</span><span class="p">:</span>
+                <span class="n">time</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">heads</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">commit</span><span class="o">.</span><span class="n">committed_date</span>
+                <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">container_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The unique label to use for this submission&#39;s docker container</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s">&quot;user_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+            <span class="s">&quot;submission_uuid&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">uuid</span><span class="p">,</span>
+        <span class="p">}</span>
+
+<div class="viewcode-block" id="Submission.__init__"><a class="viewcode-back" href="../../../models.html#grader.models.submission.Submission.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">assignment</span><span class="p">,</span> <span class="n">tar_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Instantiates a new Submission.</span>
+
+<span class="sd">        :param str assignment: The :class:`Assignment` object to which</span>
+<span class="sd">            this assignment belongs.</span>
+
+<span class="sd">        :param str tar_name: The name of the submission&#39;s .tar.gz file</span>
+<span class="sd">            (including extension)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">assignment</span><span class="o">.</span><span class="n">submissions_dir</span><span class="p">,</span> <span class="n">tar_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assignment</span> <span class="o">=</span> <span class="n">assignment</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Cannot find </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">FileNotFoundError</span><span class="p">(</span><span class="s">&quot;Submission doesn&#39;t exist.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">tarfile</span><span class="o">.</span><span class="n">is_tarfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> is not a tarball&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">SubmissionError</span><span class="p">(</span><span class="s">&quot;Submission is screwed up...&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">full_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">_remove_extension</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">basename</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">uuid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">split_full_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">full_id</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;String representation of a Submission&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">&quot;Submission {} ({})&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">uuid</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_container</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># TODO pull in container config and hostconfig from</span>
+        <span class="c"># assignment.yml</span>
+
+        <span class="n">options</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;image&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">assignment</span><span class="o">.</span><span class="n">image_tag</span><span class="p">,</span>
+            <span class="s">&#39;labels&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">container_labels</span><span class="p">,</span>
+            <span class="s">&#39;name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_id</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Creating container with options </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">options</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">docker_cli</span><span class="o">.</span><span class="n">create_container</span><span class="p">(</span><span class="o">**</span><span class="n">options</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span><span class="p">[</span><span class="s">&#39;Warnings&#39;</span><span class="p">]:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s">&#39;Warnings&#39;</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">result</span><span class="p">[</span><span class="s">&#39;Id&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="n">docker</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">NotFound</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">explanation</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&quot;utf-8&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="s">&quot;No such image&quot;</span> <span class="ow">in</span> <span class="n">msg</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">+=</span> <span class="s">&quot; Did you build the assignment?&quot;</span>
+            <span class="k">raise</span> <span class="n">SubmissionContainerError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+    <span class="k">def</span> <span class="nf">get_container_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Filter the containers down to the one we want</span>
+        <span class="n">filters</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&#39;label&#39;</span><span class="p">:</span> <span class="s">&#39;submission_uuid={}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uuid</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="n">containers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">docker_cli</span><span class="o">.</span><span class="n">containers</span><span class="p">(</span><span class="nb">all</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Found matching containers: </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">containers</span><span class="p">)</span>
+
+        <span class="n">container_id</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">containers</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">container_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_container</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">containers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">container_id</span> <span class="o">=</span> <span class="n">containers</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s">&#39;Id&#39;</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">containers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">SubmissionContainerError</span><span class="p">(</span>
+                <span class="s">&quot;Found multiple containers for submission. &quot;</span>
+                <span class="s">&quot;Needs manual cleanup: {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">containers</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">image_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">docker_cli</span><span class="o">.</span><span class="n">inspect_container</span><span class="p">(</span><span class="n">container_id</span><span class="p">)[</span><span class="s">&#39;Image&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">image_id</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">assignment</span><span class="o">.</span><span class="n">image_id</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s">&quot;This container is based on an old image (</span><span class="si">%s</span><span class="s"> instead of </span><span class="si">%s</span><span class="s">). &quot;</span>
+                <span class="s">&quot;You may want to delete it and start over.&quot;</span><span class="p">,</span>
+                <span class="n">image_id</span><span class="p">[:</span><span class="mi">5</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">assignment</span><span class="o">.</span><span class="n">image_id</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">container_id</span>
+
+    <span class="k">def</span> <span class="nf">_add_submission_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">c_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Unpacks this submission into a docker container with id</span>
+<span class="sd">        ``c_id``. The unpacked archive is stored in a temporary</span>
+<span class="sd">        directory.</span>
+
+<span class="sd">        :param str c_id: The ID of the docker container to store the</span>
+<span class="sd">            submission in</span>
+
+<span class="sd">        :return: The temporary path where the stuff was unpacked</span>
+<span class="sd">        :rtype: str</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Make a temporary directory in the container to store the</span>
+        <span class="c"># unpacked submission</span>
+        <span class="n">tmpdir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">docker_cli</span><span class="o">.</span><span class="n">exec_start</span><span class="p">(</span>
+            <span class="n">exec_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">docker_cli</span><span class="o">.</span><span class="n">exec_create</span><span class="p">(</span>
+                <span class="n">container</span><span class="o">=</span><span class="n">c_id</span><span class="p">,</span>
+                <span class="n">cmd</span><span class="o">=</span><span class="s">&quot;mktemp -d&quot;</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c"># Cleanup the return value</span>
+        <span class="n">tmpdir</span> <span class="o">=</span> <span class="n">tmpdir</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&#39;ascii&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Adding submission files to </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">tmpdir</span><span class="p">)</span>
+
+        <span class="c"># Unpack the submission into tmpdir</span>
+        <span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">tar</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">docker_cli</span><span class="o">.</span><span class="n">put_archive</span><span class="p">(</span>
+                <span class="n">container</span><span class="o">=</span><span class="n">c_id</span><span class="p">,</span>
+                <span class="n">path</span><span class="o">=</span><span class="n">tmpdir</span><span class="p">,</span>
+                <span class="n">data</span><span class="o">=</span><span class="n">tar</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="p">)</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">docker_cli</span><span class="o">.</span><span class="n">exec_start</span><span class="p">(</span>
+            <span class="n">exec_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">docker_cli</span><span class="o">.</span><span class="n">exec_create</span><span class="p">(</span>
+                <span class="n">container</span><span class="o">=</span><span class="n">c_id</span><span class="p">,</span>
+                <span class="n">user</span><span class="o">=</span><span class="s">&quot;root&quot;</span><span class="p">,</span>
+                <span class="n">cmd</span><span class="o">=</span><span class="s">&quot;chmod --recursive +r {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">output</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;chmod says: </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">tmpdir</span>
+
+    <span class="k">def</span> <span class="nf">grade</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">show_output</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="n">c_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_container_id</span><span class="p">()</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Got container ID </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">c_id</span><span class="p">)</span>
+
+        <span class="c"># Start the container</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">docker_cli</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">container</span><span class="o">=</span><span class="n">c_id</span><span class="p">)</span>
+
+        <span class="c"># Add all submission files</span>
+        <span class="n">submission_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_submission_files</span><span class="p">(</span><span class="n">c_id</span><span class="p">)</span>
+
+        <span class="c"># Grade the submission</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">docker_cli</span><span class="o">.</span><span class="n">exec_start</span><span class="p">(</span>
+            <span class="n">exec_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">docker_cli</span><span class="o">.</span><span class="n">exec_create</span><span class="p">(</span>
+                <span class="n">container</span><span class="o">=</span><span class="n">c_id</span><span class="p">,</span>
+                <span class="n">cmd</span><span class="o">=</span><span class="s">&quot;grade-it {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">submission_dir</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">stream</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">output</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">show_output</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s">&quot;utf-8&quot;</span><span class="p">),</span> <span class="n">end</span><span class="o">=</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">docker_cli</span><span class="o">.</span><span class="n">stop</span><span class="p">(</span>
+            <span class="n">container</span><span class="o">=</span><span class="n">c_id</span>
+        <span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About Grader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../commands.html">Commands</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exceptions.html">Exceptions</a></li>
+</ul>
+
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Billy Rhoades, Mike Wisely.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

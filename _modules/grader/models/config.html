@@ -23,6 +23,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="author" title="About these documents" href="../../../about.html" />
     <link rel="top" title="Grader 0.0.1 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" />
    
@@ -38,23 +39,21 @@
           <div class="body" role="main">
             
   <h1>Source code for grader.models.config</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">jsonschema</span>
+<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
 
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">__name__</span><span class="p">)</span>
 
-<div class="viewcode-block" id="GraderConfigException"><a class="viewcode-back" href="../../../exceptions.html#grader.models.GraderConfigException">[docs]</a><span class="k">class</span> <span class="nc">GraderConfigException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A general-purpose exception thrown by the GraderConfig class.</span>
+
+<div class="viewcode-block" id="ConfigValidationError"><a class="viewcode-back" href="../../../exceptions.html#grader.models.config.ConfigValidationError">[docs]</a><span class="k">class</span> <span class="nc">ConfigValidationError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An exception thrown when a config file cannot be validated</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="AssignmentConfigException"><a class="viewcode-back" href="../../../exceptions.html#grader.models.AssignmentConfigException">[docs]</a><span class="k">class</span> <span class="nc">AssignmentConfigException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;A general-purpose exception thrown by the AssignmentConfig class.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">pass</span></div>
-
-
-<div class="viewcode-block" id="Config"><a class="viewcode-back" href="../../../models.html#grader.models.Config">[docs]</a><span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Config"><a class="viewcode-back" href="../../../models.html#grader.models.config.Config">[docs]</a><span class="k">class</span> <span class="nc">Config</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A base class for configuration objects. Provides two vaguely-useful</span>
 <span class="sd">    methods to subclasses.</span>
 
@@ -63,6 +62,10 @@
 <span class="sd">    * The class must have a class-wide ``CONFIG_FILE_NAME`` variable,</span>
 <span class="sd">      which corresponds to the name of the configuration file (e.g.,</span>
 <span class="sd">      ``&quot;config.yml&quot;``)</span>
+
+<span class="sd">    * The class must have a class-wide ``SCHEMA`` variable, which is a</span>
+<span class="sd">      valid JSONSchema that can be used to validate the fields in the</span>
+<span class="sd">      Config.</span>
 
 <span class="sd">    * Instances of the class must have an attribute ``path``, which is</span>
 <span class="sd">      the file path to the directory containing the corresponding</span>
@@ -73,6 +76,37 @@
 <span class="sd">      configuration file.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Config.new"><a class="viewcode-back" href="../../../models.html#grader.models.config.Config.new">[docs]</a>    <span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new GraderConfig object and corresponding config file on</span>
+<span class="sd">        disk.</span>
+
+<span class="sd">        :param str path: The path to the directory in which the config</span>
+<span class="sd">            file will be saved</span>
+
+<span class="sd">        :param dict config: A dict of default configurations to store</span>
+<span class="sd">            in the new configuration file.</span>
+
+<span class="sd">        :raises: if ``config`` doesn&#39;t meet the requirements of the</span>
+<span class="sd">            Config&#39;s :data:`SCHEMA`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cls</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="n">config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">CONFIG_FILE_NAME</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">config_file</span><span class="p">:</span>
+            <span class="n">config_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">default_flow_style</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">jsonschema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">SCHEMA</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">jsonschema</span><span class="o">.</span><span class="n">ValidationError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ConfigValidationError</span><span class="p">(</span>
+                <span class="s">&quot;{} is invalid.</span><span class="se">\n</span><span class="s">{}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">CONFIG_FILE_NAME</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">file_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -83,14 +117,44 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">CONFIG_FILE_NAME</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Config.__getitem__"><a class="viewcode-back" href="../../../models.html#grader.models.Config.__getitem__">[docs]</a>    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+<div class="viewcode-block" id="Config.__init__"><a class="viewcode-back" href="../../../models.html#grader.models.config.Config.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Instantiates a Config by reading a YAML file</span>
+
+<span class="sd">        :param str path: The path to the directory containing the</span>
+<span class="sd">            YAML-formatted configuration file.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">FileNotFoundError</span><span class="p">(</span><span class="s">&quot;Cannot open {}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">config_file</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Loading {}.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;Validating {}.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Config.__getitem__"><a class="viewcode-back" href="../../../models.html#grader.models.config.Config.__getitem__">[docs]</a>    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Returns the configuration item for key ``name``</span>
+
 <span class="sd">        :param str name: The key to fetch</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Config.get"><a class="viewcode-back" href="../../../models.html#grader.models.config.Config.get">[docs]</a>    <span class="k">def</span> <span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the configuration item for key ``name``, defaulting to</span>
+<span class="sd">        ``default``</span>
+
+<span class="sd">        :param str name: The key to fetch</span>
+
+<span class="sd">        :param default: The item to return if the key is not found</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="GraderConfig"><a class="viewcode-back" href="../../../models.html#grader.models.GraderConfig">[docs]</a><span class="k">class</span> <span class="nc">GraderConfig</span><span class="p">(</span><span class="n">Config</span><span class="p">):</span>
+<div class="viewcode-block" id="GraderConfig"><a class="viewcode-back" href="../../../models.html#grader.models.config.GraderConfig">[docs]</a><span class="k">class</span> <span class="nc">GraderConfig</span><span class="p">(</span><span class="n">Config</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class for creating, loading, and accessing grader-wide,</span>
 <span class="sd">    YAML-formatted configuration files</span>
 
@@ -99,49 +163,42 @@
     <span class="n">CONFIG_FILE_NAME</span> <span class="o">=</span> <span class="s">&quot;grader.yml&quot;</span>
     <span class="sd">&quot;&quot;&quot;The name of the configuration file on disk&quot;&quot;&quot;</span>
 
-    <span class="nd">@classmethod</span>
-<div class="viewcode-block" id="GraderConfig.new"><a class="viewcode-back" href="../../../models.html#grader.models.GraderConfig.new">[docs]</a>    <span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">course_name</span><span class="p">,</span> <span class="n">course_id</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Creates a new GraderConfig object and corresponding config file on</span>
-<span class="sd">        disk.</span>
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&quot;$schema&quot;</span><span class="p">:</span> <span class="s">&quot;http://json-schema.org/schema#&quot;</span><span class="p">,</span>
 
-<span class="sd">        :param str path: The path to the directory in which the config</span>
-<span class="sd">            file will be saved</span>
-
-<span class="sd">        :param str course_name: The name of the course</span>
-
-<span class="sd">        :param str course_id: The unique ID of the course</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">CONFIG_FILE_NAME</span><span class="p">)</span>
-        <span class="n">header</span> <span class="o">=</span> <span class="s">&quot;# grader configuration for {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">course_name</span><span class="p">)</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s">&quot;course-id&quot;</span><span class="p">:</span> <span class="n">course_id</span><span class="p">,</span>
-            <span class="s">&quot;course-name&quot;</span><span class="p">:</span> <span class="n">course_name</span><span class="p">,</span>
-        <span class="p">}</span>
-
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">config_file</span><span class="p">:</span>
-            <span class="n">config_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
-            <span class="n">config_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">default_flow_style</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
-
-        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="GraderConfig.__init__"><a class="viewcode-back" href="../../../models.html#grader.models.GraderConfig.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Instantiates a GraderConfig by reading a YAML file</span>
-
-<span class="sd">        :param str path: The path to the directory containing the</span>
-<span class="sd">            YAML-formatted configuration file.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">GraderConfigException</span><span class="p">(</span><span class="s">&quot;Grader configuration file doesn&#39;t exist!&quot;</span><span class="p">)</span>
-
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">config_file</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span></div></div>
+        <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;object&quot;</span><span class="p">,</span>
+        <span class="s">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s">&quot;course-id&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;string&quot;</span><span class="p">,</span>
+                <span class="s">&quot;pattern&quot;</span><span class="p">:</span> <span class="s">r&quot;^[\w-]+$&quot;</span>
+            <span class="p">},</span>
+            <span class="s">&quot;course-name&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;string&quot;</span><span class="p">,</span>
+                <span class="s">&quot;pattern&quot;</span><span class="p">:</span> <span class="s">r&quot;^[\w-]+$&quot;</span>
+            <span class="p">},</span>
+            <span class="s">&quot;roster&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;array&quot;</span><span class="p">,</span>
+                <span class="s">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;object&quot;</span><span class="p">,</span>
+                    <span class="s">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s">&quot;name&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;string&quot;</span><span class="p">},</span>
+                        <span class="s">&quot;id&quot;</span><span class="p">:</span> <span class="p">{</span>
+                            <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;string&quot;</span><span class="p">,</span>
+                            <span class="s">&quot;pattern&quot;</span><span class="p">:</span> <span class="s">&quot;^\w+$&quot;</span><span class="p">,</span>
+                        <span class="p">},</span>
+                    <span class="p">},</span>
+                    <span class="s">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;name&quot;</span><span class="p">,</span> <span class="s">&quot;id&quot;</span><span class="p">],</span>
+                    <span class="s">&quot;additionalProperties&quot;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+                <span class="p">},</span>
+            <span class="p">},</span>
+        <span class="p">},</span>
+        <span class="s">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;course-id&quot;</span><span class="p">,</span> <span class="s">&quot;course-name&quot;</span><span class="p">],</span>
+        <span class="s">&quot;additionalProperties&quot;</span><span class="p">:</span> <span class="bp">False</span><span class="p">,</span>
+    <span class="p">}</span>
+    <span class="sd">&quot;&quot;&quot;The schema for a Grader-wide configuration file&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="AssignmentConfig"><a class="viewcode-back" href="../../../models.html#grader.models.AssignmentConfig">[docs]</a><span class="k">class</span> <span class="nc">AssignmentConfig</span><span class="p">(</span><span class="n">Config</span><span class="p">):</span>
+<div class="viewcode-block" id="AssignmentConfig"><a class="viewcode-back" href="../../../models.html#grader.models.config.AssignmentConfig">[docs]</a><span class="k">class</span> <span class="nc">AssignmentConfig</span><span class="p">(</span><span class="n">Config</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A class for creating, loading, and accessing assignment-specific,</span>
 <span class="sd">    YAML-formatted configuration files</span>
 
@@ -150,43 +207,21 @@
     <span class="n">CONFIG_FILE_NAME</span> <span class="o">=</span> <span class="s">&quot;assignment.yml&quot;</span>
     <span class="sd">&quot;&quot;&quot;The name of the configuration file on disk&quot;&quot;&quot;</span>
 
-    <span class="nd">@classmethod</span>
-<div class="viewcode-block" id="AssignmentConfig.new"><a class="viewcode-back" href="../../../models.html#grader.models.AssignmentConfig.new">[docs]</a>    <span class="k">def</span> <span class="nf">new</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">assignment_name</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Creates a new AssignmentConfig object and corresponding config file</span>
-<span class="sd">        on disk.</span>
+    <span class="n">SCHEMA</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&quot;$schema&quot;</span><span class="p">:</span> <span class="s">&quot;http://json-schema.org/schema#&quot;</span><span class="p">,</span>
 
-<span class="sd">        :param str path: The path to the directory in which the config</span>
-<span class="sd">            file will be saved</span>
-
-<span class="sd">        :param str assignment_name: The name of the assignment</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">config_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">cls</span><span class="o">.</span><span class="n">CONFIG_FILE_NAME</span><span class="p">)</span>
-        <span class="n">header</span> <span class="o">=</span> <span class="s">&quot;# assignment configuration for {}</span><span class="se">\n</span><span class="s">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">assignment_name</span><span class="p">)</span>
-        <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s">&quot;assignment-name&quot;</span><span class="p">:</span> <span class="n">assignment_name</span>
-        <span class="p">}</span>
-
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_path</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">config_file</span><span class="p">:</span>
-            <span class="n">config_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
-            <span class="n">config_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">default_flow_style</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
-
-        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="AssignmentConfig.__init__"><a class="viewcode-back" href="../../../models.html#grader.models.AssignmentConfig.__init__">[docs]</a>    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Instantiates an AssignmentConfig by reading a YAML file</span>
-
-<span class="sd">        :param str path: The path to the directory containing the</span>
-<span class="sd">            YAML-formatted configuration file.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">AssignmentConfigException</span><span class="p">(</span><span class="s">&quot;Assignment configuration file doesn&#39;t exist!&quot;</span><span class="p">)</span>
-
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">config_file</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span></div></div>
+        <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;object&quot;</span><span class="p">,</span>
+        <span class="s">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s">&quot;assignment-name&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;string&quot;</span><span class="p">,</span>
+                <span class="s">&quot;pattern&quot;</span><span class="p">:</span> <span class="s">r&quot;^[\w-]+$&quot;</span>
+            <span class="p">},</span>
+            <span class="s">&quot;image-build-options&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s">&quot;type&quot;</span><span class="p">:</span> <span class="s">&quot;object&quot;</span><span class="p">}</span>
+        <span class="p">},</span>
+        <span class="s">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s">&quot;assignment-name&quot;</span><span class="p">],</span>
+        <span class="s">&quot;additionalProperties&quot;</span><span class="p">:</span> <span class="bp">False</span>
+    <span class="p">}</span>
+    <span class="sd">&quot;&quot;&quot;The schema for a Assignment-wide configuration file&quot;&quot;&quot;</span></div>
 </pre></div>
 
           </div>
@@ -196,9 +231,13 @@
         <div class="sphinxsidebarwrapper">
 <h3><a href="../../../index.html">Table Of Contents</a></h3>
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../about.html">About Grader</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tutorial.html">Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../commands.html">Commands</a></li>
+</ul>
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../exceptions.html">Exceptions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../todo.html">TODO Items</a></li>
 </ul>
 
 <div id="searchbox" style="display: none" role="search">
