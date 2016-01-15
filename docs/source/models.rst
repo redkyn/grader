@@ -50,6 +50,15 @@ GradeSheet
    .. automethod:: __init__
 
 
+Submission
+----------
+
+.. autoclass:: Submission
+   :members:
+
+   .. automethod:: __init__
+
+
 Configuration
 -------------
 
@@ -64,4 +73,11 @@ Configuration
    :members:
 
 .. autoclass:: AssignmentConfig
+   :members:
+
+
+Mixins
+------
+
+.. autoclass:: grader.models.mixins.DockerClientMixin
    :members:
