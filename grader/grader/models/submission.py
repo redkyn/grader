@@ -1,6 +1,5 @@
 import docker
 import git
-import gzip
 import hashlib
 import logging
 import os
@@ -576,9 +575,10 @@ class Submission(DockerClientMixin):
         # Cleanup the return value
         tmpdir = tmpdir.decode('ascii').strip()
         logger.debug("Adding submission files to %s", tmpdir)
+        logger.debug("Assignment archive is %s", self.path)
 
         # Unpack the submission into tmpdir
-        with gzip.open(self.path) as tar:
+        with open(self.path, mode='rb') as tar:
             self.docker_cli.put_archive(
                 container=c_id,
                 path=tmpdir,
