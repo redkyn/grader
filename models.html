@@ -907,7 +907,7 @@ YAML-formatted configuration files</p>
 
 <dl class="attribute">
 <dt id="grader.models.GraderConfig.SCHEMA">
-<code class="descname">SCHEMA</code><em class="property"> = {'$schema': 'http://json-schema.org/schema#', 'type': 'object', 'additionalProperties': False, 'required': ['course-id', 'course-name'], 'properties': {'roster': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['name', 'id'], 'properties': {'name': {'type': 'string'}, 'id': {'type': 'string', 'pattern': '^\\w+$'}}}}, 'course-name': {'type': 'string', 'pattern': '^[\\w-]+$'}, 'course-id': {'type': 'string', 'pattern': '^[\\w-]+$'}}}</em><a class="headerlink" href="#grader.models.GraderConfig.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'object', 'additionalProperties': False, 'properties': {'course-name': {'type': 'string', 'pattern': '^[\\w-]+$'}, 'roster': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'properties': {'name': {'type': 'string'}, 'id': {'type': 'string', 'pattern': '^\\w+$'}}, 'required': ['name', 'id']}}, 'course-id': {'type': 'string', 'pattern': '^[\\w-]+$'}}, '$schema': 'http://json-schema.org/schema#', 'required': ['course-id', 'course-name']}</em><a class="headerlink" href="#grader.models.GraderConfig.SCHEMA" title="Permalink to this definition">¶</a></dt>
 <dd><p>The schema for a Grader-wide configuration file</p>
 </dd></dl>
 
@@ -926,7 +926,7 @@ YAML-formatted configuration files</p>
 
 <dl class="attribute">
 <dt id="grader.models.AssignmentConfig.SCHEMA">
-<code class="descname">SCHEMA</code><em class="property"> = {'$schema': 'http://json-schema.org/schema#', 'type': 'object', 'additionalProperties': False, 'required': ['assignment-name'], 'properties': {'assignment-name': {'type': 'string', 'pattern': '^[\\w-]+$'}, 'image-build-options': {'type': 'object'}}}</em><a class="headerlink" href="#grader.models.AssignmentConfig.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<code class="descname">SCHEMA</code><em class="property"> = {'type': 'object', 'additionalProperties': False, 'properties': {'image-build-options': {'type': 'object'}, 'assignment-name': {'type': 'string', 'pattern': '^[\\w-]+$'}}, '$schema': 'http://json-schema.org/schema#', 'required': ['assignment-name']}</em><a class="headerlink" href="#grader.models.AssignmentConfig.SCHEMA" title="Permalink to this definition">¶</a></dt>
 <dd><p>The schema for a Assignment-wide configuration file</p>
 </dd></dl>
 

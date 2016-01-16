@@ -41,7 +41,105 @@
             
   <div class="section" id="tutorial">
 <h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
-<p>TODO: uh... the whole thing</p>
+<div class="section" id="setup">
+<h2>Setup<a class="headerlink" href="#setup" title="Permalink to this headline">¶</a></h2>
+<dl class="docutils">
+<dt>Depending on your distribution, you will need the following packages:</dt>
+<dd><ul class="first last simple">
+<li>python3-dev</li>
+<li>libcurses-dev</li>
+<li>python3-dev</li>
+<li>git</li>
+</ul>
+</dd>
+</dl>
+<p>And, of course, you&#8217;ll want Docker if you plan to do anything interesting at all. Grader requires docker with <strong>API version &gt;= 1.20</strong>. We use put_archive (PUT /containers/(id)/archive) from docker-py.</p>
+<p>Grab the repository and run buildout to set up your local grader install:</p>
+<div class="highlight-bash"><div class="highlight"><pre>git clone https://github.com/grade-it/grader.git
+<span class="nb">cd </span>grader
+
+<span class="c"># Bootstrap buildout</span>
+python3 bin/bootstrap-buildout.py
+
+<span class="c"># Setup your development environment with buildout... this can take a bit.</span>
+bin/buildout
+
+<span class="c"># Add to path</span>
+<span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:<span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/bin
+</pre></div>
+</div>
+<p>You now have a functioning grader installation. Change to your desired working directory before continuing.</p>
+</div>
+<div class="section" id="preparing-working-directory">
+<h2>Preparing Working Directory<a class="headerlink" href="#preparing-working-directory" title="Permalink to this headline">¶</a></h2>
+<p>In your working directory, begin by creating an assignments folder with <a class="reference internal" href="commands.html#init"><span>init</span></a>. You must specify
+a course name.</p>
+<div class="highlight-bash"><div class="highlight"><pre>grader init course-name
+</pre></div>
+</div>
+<p>This creates a template grader.yml file which contains a course name and a unique course UUID. Now,
+create an assignment using <a class="reference internal" href="commands.html#new"><span>new</span></a>. You should pass it a <span class="xref std std-ref">gradesheet</span>, an example gradesheet is
+used below.</p>
+<div class="highlight-bash"><div class="highlight"><pre>grader new hw1 https://github.com/grade-it/python-gradesheet.git
+</pre></div>
+</div>
+<p>Which should yield:</p>
+<div class="highlight-python"><div class="highlight"><pre>INFO     Creating assignment directory.
+INFO     Successfully cloned https://github.com/grade-it/python-gradesheet.git
+INFO     Created &#39;hw1&#39;.
+</pre></div>
+</div>
+<p>This creates an assignments folder with your specified homework:</p>
+<div class="highlight-python"><div class="highlight"><pre>.
+├── assignments
+│   └── hw1
+│       ├── gradesheet
+│       │   ├── assignment.yml
+│       │   ├── Dockerfile
+│       │   ├── README.md
+│       │   └── scripts
+│       │       └── grade-it
+│       ├── results
+│       └── submissions
+└── grader.yml
+</pre></div>
+</div>
+<p>You should now add students to your roster in grader.yml. Every assignment imported must have a matching id
+(think: username) within your config. Here is an example:</p>
+<div class="highlight-python"><div class="highlight"><pre>course-id: 80efce90-cb8b-460f-9f4b-fbfde0f4ec48
+course-name: &#39;5201&#39;
+roster:
+  - id: admb23
+    name: Admiral Akbar
+  - id: bjrdo4
+    name: Billy Rhoades
+  - id: mww4t6
+    name: Mike Wisely
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-grader">
+<h2>Using Grader<a class="headerlink" href="#using-grader" title="Permalink to this headline">¶</a></h2>
+<p>Start by building your new docker image, this is done by simply running <a class="reference internal" href="commands.html#build"><span>build</span></a>.</p>
+<div class="highlight-bash"><div class="highlight"><pre>grader build hw1
+</pre></div>
+</div>
+<p>Next, you should <a class="reference internal" href="commands.html#import"><span>import</span></a> your assignments. There are <a class="reference internal" href="commands.html#import"><span>many ways to do this</span></a>, in this example, a directory with <em>multiple</em> tarballs is imported.</p>
+<div class="highlight-bash"><div class="highlight"><pre>grader import --kind multiple hw1 /tmp/packed
+</pre></div>
+</div>
+<p>Which yields:</p>
+<div class="highlight-python"><div class="highlight"><pre>INFO     Imported Submission mww4t6 (350f2bd0-c36e-48ec-9af4-17a99f6665e4)
+INFO     Imported Submission bjrdo4 (5004487a-8055-43c4-9c4f-8c2b744257b2)
+INFO     Imported Submission admb23 (db83a1b9-6a07-4848-bb76-7d1a810a56af)
+</pre></div>
+</div>
+<p>These assignments have now been imported into your working directory.</p>
+<p>Now you can run your gradesheet with <a class="reference internal" href="commands.html#grade"><span>grade</span></a>.</p>
+<div class="highlight-bash"><div class="highlight"><pre>grader grade hw1
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -53,7 +151,12 @@
 <h3><a href="index.html">Table Of Contents</a></h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="about.html">About Grader</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#setup">Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#preparing-working-directory">Preparing Working Directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-grader">Using Grader</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a></li>
 </ul>
 <ul>
