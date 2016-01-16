@@ -11,6 +11,8 @@ def init_and_build_roster(p_and_r):
     path = p_and_r(["init", "cpl"])
     config_path = os.path.join(path, "grader.yml")
 
+    assert os.path.exists(path)
+
     with open(config_path) as config:
         content = yaml.load(config)
         content['roster'] = [
