@@ -116,8 +116,7 @@ comply with <a class="reference internal" href="#grader.models.GraderConfig.SCHE
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name" colspan="2">Raises GraderConfigError:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last">if <code class="docutils literal"><span class="pre">course_name</span></code> or
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>GraderConfigError</strong> &#8211; if <code class="docutils literal"><span class="pre">course_name</span></code> or
 <code class="docutils literal"><span class="pre">course_id</span></code> don&#8217;t comply with the configuration schema</p>
 </td>
 </tr>
@@ -177,8 +176,7 @@ repository. Read more about it in <a class="reference internal" href="#grader.mo
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>str</em>) &#8211; The name of the assignment to get</td>
 </tr>
-<tr class="field-even field"><th class="field-name" colspan="2">Raises AssignmentNotFoundError:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body">if no such assignment exists</td>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><strong>AssignmentNotFoundError</strong> &#8211; if no such assignment exists</td>
 </tr>
 <tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">The Assignment</td>
 </tr>
@@ -443,8 +441,7 @@ to clone.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name" colspan="2">Raises GradeSheetError:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first last">if there was a problem cloning
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><strong>GradeSheetError</strong> &#8211; if there was a problem cloning
 the repo</p>
 </td>
 </tr>
@@ -555,8 +552,7 @@ the student&#8217;s id.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name" colspan="2">Raises SubmissionError:</th></tr>
-<tr class="field-even field"><td>&nbsp;</td><td class="field-body"><p class="first">If there was an issue with matching
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><strong>SubmissionError</strong> &#8211; If there was an issue with matching
 basename against <code class="docutils literal"><span class="pre">sid_pattern</span></code></p>
 </td>
 </tr>
@@ -716,8 +712,7 @@ list of acceptable values for <code class="docutils literal"><span class="pre">s
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">a function that will import a submission into Grader</td>
 </tr>
-<tr class="field-odd field"><th class="field-name" colspan="2">Raises SubmissionError:</th></tr>
-<tr class="field-odd field"><td>&nbsp;</td><td class="field-body">if no importer can be found</td>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><strong>SubmissionError</strong> &#8211; if no importer can be found</td>
 </tr>
 </tbody>
 </table>
@@ -912,7 +907,7 @@ YAML-formatted configuration files</p>
 
 <dl class="attribute">
 <dt id="grader.models.GraderConfig.SCHEMA">
-<code class="descname">SCHEMA</code><em class="property"> = {'additionalProperties': False, 'required': ['course-id', 'course-name'], '$schema': 'http://json-schema.org/schema#', 'type': 'object', 'properties': {'course-name': {'type': 'string', 'pattern': '^[\\w-]+$'}, 'course-id': {'type': 'string', 'pattern': '^[\\w-]+$'}, 'roster': {'items': {'additionalProperties': False, 'required': ['name', 'id'], 'type': 'object', 'properties': {'name': {'type': 'string'}, 'id': {'type': 'string', 'pattern': '^\\w+$'}}}, 'type': 'array'}}}</em><a class="headerlink" href="#grader.models.GraderConfig.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<code class="descname">SCHEMA</code><em class="property"> = {'$schema': 'http://json-schema.org/schema#', 'type': 'object', 'additionalProperties': False, 'required': ['course-id', 'course-name'], 'properties': {'roster': {'type': 'array', 'items': {'type': 'object', 'additionalProperties': False, 'required': ['name', 'id'], 'properties': {'name': {'type': 'string'}, 'id': {'type': 'string', 'pattern': '^\\w+$'}}}}, 'course-name': {'type': 'string', 'pattern': '^[\\w-]+$'}, 'course-id': {'type': 'string', 'pattern': '^[\\w-]+$'}}}</em><a class="headerlink" href="#grader.models.GraderConfig.SCHEMA" title="Permalink to this definition">¶</a></dt>
 <dd><p>The schema for a Grader-wide configuration file</p>
 </dd></dl>
 
@@ -931,7 +926,7 @@ YAML-formatted configuration files</p>
 
 <dl class="attribute">
 <dt id="grader.models.AssignmentConfig.SCHEMA">
-<code class="descname">SCHEMA</code><em class="property"> = {'additionalProperties': False, 'required': ['assignment-name'], '$schema': 'http://json-schema.org/schema#', 'type': 'object', 'properties': {'assignment-name': {'type': 'string', 'pattern': '^[\\w-]+$'}, 'image-build-options': {'type': 'object'}}}</em><a class="headerlink" href="#grader.models.AssignmentConfig.SCHEMA" title="Permalink to this definition">¶</a></dt>
+<code class="descname">SCHEMA</code><em class="property"> = {'$schema': 'http://json-schema.org/schema#', 'type': 'object', 'additionalProperties': False, 'required': ['assignment-name'], 'properties': {'assignment-name': {'type': 'string', 'pattern': '^[\\w-]+$'}, 'image-build-options': {'type': 'object'}}}</em><a class="headerlink" href="#grader.models.AssignmentConfig.SCHEMA" title="Permalink to this definition">¶</a></dt>
 <dd><p>The schema for a Assignment-wide configuration file</p>
 </dd></dl>
 
@@ -1009,7 +1004,7 @@ object.</p>
       &copy;2016, Billy Rhoades, Mike Wisely.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
       
       |
