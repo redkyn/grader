@@ -128,7 +128,7 @@ class Submission(DockerClientMixin):
     @classmethod
     def _check_tarball(cls, assignment, path, student_id):
         with tempfile.TemporaryDirectory() as tmpdir:
-            with tarfile.open(path, "r:gz") as tar:
+            with tarfile.open(path) as tar:
                 tar.extractall(tmpdir)
 
             try:
