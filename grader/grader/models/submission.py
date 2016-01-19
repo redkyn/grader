@@ -598,7 +598,18 @@ class Submission(DockerClientMixin):
 
         return tmpdir
 
-    def grade(self, show_output=True):
+    def grade(self, assignment, show_output=True):
+        """Performs the magic--- prepares the docker container,
+        runs the grade command, and writes to logs.
+
+        :param Assignment assignment: The assignment we're grading, used for
+            results directory.
+        :param bool show_output: Whether to output STDOUT/STDERR from the
+            container to STDOUT. Defaults to True.
+
+        :return: None
+
+        """
         c_id = self.get_container_id()
         logger.debug("Got container ID %s", c_id)
 
@@ -617,9 +628,12 @@ class Submission(DockerClientMixin):
             stream=True,
         )
 
-        for line in output:
-            if show_output:
-                print(line.decode("utf-8"), end="")
+        with open(os.path.join(assignment.results_dir,
+                               "{}.log".format(self.user_id)), 'w') as f:
+            for line in output:
+                if show_output:
+                    print(line.decode("utf-8"), end="")
+                f.write(line.decode("utf-8"))
 
         self.docker_cli.stop(
             container=c_id

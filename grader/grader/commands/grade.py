@@ -27,4 +27,4 @@ def run(args):
     for user_id, submissions in a.submissions_by_user.items():
         logger.info("Grading submissions for %s", user_id)
         for submission in submissions:
-            submission.grade()
+            submission.grade(a)
