@@ -589,7 +589,7 @@ class Submission(DockerClientMixin):
             exec_id=self.docker_cli.exec_create(
                 container=c_id,
                 user="root",
-                cmd="chmod --recursive +r {}".format(tmpdir)
+                cmd="chmod --recursive +rX {}".format(tmpdir)
             )
         )
 
