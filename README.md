@@ -1,4 +1,4 @@
-# Grader
+<img src="docs/grader.png" alt="Grader"/>
 
 [![Build Status](https://travis-ci.org/grade-it/grader.svg?branch=master)](https://travis-ci.org/grade-it/grader)
 
