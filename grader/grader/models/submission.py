@@ -485,6 +485,19 @@ class Submission(DockerClientMixin):
         return [os.path.join(results_dir, r)
                 for r in os.listdir(results_dir) if name_re.match(r)]
 
+    @property
+    def latest_result(self):
+        """Path to the latest result for this submission. If there are no
+        results, returns None.
+
+        """
+        def timestamp(path):
+            return os.stat(path).st_mtime
+
+        results = self.results_files
+        if results:
+            return max(results, key=timestamp)
+        return None
 
     def __init__(self, assignment, tar_name):
         """Instantiates a new Submission.
