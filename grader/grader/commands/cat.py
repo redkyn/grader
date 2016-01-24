@@ -21,13 +21,8 @@ def setup_parser(parser):
     parser.set_defaults(run=run)
 
 
-def timestamp(path):
-    return os.stat(path).st_mtime
-
-
 def last_graded(submission):
-    latest_result = max(submission.results_files, key=timestamp)
-    return os.stat(latest_result).st_mtime
+    return os.stat(submission.latest_result).st_mtime
 
 
 @require_grader_config
@@ -42,7 +37,6 @@ def run(args):
         return
 
     latest_submission = max(submissions, key=last_graded)
-    latest_result = max(latest_submission.results_files, key=timestamp)
-    logger.debug("Catting %s", latest_result)
-    with open(latest_result) as f:
+    logger.debug("Catting %s", latest_submission.latest_result)
+    with open(latest_submission.latest_result) as f:
         print(f.read())
