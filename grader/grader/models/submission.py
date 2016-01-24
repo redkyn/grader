@@ -611,19 +611,21 @@ class Submission(DockerClientMixin):
 
         return tmpdir
 
-    def grade(self, assignment, show_output=True):
+    def grade(self, assignment, rebuild_container=False, show_output=True):
         """Performs the magic--- prepares the docker container,
         runs the grade command, and writes to logs.
 
         :param Assignment assignment: The assignment we're grading, used for
             results directory.
+        :param bool rebuild_container: Whether to discard the old
+            container and build a new one instead. Defaults to False.
         :param bool show_output: Whether to output STDOUT/STDERR from the
             container to STDOUT. Defaults to True.
 
         :return: None
 
         """
-        c_id = self.get_container_id()
+        c_id = self.get_container_id(rebuild=rebuild_container)
         logger.debug("Got container ID %s", c_id)
 
         # Start the container
