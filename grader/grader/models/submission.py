@@ -2,6 +2,7 @@ import docker
 import git
 import hashlib
 import io
+import itertools
 import logging
 import os
 import re
@@ -611,6 +612,34 @@ class Submission(DockerClientMixin):
 
         return tmpdir
 
+    def _record_output(self, output):
+        results_dir = self.assignment.results_dir
+
+        # Attempt to decode the string as YAML. If it works, use the
+        # correct file extension.
+        extension = "log"
+        try:
+            yaml.load(output)
+            logger.info("Logging %s output as YAML", self.user_id)
+            extension = "yml"
+        except yaml.YAMLError:
+            logger.info("Logging %s output as text", self.user_id)
+
+        # Pick a uniquely numbered file name
+        filename = ''
+        for i in itertools.count(1):
+            if os.path.exists(os.path.join(results_dir, filename)):
+                filename = "{}.{:02}.{}".format(self.user_id, i, extension)
+            else:
+                break
+
+        # Save results to a file
+        path = os.path.join(results_dir, filename)
+        with open(path, 'w') as result_file:
+            result_file.write(output)
+
+        logger.info("Wrote to %s", path)
+
     def grade(self, assignment, rebuild_container=False, show_output=True):
         """Performs the magic--- prepares the docker container,
         runs the grade command, and writes to logs.
@@ -652,20 +681,7 @@ class Submission(DockerClientMixin):
                 print(line, end="")
             output_text.write(line)
 
-        # Attempt to decode the string as YAML. If it works, use the
-        # correct file extension.
-        try:
-            yaml.load(output_text.getvalue())
-            logger.info("Logging %s output as YAML", self.user_id)
-            result_filename = "{}.yml".format(self.user_id)
-        except yaml.YAMLError:
-            logger.info("Logging %s output as text", self.user_id)
-            result_filename = "{}.log".format(self.user_id)
-
-        # Save results to a file
-        result_filepath = os.path.join(assignment.results_dir, result_filename)
-        with open(result_filepath, 'w') as result_file:
-            result_file.write(output_text.getvalue())
+        self._record_output(output_text.getvalue())
 
         self.docker_cli.stop(
             container=c_id
