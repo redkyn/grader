@@ -27,20 +27,16 @@ def run(args):
     g = Grader(args.path)
     a = g.get_assignment(args.assignment)
 
+    users = a.submissions_by_user
+
     if args.student_id:
         try:
-            submissions = a.submissions_by_user[args.student_id]
+            users = {args.student_id: users[args.student_id]}
         except KeyError:
             logger.error("Cannot find student %s", args.student_id)
             return
 
-        for submission in submissions:
-            submission.grade(a, rebuild_container=args.rebuild,
-                             show_output=args.suppress_output)
-        return
-
-    # If we didn't get a student_id
-    for user_id, submissions in a.submissions_by_user.items():
+    for user_id, submissions in users.items():
         logger.info("Grading submissions for %s", user_id)
         for submission in submissions:
             submission.grade(a, rebuild_container=args.rebuild,
