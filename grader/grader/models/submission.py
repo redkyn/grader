@@ -475,6 +475,17 @@ class Submission(DockerClientMixin):
             "submission_uuid": self.uuid,
         }
 
+    @property
+    def results_files(self):
+        """A list of paths to grading results for this submission.
+
+        """
+        name_re = re.compile(r"^{}(?:\..*)$".format(self.user_id))
+        results_dir = self.assignment.results_dir
+        return [os.path.join(results_dir, r)
+                for r in os.listdir(results_dir) if name_re.match(r)]
+
+
     def __init__(self, assignment, tar_name):
         """Instantiates a new Submission.
 
