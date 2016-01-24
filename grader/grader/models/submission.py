@@ -1,6 +1,7 @@
 import docker
 import git
 import hashlib
+import io
 import logging
 import os
 import re
@@ -8,6 +9,7 @@ import shutil
 import tarfile
 import tempfile
 import uuid
+import yaml
 
 from contextlib import contextmanager
 from datetime import datetime
@@ -628,12 +630,29 @@ class Submission(DockerClientMixin):
             stream=True,
         )
 
-        with open(os.path.join(assignment.results_dir,
-                               "{}.log".format(self.user_id)), 'w') as f:
-            for line in output:
-                if show_output:
-                    print(line.decode("utf-8"), end="")
-                f.write(line.decode("utf-8"))
+        # Retrieve output, displaying to the screen and saving to a
+        # string buffer for later
+        output_text = io.StringIO()
+        for line in output:
+            line = line.decode("utf-8")
+            if show_output:
+                print(line, end="")
+            output_text.write(line)
+
+        # Attempt to decode the string as YAML. If it works, use the
+        # correct file extension.
+        try:
+            yaml.load(output_text.getvalue())
+            logger.info("Logging %s output as YAML", self.user_id)
+            result_filename = "{}.yml".format(self.user_id)
+        except yaml.YAMLError:
+            logger.info("Logging %s output as text", self.user_id)
+            result_filename = "{}.log".format(self.user_id)
+
+        # Save results to a file
+        result_filepath = os.path.join(assignment.results_dir, result_filename)
+        with open(result_filepath, 'w') as result_file:
+            result_file.write(output_text.getvalue())
 
         self.docker_cli.stop(
             container=c_id
