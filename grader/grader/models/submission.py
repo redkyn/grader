@@ -524,7 +524,14 @@ class Submission(DockerClientMixin):
                 msg += " Did you build the assignment?"
             raise SubmissionContainerError(msg) from e
 
-    def get_container_id(self):
+    def get_container_id(self, rebuild=True):
+        """Retrieve's this submission's container id
+
+        :param bool rebuild: Remove the old container and build a new
+            one instead.
+
+        :return: The ID of this submission's container
+        """
         # Filter the containers down to the one we want
         filters = {
             'label': 'submission_uuid={}'.format(self.uuid)
@@ -537,6 +544,10 @@ class Submission(DockerClientMixin):
             container_id = self._create_container()
         elif len(containers) == 1:
             container_id = containers[0]['Id']
+            if rebuild:
+                logger.info("Removing old container %s", container_id)
+                self.docker_cli.remove_container(container_id, force=True)
+                container_id = self._create_container()
         elif len(containers) > 1:
             raise SubmissionContainerError(
                 "Found multiple containers for submission. "
