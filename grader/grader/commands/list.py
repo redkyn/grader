@@ -79,7 +79,7 @@ def build_submission_info(assignments, full=False):
                     ("Last File MTime", str(submission.latest_mtime)),
                     ("Last Commit", str(submission.latest_commit)),
                     ("SHA1", shorten(submission.sha1sum, full=full)),
-                    ("Grade", "--"),
+                    ("Re-Grades", len(submission.results_files)),
                     ("Failed", "--"),
                 ]))
     return info
@@ -100,7 +100,7 @@ def run(args):
     if args.submissions:
         columns = [
             "Assignment", "User ID", "Submission UUID", "Import Time",
-            "Last File MTime", "Last Commit", "SHA1", "Grade", "Failed"
+            "Last File MTime", "Last Commit", "SHA1", "Re-Grades", "Failed"
         ]
         rows = s_info
         rows = sort_by_assignment(rows, args.sortby)

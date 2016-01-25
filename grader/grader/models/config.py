@@ -156,6 +156,14 @@ class GraderConfig(Config):
     }
     """The schema for a Grader-wide configuration file"""
 
+    @property
+    def roster(self):
+        return self.data.get('roster', [])
+
+    def get_student_name(self, student_id):
+        d = {x['id']: x['name'] for x in self.roster}
+        return d[student_id]
+
 
 class AssignmentConfig(Config):
     """A class for creating, loading, and accessing assignment-specific,

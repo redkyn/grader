@@ -1,4 +1,5 @@
 import git
+import glob
 import logging
 import os
 
@@ -91,6 +92,13 @@ class GradeSheet(object):
     def dockerfile_path(self):
         """The path to this gradesheet's Dockerfile"""
         return os.path.join(self.path, "Dockerfile")
+
+    @property
+    def templates(self):
+        """A dictionary of this gradesheet's optional report templates"""
+        templates = glob.glob(os.path.join(self.path, '*.template'))
+        return {os.path.basename(t).split('.')[0].lower(): t
+                for t in templates}
 
     def __init__(self, assignment):
         """Instantiates a GradeSheet.
