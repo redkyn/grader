@@ -1,8 +1,6 @@
 '''TODO: Build command docs
 '''
 import logging
-import os
-from docker import Client
 from subprocess import call
 
 from grader.models import Grader
@@ -26,7 +24,7 @@ def setup_parser(parser):
 def run(args):
     g = Grader(args.path)
     a = g.get_assignment(args.assignment)
-    
+
     submissions = a.submissions_by_user
 
     if args.username not in submissions:
@@ -35,8 +33,8 @@ def run(args):
 
     user_submissions = submissions[args.username]
     if len(user_submissions) > 1:
-        logger.error("FIXME: Only supporting one submission (there are {0})."\
-                .format(len(user_submissions)))
+        logger.error("FIXME: Only supporting one submission (there are {0})."
+                     .format(len(user_submissions)))
         return
 
     shell = a.gradesheet.config.get('shell', '/bin/bash')
@@ -49,4 +47,3 @@ def run(args):
 
     logger.info("Stopping container {0}".format(id))
     a.docker_cli.stop(container=id)
-
