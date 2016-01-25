@@ -511,6 +511,7 @@ class Submission(DockerClientMixin):
         """
         self.path = os.path.join(assignment.submissions_dir, tar_name)
         self.assignment = assignment
+        self.grader = assignment.grader
 
         if not os.path.isfile(self.path):
             logger.debug("Cannot find %s", self.path)
@@ -522,6 +523,7 @@ class Submission(DockerClientMixin):
         self.basename = os.path.basename(self.path)
         self.full_id = self.__class__._remove_extension(self.basename)
         self.user_id, self.uuid = self.split_full_id(self.full_id)
+        self.student_name = self.grader.config.get_student_name(self.user_id)
 
     def __str__(self):
         """String representation of a Submission"""
