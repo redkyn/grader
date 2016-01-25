@@ -32,18 +32,32 @@ def run(args):
         return
 
     user_submissions = submissions[args.username]
-    if len(user_submissions) > 1:
-        logger.error("FIXME: Only supporting one submission (there are {0})."
-                     .format(len(user_submissions)))
-        return
+    sub = None
+    if len(user_submissions) > 0:
+        i = 1 
+        print("Index\tCreated")
+        for s in user_submissions:
+            info = a.docker_cli.inspect_container(s.full_id)
+            print("{0}\t{1}".format(i, info['Created']))
+            i += 1
+        choice = -1
+        while choice < 0 or choice >= len(user_submissions):
+            choice = input("Please enter your selection: ")
+            try:
+                choice = int(choice)-1
+            except:
+                choice = -1
+
+        sub = user_submissions[choice]
+    else:
+        sub = user_submissions[0]
 
     shell = a.gradesheet.config.get('shell', '/bin/bash')
-    id = user_submissions[0].full_id
 
-    logger.info("Starting container {0}".format(id))
-    a.docker_cli.start(container=id)
+    logger.info("Starting container {0}".format(sub.id))
+    a.docker_cli.start(container=sub.id)
 
-    call(["/usr/bin/docker", "exec", "-it", id, shell])
+    call(["/usr/bin/docker", "exec", "-it", sub.id, shell])
 
-    logger.info("Stopping container {0}".format(id))
+    logger.info("Stopping container {0}".format(sub.id))
     a.docker_cli.stop(container=id)
