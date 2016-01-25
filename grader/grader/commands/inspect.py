@@ -25,16 +25,15 @@ def run(args):
     g = Grader(args.path)
     a = g.get_assignment(args.assignment)
 
-    submissions = a.submissions_by_user
-
-    if args.username not in submissions:
+    if args.username not in a.submissions_by_user:
         logger.error("User does not have a graded submission available.")
         return
 
-    user_submissions = submissions[args.username]
+    user_submissions = a.submissions_by_user[args.username]
     sub = None
-    if len(user_submissions) > 0:
-        i = 1 
+    # If they have multiple submissions, make them choose
+    if len(user_submissions) > 1:
+        i = 1
         print("Index\tCreated")
         for s in user_submissions:
             info = a.docker_cli.inspect_container(s.full_id)
@@ -54,6 +53,7 @@ def run(args):
 
     shell = a.gradesheet.config.get('shell', '/bin/bash')
 
+    # Start container, run exec, stop container
     logger.info("Starting container {0}".format(sub.id))
     a.docker_cli.start(container=sub.id)
 
