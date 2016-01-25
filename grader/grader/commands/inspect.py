@@ -3,6 +3,7 @@
 import logging
 import os
 from docker import Client
+from subprocess import call
 
 from grader.models import Grader
 from grader.utils.config import require_grader_config
@@ -41,9 +42,11 @@ def run(args):
     shell = a.gradesheet.config.get('shell', '/bin/bash')
     id = user_submissions[0].full_id
 
-    # Start the container
-    cli = Client(base_url='unix://var/run/docker.sock')
-    cli.start(container=id)
-    os.execl("/usr/bin/docker", "", "exec", "-it", id, shell)
-    #os.execv?
+    logger.info("Starting container {0}".format(id))
+    a.docker_cli.start(container=id)
+
+    call(["/usr/bin/docker", "exec", "-it", id, shell])
+
+    logger.info("Stopping container {0}".format(id))
+    a.docker_cli.stop(container=id)
 
