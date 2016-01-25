@@ -79,6 +79,15 @@ def run(args):
             # Load the report data
             with open(submission.latest_result) as result_file:
                 data = load_data(result_file.read())
+                data.update({
+                    'student': {
+                        'id': user_id,
+                        'name': submission.student_name
+                    },
+                    'assignment': {
+                        'name': submission.assignment.name
+                    }
+                })
 
             # Save it to a file
             filename = "{}.{}".format(submission.full_id, args.template)
