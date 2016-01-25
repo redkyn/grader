@@ -186,7 +186,8 @@ class AssignmentConfig(Config):
             "image-build-options": {"type": "object"},
             "shell": {
                 "type": "string"
-            }
+            },
+            "review-editor": {"type": "string"}
         },
         "required": ["assignment-name"],
         "additionalProperties": False

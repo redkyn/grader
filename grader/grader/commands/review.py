@@ -26,7 +26,7 @@ def setup_parser(parser):
 def run(args):
     g = Grader(args.path)
     a = g.get_assignment(args.assignment)
-    
+
     if len(a.submissions_by_user) == 0:
         logger.error("There are no graded submissions for this assignment.")
         return
@@ -35,13 +35,21 @@ def run(args):
         logger.error("User does not have a graded submission available.")
         return
 
-    for user_id, subs in a.submissions_by_user.items():
-        #FIXME: Combine code with inspect
+    user_ids = sorted(a.submissions_by_user.keys())
+
+    for user_id in user_ids:
+        if args.start_at and user_id != args.start_at:
+            continue  # FIXME:gross skip until we reach target
+        else:
+            args.start_at = None
+        subs = a.submissions_by_user[user_id]
+
+        # FIXME: Combine code with inspect
         sub = None
         # If they have multiple submissions, make them choose
         if len(subs) > 1:
             print("{0} submissions found for {1}, choose one:\n"
-                    .format(len(subs), user_id))
+                  .format(len(subs), user_id))
             i = 1
             print("Index\tCreated")
             for s in subs:
@@ -60,13 +68,13 @@ def run(args):
         else:
             sub = subs[0]
 
-        editor = a.gradesheet.config.get("editor", 
-                "/usr/bin/vim -O2 {0} {1} {2} {3}")
+        editor = a.gradesheet.config \
+            .get("review-editor", "/usr/bin/vim -O2 {0} {1} {2} {3}")
         # Get all submitted files
         with sub.unpacked_files as sub_dir:
             # gross... the idea is to get all files in the submission
-            # directory into a list. 
-            sub_files_by_dir = [[x[0], x[2]] for x in os.walk(sub_dir) if 
+            # directory into a list.
+            sub_files_by_dir = [[x[0], x[2]] for x in os.walk(sub_dir) if
                                 len(x[2]) > 0]
             sub_files = []
 
@@ -78,7 +86,7 @@ def run(args):
             args = []
 
             # Smash all of our files into a list so it looks like:
-            # [first submission file, first result file, other submission 
+            # [first submission file, first result file, other submission
             #   files, other result files]
             for type in [sub_files, results]:
                 if len(type) > 0:
@@ -93,7 +101,7 @@ def run(args):
                     args.append("")
 
             # Call with first file, second file, then all other files
-            call(list(filter(lambda x: x != "", 
-                editor.format(*args).split(' '))))
+            call(list(filter(lambda x: x != "",
+                 editor.format(*args).split(' '))))
 
-            #FIXME: Add check for continue, quit, next, select, previous
+        # FIXME: Add check for continue, quit, next, select, previous
