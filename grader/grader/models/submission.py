@@ -1,6 +1,8 @@
 import docker
 import git
 import hashlib
+import io
+import itertools
 import logging
 import os
 import re
@@ -8,6 +10,7 @@ import shutil
 import tarfile
 import tempfile
 import uuid
+import yaml
 
 from contextlib import contextmanager
 from datetime import datetime
@@ -472,6 +475,30 @@ class Submission(DockerClientMixin):
             "submission_uuid": self.uuid,
         }
 
+    @property
+    def results_files(self):
+        """A list of paths to grading results for this submission.
+
+        """
+        name_re = re.compile(r"^{}(?:\..*)$".format(self.user_id))
+        results_dir = self.assignment.results_dir
+        return [os.path.join(results_dir, r)
+                for r in os.listdir(results_dir) if name_re.match(r)]
+
+    @property
+    def latest_result(self):
+        """Path to the latest result for this submission. If there are no
+        results, returns None.
+
+        """
+        def timestamp(path):
+            return os.stat(path).st_mtime
+
+        results = self.results_files
+        if results:
+            return max(results, key=timestamp)
+        return None
+
     def __init__(self, assignment, tar_name):
         """Instantiates a new Submission.
 
@@ -484,6 +511,7 @@ class Submission(DockerClientMixin):
         """
         self.path = os.path.join(assignment.submissions_dir, tar_name)
         self.assignment = assignment
+        self.grader = assignment.grader
 
         if not os.path.isfile(self.path):
             logger.debug("Cannot find %s", self.path)
@@ -495,6 +523,7 @@ class Submission(DockerClientMixin):
         self.basename = os.path.basename(self.path)
         self.full_id = self.__class__._remove_extension(self.basename)
         self.user_id, self.uuid = self.split_full_id(self.full_id)
+        self.student_name = self.grader.config.get_student_name(self.user_id)
 
     def __str__(self):
         """String representation of a Submission"""
@@ -522,7 +551,14 @@ class Submission(DockerClientMixin):
                 msg += " Did you build the assignment?"
             raise SubmissionContainerError(msg) from e
 
-    def get_container_id(self):
+    def get_container_id(self, rebuild=True):
+        """Retrieve's this submission's container id
+
+        :param bool rebuild: Remove the old container and build a new
+            one instead.
+
+        :return: The ID of this submission's container
+        """
         # Filter the containers down to the one we want
         filters = {
             'label': 'submission_uuid={}'.format(self.uuid)
@@ -535,6 +571,10 @@ class Submission(DockerClientMixin):
             container_id = self._create_container()
         elif len(containers) == 1:
             container_id = containers[0]['Id']
+            if rebuild:
+                logger.info("Removing old container %s", container_id)
+                self.docker_cli.remove_container(container_id, force=True)
+                container_id = self._create_container()
         elif len(containers) > 1:
             raise SubmissionContainerError(
                 "Found multiple containers for submission. "
@@ -598,19 +638,49 @@ class Submission(DockerClientMixin):
 
         return tmpdir
 
-    def grade(self, assignment, show_output=True):
+    def _record_output(self, output):
+        results_dir = self.assignment.results_dir
+
+        # Attempt to decode the string as YAML. If it works, use the
+        # correct file extension.
+        extension = "log"
+        try:
+            yaml.load(output)
+            logger.info("Logging %s output as YAML", self.user_id)
+            extension = "yml"
+        except yaml.YAMLError:
+            logger.info("Logging %s output as text", self.user_id)
+
+        # Pick a uniquely numbered file name
+        filename = ''
+        for i in itertools.count(1):
+            if os.path.exists(os.path.join(results_dir, filename)):
+                filename = "{}.{:02}.{}".format(self.user_id, i, extension)
+            else:
+                break
+
+        # Save results to a file
+        path = os.path.join(results_dir, filename)
+        with open(path, 'w') as result_file:
+            result_file.write(output)
+
+        logger.info("Wrote to %s", path)
+
+    def grade(self, assignment, rebuild_container=False, show_output=True):
         """Performs the magic--- prepares the docker container,
         runs the grade command, and writes to logs.
 
         :param Assignment assignment: The assignment we're grading, used for
             results directory.
+        :param bool rebuild_container: Whether to discard the old
+            container and build a new one instead. Defaults to False.
         :param bool show_output: Whether to output STDOUT/STDERR from the
             container to STDOUT. Defaults to True.
 
         :return: None
 
         """
-        c_id = self.get_container_id()
+        c_id = self.get_container_id(rebuild=rebuild_container)
         logger.debug("Got container ID %s", c_id)
 
         # Start the container
@@ -628,12 +698,16 @@ class Submission(DockerClientMixin):
             stream=True,
         )
 
-        with open(os.path.join(assignment.results_dir,
-                               "{}.log".format(self.user_id)), 'w') as f:
-            for line in output:
-                if show_output:
-                    print(line.decode("utf-8"), end="")
-                f.write(line.decode("utf-8"))
+        # Retrieve output, displaying to the screen and saving to a
+        # string buffer for later
+        output_text = io.StringIO()
+        for line in output:
+            line = line.decode("utf-8")
+            if show_output:
+                print(line, end="")
+            output_text.write(line)
+
+        self._record_output(output_text.getvalue())
 
         self.docker_cli.stop(
             container=c_id

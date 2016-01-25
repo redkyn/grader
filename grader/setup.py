@@ -14,7 +14,8 @@ setup(  # pragma: no cover
         'PyYAML==3.11',
         'jsonschema==2.5.1',
         'prettytable==0.7.2',
-        'colorlog',
+        'colorlog==2.6.0',
+        'Jinja2==2.8'
     ],
     entry_points={
         'console_scripts': ['grader = grader:run'],
