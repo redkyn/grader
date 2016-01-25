@@ -83,25 +83,42 @@ def run(args):
                     sub_files.append(os.path.join(dir[0], f))
 
             results = sub.results_files
-            args = []
+            com_args = []
 
             # Smash all of our files into a list so it looks like:
             # [first submission file, first result file, other submission
             #   files, other result files]
             for type in [sub_files, results]:
                 if len(type) > 0:
-                    args.append(type[0])
+                    com_args.append(type[0])
                 else:
-                    args.append("")
+                    com_args.append("")
 
             for type in [sub_files, results]:
                 if len(type) > 1:
-                    args.append(' '.join(type[1:]))
+                    com_args.append(' '.join(type[1:]))
                 else:
-                    args.append("")
+                    com_args.append("")
 
             # Call with first file, second file, then all other files
             call(list(filter(lambda x: x != "",
-                 editor.format(*args).split(' '))))
+                 editor.format(*com_args).split(' '))))
 
-        # FIXME: Add check for continue, quit, next, select, previous
+        current_index = user_ids.index(user_id)
+        if current_index != len(user_ids)-1:
+            print("Finished grading {0}, {1} more remain.".format(user_id,
+                len(user_ids)-current_index-1))
+            print("{0} is next.\n".format(user_ids[current_index+1]))
+
+            choice = None
+            while choice is None:
+                print("C) Continue")
+                print("Q) Quit")
+
+                choice = input("\nSelect a command: ")
+
+                if choice not in ["C", "Q", ""]:
+                    choice = None
+
+            if choice == "Q":
+                break
