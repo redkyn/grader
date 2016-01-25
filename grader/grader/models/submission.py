@@ -433,7 +433,7 @@ class Submission(DockerClientMixin):
 
         """
         with tempfile.TemporaryDirectory() as tmpdir:
-            with tarfile.open(self.path, "r:gz") as tar:
+            with tarfile.open(self.path, "r") as tar:
                 tar.extractall(tmpdir)
             yield tmpdir
 
