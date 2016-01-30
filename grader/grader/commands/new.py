@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def setup_parser(parser):
     parser.add_argument('name', help='Assignment name')
     parser.add_argument('repo', nargs='?', default=None,
-                        help='Payload repo')
+                        help='Gradesheet repository')
     parser.set_defaults(run=run)
 
 
