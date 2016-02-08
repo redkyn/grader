@@ -35,41 +35,24 @@ def run(args):
         logger.error("User does not have a graded submission available.")
         return
 
-    user_ids = sorted(a.submissions_by_user.keys())
+    review_loop(a, args.start_at)
 
-    for user_id in user_ids:
-        if args.start_at and user_id != args.start_at:
-            continue  # FIXME: gross skip until we reach target
-        else:
-            args.start_at = None
-        subs = a.submissions_by_user[user_id]
 
-        # FIXME: Combine code with inspect
-        sub = None
-        # If they have multiple submissions, make them choose
-        if len(subs) > 1:
-            print("{0} submissions found for {1}, choose one:\n"
-                  .format(len(subs), user_id))
-            i = 1
-            print("Index\tCreated")
-            for s in subs:
-                info = a.docker_cli.inspect_container(s.full_id)
-                print("{0}\t{1}".format(i, info['Created']))
-                i += 1
-            choice = -1
-            while choice < 0 or choice >= len(subs):
-                choice = input("Please enter your selection: ")
-                try:
-                    choice = int(choice)-1
-                except:
-                    choice = -1
+def review_loop(assignment, start_at):
+    # Figure out where to start at (index)
+    user_ids = sorted(assignment.submissions_by_user.keys())
+    editor = assignment.gradesheet.config \
+        .get("review-editor", "/usr/bin/vim -O2 {0} {1} {2} {3}")
 
-            sub = subs[choice]
-        else:
-            sub = subs[0]
+    i = 0
+    if start_at:
+        i = user_ids.index(start_at)
 
-        editor = a.gradesheet.config \
-            .get("review-editor", "/usr/bin/vim -O2 {0} {1} {2} {3}")
+    while i < len(user_ids):
+        user = user_ids[i]
+        subs = assignment.submissions_by_user[user]
+        sub = submission_choice(assignment, user, subs)
+
         # Get all submitted files
         with sub.unpacked_files as sub_dir:
             # gross... the idea is to get all files in the submission
@@ -104,21 +87,43 @@ def run(args):
             call(list(filter(lambda x: x != "",
                  editor.format(*com_args).split(' '))))
 
-        current_index = user_ids.index(user_id)
-        if current_index != len(user_ids)-1:
-            print("Finished grading {0}, {1} more remain.".format(user_id,
-                  len(user_ids)-current_index-1))
-            print("{0} is next.\n".format(user_ids[current_index+1]))
+        if i != len(user_ids)-1:
+            print("Finished grading {0}, {1} more remain.".format(user,
+                  len(user_ids)-i-1))
+            print("{0} is next.\n".format(user_ids[i+1]))
 
-            choice = None
-            while choice is None:
-                print("C) Continue")
+            choice = "A"
+            while choice.upper() not in ["C", "Q", ""]:
+                print("C) Continue (default)")
                 print("Q) Quit")
 
                 choice = input("\nSelect a command: ")
 
-                if choice.upper() not in ["C", "Q", ""]:
-                    choice = None
-
             if choice.upper() == "Q":
                 break
+            i += 1  # continue
+
+def submission_choice(a, user_id, subs):
+    # FIXME: Combine code with inspect
+
+    # If they have multiple submissions, make them choose
+    if len(subs) > 1:
+        print("{0} submissions found for {1}, choose one:\n"
+              .format(len(subs), user_id))
+        i = 1
+        print("Index\tCreated")
+        for s in subs:
+            info = a.docker_cli.inspect_container(s.full_id)
+            print("{0}\t{1}".format(i, info['Created']))
+            i += 1
+        choice = -1
+        while choice < 0 or choice >= len(subs):
+            choice = input("Please enter your selection: ")
+            try:
+                choice = int(choice)-1
+            except:
+                pass
+
+        return subs[choice]
+    else:
+        return subs[0]
