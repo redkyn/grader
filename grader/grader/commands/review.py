@@ -39,7 +39,7 @@ def run(args):
 
     for user_id in user_ids:
         if args.start_at and user_id != args.start_at:
-            continue  # FIXME:gross skip until we reach target
+            continue  # FIXME: gross skip until we reach target
         else:
             args.start_at = None
         subs = a.submissions_by_user[user_id]
@@ -107,7 +107,7 @@ def run(args):
         current_index = user_ids.index(user_id)
         if current_index != len(user_ids)-1:
             print("Finished grading {0}, {1} more remain.".format(user_id,
-                len(user_ids)-current_index-1))
+                  len(user_ids)-current_index-1))
             print("{0} is next.\n".format(user_ids[current_index+1]))
 
             choice = None
@@ -117,8 +117,8 @@ def run(args):
 
                 choice = input("\nSelect a command: ")
 
-                if choice not in ["C", "Q", ""]:
+                if choice.upper() not in ["C", "Q", ""]:
                     choice = None
 
-            if choice == "Q":
+            if choice.upper() == "Q":
                 break
