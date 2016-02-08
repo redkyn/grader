@@ -53,39 +53,7 @@ def review_loop(assignment, start_at):
         subs = assignment.submissions_by_user[user]
         sub = submission_choice(assignment, user, subs)
 
-        # Get all submitted files
-        with sub.unpacked_files as sub_dir:
-            # gross... the idea is to get all files in the submission
-            # directory into a list.
-            sub_files_by_dir = [[x[0], x[2]] for x in os.walk(sub_dir) if
-                                len(x[2]) > 0]
-            sub_files = []
-
-            for dir in sub_files_by_dir:
-                for f in dir[1]:
-                    sub_files.append(os.path.join(dir[0], f))
-
-            results = sub.results_files
-            com_args = []
-
-            # Smash all of our files into a list so it looks like:
-            # [first submission file, first result file, other submission
-            #   files, other result files]
-            for type in [sub_files, results]:
-                if len(type) > 0:
-                    com_args.append(type[0])
-                else:
-                    com_args.append("")
-
-            for type in [sub_files, results]:
-                if len(type) > 1:
-                    com_args.append(' '.join(type[1:]))
-                else:
-                    com_args.append("")
-
-            # Call with first file, second file, then all other files
-            call(list(filter(lambda x: x != "",
-                 editor.format(*com_args).split(' '))))
+        review_files(sub, editor)
 
         if i != len(user_ids)-1:
             print("Finished grading {0}, {1} more remain.".format(user,
@@ -128,3 +96,39 @@ def submission_choice(assignment, user_id, subs):
         return subs[choice]
     else:
         return subs[0]
+
+
+def review_files(sub, editor):
+    # Get all submitted files
+    with sub.unpacked_files as sub_dir:
+        # gross... the idea is to get all files in the submission
+        # directory into a list.
+        sub_files_by_dir = [[x[0], x[2]] for x in os.walk(sub_dir) if
+                            len(x[2]) > 0]
+        sub_files = []
+
+        for dir in sub_files_by_dir:
+            for f in dir[1]:
+                sub_files.append(os.path.join(dir[0], f))
+
+        results = sub.results_files
+        com_args = []
+
+        # Smash all of our files into a list so it looks like:
+        # [first submission file, first result file, other submission
+        #   files, other result files]
+        for type in [sub_files, results]:
+            if len(type) > 0:
+                com_args.append(type[0])
+            else:
+                com_args.append("")
+
+        for type in [sub_files, results]:
+            if len(type) > 1:
+                com_args.append(' '.join(type[1:]))
+            else:
+                com_args.append("")
+
+        # Call with first file, second file, then all other files
+        call(list(filter(lambda x: x != "",
+             editor.format(*com_args).split(' '))))
