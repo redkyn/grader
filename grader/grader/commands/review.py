@@ -3,6 +3,7 @@
 import logging
 from subprocess import call
 import os
+import re
 
 from grader.models import Grader
 from grader.utils.config import require_grader_config
@@ -78,9 +79,6 @@ def review_loop(assignment, start_at):
                         print("Jumping to {1} (#{0})"
                               .format(new_index+1, user_ids[new_index]))
                         i = new_index
-                        choice = "C"  # Otherwise we loop forever
-        else:
-            break
 
             if choice == "Q":
                 break
@@ -92,6 +90,10 @@ def review_loop(assignment, start_at):
 
             # Separate from next call
             print("")
+        else:
+            break
+
+    print("Finished walking through all files.")
 
 
 def submission_choice(assignment, user_id, subs):
@@ -131,7 +133,13 @@ def review_files(sub, editor):
 
         for dir in sub_files_by_dir:
             for f in dir[1]:
-                sub_files.append(os.path.join(dir[0], f))
+                fullfile = os.path.join(dir[0], f)
+
+                # Filter junk files, including .git and .+~
+                if not re.search(r"\/.git(?!ignore)|.+~", fullfile,
+                                 re.IGNORECASE):
+                    print("NO MATCH {0}".format(fullfile))
+                    sub_files.append(fullfile)
 
         results = sub.results_files
         com_args = []
