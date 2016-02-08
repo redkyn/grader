@@ -103,7 +103,8 @@ def review_loop(assignment, start_at):
                 break
             i += 1  # continue
 
-def submission_choice(a, user_id, subs):
+
+def submission_choice(assignment, user_id, subs):
     # FIXME: Combine code with inspect
 
     # If they have multiple submissions, make them choose
@@ -113,7 +114,7 @@ def submission_choice(a, user_id, subs):
         i = 1
         print("Index\tCreated")
         for s in subs:
-            info = a.docker_cli.inspect_container(s.full_id)
+            info = assignment.docker_cli.inspect_container(s.full_id)
             print("{0}\t{1}".format(i, info['Created']))
             i += 1
         choice = -1
