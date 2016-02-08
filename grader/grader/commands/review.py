@@ -61,15 +61,37 @@ def review_loop(assignment, start_at):
             print("{0} is next.\n".format(user_ids[i+1]))
 
             choice = "A"
-            while choice.upper() not in ["C", "Q", ""]:
-                print("C) Continue (default)")
-                print("Q) Quit")
+            while choice.upper() not in ["C", "Q", "P", "L", "U", ""]:
+                print("C|N)   Continue (default)")
+                if i > 0:
+                    print("H|P)   Previous")
+                print("U)     User")
+                print("Q)     Quit")
 
-                choice = input("\nSelect a command: ")
+                choice = input("\nSelect a command: ").upper()
 
-            if choice.upper() == "Q":
+                if choice == "U":
+                    new_index = select_user(user_ids, i)
+                    if new_index == i:
+                        choice = "A"
+                    else:
+                        print("Jumping to {1} (#{0})"
+                              .format(new_index+1, user_ids[new_index]))
+                        i = new_index
+                        choice = "C"  # Otherwise we loop forever
+        else:
+            break
+
+            if choice == "Q":
                 break
-            i += 1  # continue
+
+            if (choice == "H" or choice == "P") and i > 0:
+                i -= 1
+            elif choice != "U":
+                i += 1  # continue
+
+            # Separate from next call
+            print("")
 
 
 def submission_choice(assignment, user_id, subs):
@@ -90,7 +112,7 @@ def submission_choice(assignment, user_id, subs):
             choice = input("Please enter your selection: ")
             try:
                 choice = int(choice)-1
-            except:
+            except TypeError:
                 pass
 
         return subs[choice]
@@ -132,3 +154,27 @@ def review_files(sub, editor):
         # Call with first file, second file, then all other files
         call(list(filter(lambda x: x != "",
              editor.format(*com_args).split(' '))))
+
+
+def select_user(user_ids, current_position):
+    print("User list: ")
+    for i, user in enumerate(user_ids):
+        i += 1
+        if current_position != i:
+            print("   ", i, ") ", user, sep="")
+        else:
+            print("-> ", i, ") ", user, sep="")
+    print("")
+
+    # Present menu
+    choice = -1
+    while choice > len(user_ids) or choice <= 0:
+        try:
+            choice = input("\nSelect a user by index (#) or Q to quit: ")
+            if choice == "Q":
+                return current_position
+            choice = int(choice)
+        except TypeError:
+            pass
+
+    return choice - 1
