@@ -30,7 +30,7 @@ def run(args):
         return
 
     user_submissions = a.submissions_by_user[args.username]
-    sub = None
+    id = None
     # If they have multiple submissions, make them choose
     if len(user_submissions) > 1:
         i = 1
@@ -47,17 +47,17 @@ def run(args):
             except:
                 choice = -1
 
-        sub = user_submissions[choice]
+        id = user_submissions[choice].full_id
     else:
-        sub = user_submissions[0]
+        id = user_submissions[0].full_id
 
     shell = a.gradesheet.config.get('shell', '/bin/bash')
 
     # Start container, run exec, stop container
-    logger.info("Starting container {0}".format(sub.id))
-    a.docker_cli.start(container=sub.id)
+    logger.info("Starting container {0}".format(id))
+    a.docker_cli.start(container=id)
 
-    call(["/usr/bin/docker", "exec", "-it", sub.id, shell])
+    call(["/usr/bin/docker", "exec", "-it", id, shell])
 
-    logger.info("Stopping container {0}".format(sub.id))
+    logger.info("Stopping container {0}".format(id))
     a.docker_cli.stop(container=id)
