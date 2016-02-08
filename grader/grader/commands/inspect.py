@@ -1,7 +1,8 @@
-'''TODO: Build command docs
+'''TODO: Inspect command docs
 '''
 import logging
-from subprocess import call
+import shutil
+import subprocess
 
 from grader.models import Grader
 from grader.utils.config import require_grader_config
@@ -13,8 +14,8 @@ help = "Inspect a graded submission container."
 
 def setup_parser(parser):
     parser.add_argument('assignment',
-                        help='Name of the assignment which the user has a \
-                                graded submission for.')
+                        help='Name of the assignment which the user has a '
+                             'graded submission for.')
     parser.add_argument('username',
                         help='Username of the submission to inspect.')
     parser.set_defaults(run=run)
@@ -57,7 +58,7 @@ def run(args):
     logger.info("Starting container {0}".format(id))
     a.docker_cli.start(container=id)
 
-    call(["/usr/bin/docker", "exec", "-it", id, shell])
+    subprocess.call([shutil.which("docker"), "exec", "-it", id, shell])
 
     logger.info("Stopping container {0}".format(id))
     a.docker_cli.stop(container=id)
