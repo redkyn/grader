@@ -285,9 +285,9 @@ class Assignment(DockerClientMixin):
         """
         self.docker_cli.remove_image(self.image_tag)
 
-    def import_submission(self, path, submission_type):
+    def import_submission(self, path, submission_type, pattern):
         importer = Submission.get_importer(submission_type)
-        submissions = importer(self, path)
+        submissions = importer(self, path, pattern)
 
         for submission in submissions:
             if submission:

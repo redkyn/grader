@@ -155,7 +155,7 @@ class Submission(DockerClientMixin):
                 )
 
     @classmethod
-    def _check_submission_item(cls, assignment, path):
+    def _check_submission_item(cls, assignment, path, sid_pattern=r"(?P<id>.*)"):
         """Checks whether the submission item meets the following
         requirements:
 
@@ -182,7 +182,15 @@ class Submission(DockerClientMixin):
                 'Unsure how to handle basename "{}".'.format(basename)
             )
 
-        student_id = match.group(1)
+        student_id_match = re.match(sid_pattern, match.group(1))
+        if student_id_match is not None:
+            try:
+                student_id = student_id_match.group('id')
+            except IndexError:
+                raise SubmissionError(
+                    "{} is missing 'id' group.".format(sid_pattern)
+                )
+
         if student_id not in assignment.grader.student_ids:
             raise SubmissionImportError(
                 'Expected "{}" to match a student id.'.format(student_id)
@@ -298,7 +306,7 @@ class Submission(DockerClientMixin):
         source = os.path.normpath(source)
 
         # See if it's structured properly
-        cls._check_submission_item(assignment, source)
+        cls._check_submission_item(assignment, source, sid_pattern)
 
         # Ditch ".tar.gz" file extension (if it's there)
         basename = cls._remove_extension(os.path.basename(source))
