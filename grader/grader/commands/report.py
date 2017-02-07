@@ -24,13 +24,13 @@ def setup_parser(parser):
     parser.set_defaults(run=run)
 
 
-def load_data(content):
+def load_data(user_id, content):
     try:
         return yaml.load(content)
     except yaml.YAMLError:
         logger.info(
-            "Couldn't parse YAML for user_id."
-            " Passing to template as 'data'"
+            "Couldn't parse YAML for {}."
+            " Passing to template as 'data'".format(user_id)
         )
         return {'data': content}
 
@@ -78,7 +78,7 @@ def run(args):
         for submission in submissions:
             # Load the report data
             with open(submission.latest_result) as result_file:
-                data = load_data(result_file.read())
+                data = load_data(user_id, result_file.read())
                 data.update({
                     'student': {
                         'id': user_id,
