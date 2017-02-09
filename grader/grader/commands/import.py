@@ -14,7 +14,8 @@ def setup_parser(parser):
     parser.add_argument('--kind', required=True,
                         choices=Submission.get_importers().keys())
     parser.add_argument('--pattern',
-                        help='Regular expression to match student ID in submission filename')
+                        help='Regular expression to match student ID'
+                        ' in submission filename')
     parser.add_argument('assignment',
                         help='Name of the assignment to add submission(s) to.')
     parser.add_argument('submission_path',
