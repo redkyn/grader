@@ -82,15 +82,12 @@ class Submission(DockerClientMixin):
         return (match.group("student_id"), match.group("uuid"))
 
     @classmethod
-    def get_full_id(cls, basename, sid=None, sid_pattern=r"(?P<id>.*)"):
+    def get_full_id(cls, basename, sid_pattern=r"(?P<id>.*)"):
         """Generates a full Submission ID based on the student's ID
 
         :param str basename: The basename of a file to use for
             generating the submisison id. This string should contain
             the student's ID in some way.
-
-        :param str sid: If provided, this will be used as the
-            student's ID.
 
         :param str sid_pattern: If provided, this will be used to pull
             the student's ID out of ``basename``. The match group
@@ -105,18 +102,17 @@ class Submission(DockerClientMixin):
 
         """
         match = re.match(sid_pattern, basename)
-        if sid is None and match is not None:
-            try:
-                sid = match.group('id')
-            except IndexError:
-                raise SubmissionError(
-                    "{} is missing 'id' group.".format(sid_pattern)
-                )
-
-        if sid is None:
+        if match is None:
             raise SubmissionError(
                 'Submission ID pattern "{}" does not '
                 'match file name "{}"'.format(sid_pattern, basename)
+            )
+
+        try:
+            sid = match.group('id')
+        except IndexError:
+            raise SubmissionError(
+                "{} is missing 'id' group.".format(sid_pattern)
             )
 
         full_id = "{}--{}".format(sid, uuid.uuid4())
@@ -155,7 +151,8 @@ class Submission(DockerClientMixin):
                 )
 
     @classmethod
-    def _check_submission_item(cls, assignment, path):
+    def _check_submission_item(cls, assignment, path,
+                               sid_pattern=r"(?P<id>.*)"):
         """Checks whether the submission item meets the following
         requirements:
 
@@ -182,7 +179,15 @@ class Submission(DockerClientMixin):
                 'Unsure how to handle basename "{}".'.format(basename)
             )
 
-        student_id = match.group(1)
+        student_id_match = re.match(sid_pattern, match.group(1))
+        if student_id_match is not None:
+            try:
+                student_id = student_id_match.group('id')
+            except IndexError:
+                raise SubmissionError(
+                    "{} is missing 'id' group.".format(sid_pattern)
+                )
+
         if student_id not in assignment.grader.student_ids:
             raise SubmissionImportError(
                 'Expected "{}" to match a student id.'.format(student_id)
@@ -192,7 +197,7 @@ class Submission(DockerClientMixin):
             cls._check_tarball(assignment, path, student_id)
 
     @classmethod
-    def import_blackboard_zip(cls, assignment, zip_path,
+    def import_blackboard_zip(cls, assignment, path,
                               sid_pattern=r"(?P<id>.*)"):
         """Imports submissions from a ZIP downloaded from Blackboard
 
@@ -211,7 +216,7 @@ class Submission(DockerClientMixin):
         raise NotImplementedError("Blackboard import isn't implemented yet :/")
 
     @classmethod
-    def import_multiple(cls, assignment, source, sid_pattern=r"(?P<id>.*)"):
+    def import_multiple(cls, assignment, path, sid_pattern=r"(?P<id>.*)"):
         """Imports multiple submissions from a folder of ``.tar.gz``'s or
         folders of submission material.
 
@@ -232,14 +237,14 @@ class Submission(DockerClientMixin):
 
         """
         # Make sure this is actually a folder
-        if not os.path.isdir(source):
+        if not os.path.isdir(path):
             raise NotADirectoryError(
-                "{} is not a directory. Cannot import.".format(source)
+                "{} is not a directory. Cannot import.".format(path)
             )
 
         # Make sure we can import all the items in this folder
-        for item in os.listdir(source):
-            item = os.path.join(source, item)
+        for item in os.listdir(path):
+            item = os.path.join(path, item)
             if os.path.isfile(item) and tarfile.is_tarfile(item):
                 logger.debug("%s is a tarfile", item)
                 continue
@@ -253,7 +258,7 @@ class Submission(DockerClientMixin):
 
         # Import the items
         def import_it(path):
-            fullpath = os.path.join(source, path)
+            fullpath = os.path.join(path, path)
             try:
                 submission, = cls.import_single(
                     assignment, fullpath, sid_pattern=sid_pattern
@@ -262,11 +267,10 @@ class Submission(DockerClientMixin):
             except SubmissionError as e:
                 logger.info("Could not import %s. %s", path, e)
 
-        return [import_it(p) for p in os.listdir(source)]
+        return [import_it(p) for p in os.listdir(path)]
 
     @classmethod
-    def import_single(cls, assignment, source,
-                      sid=None, sid_pattern=r"(?P<id>.*)"):
+    def import_single(cls, assignment, path, sid_pattern=r"(?P<id>.*)"):
         """Imports a single submission.
 
         The submission may be:
@@ -295,16 +299,16 @@ class Submission(DockerClientMixin):
 
         """
         # Remove trailing slashes from the path
-        source = os.path.normpath(source)
+        source = os.path.normpath(path)
 
         # See if it's structured properly
-        cls._check_submission_item(assignment, source)
+        cls._check_submission_item(assignment, source, sid_pattern)
 
         # Ditch ".tar.gz" file extension (if it's there)
         basename = cls._remove_extension(os.path.basename(source))
 
         # Get a unique ID for this submission
-        submission_id = cls.get_full_id(basename, sid, sid_pattern)
+        submission_id = cls.get_full_id(basename, sid_pattern)
 
         # Compute the path to the completed .tar.gz
         tar_name = submission_id + ".tar.gz"
@@ -335,8 +339,7 @@ class Submission(DockerClientMixin):
         return [cls(assignment, tar_name)]
 
     @classmethod
-    def import_repo(cls, assignment, repo_url, sid=None,
-                    sid_pattern=r"(?P<id>.*)"):
+    def import_repo(cls, assignment, path, sid_pattern=r"(?P<id>.*)"):
         """Imports a submission from a git repository
 
         :param str assignment: Assignment associated with this submission
