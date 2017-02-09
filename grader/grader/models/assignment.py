@@ -287,7 +287,7 @@ class Assignment(DockerClientMixin):
 
     def import_submission(self, path, submission_type, pattern):
         importer = Submission.get_importer(submission_type)
-        submissions = importer(self, path, sid_pattern=pattern)
+        submissions = importer(self, path, pattern)
 
         for submission in submissions:
             if submission:
