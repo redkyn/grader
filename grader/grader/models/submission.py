@@ -257,8 +257,8 @@ class Submission(DockerClientMixin):
                 )
 
         # Import the items
-        def import_it(path):
-            fullpath = os.path.join(path, path)
+        def import_it(submission_path):
+            fullpath = os.path.join(path, submission_path)
             try:
                 submission, = cls.import_single(
                     assignment, fullpath, sid_pattern=sid_pattern
