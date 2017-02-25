@@ -50,7 +50,12 @@ Usage
 
 .. code-block:: bash
 
-  grader inspect assignment student_id
+  grader inspect [--user user] assignment student_id
+
+Grader inspect interactively launches into a specified program on a container.
+When the program termiantes, the container is stopped implicitly by Docker.
+
+An optional user can be specified for the process to be launched as.
 
 Examples
 ********
