@@ -1,12 +1,12 @@
 _grader_completion() {
   if [[ -z "$GRADER_HOME" ]] || [[ ! -d "$GRADER_HOME" ]] || [[ ! -e "$GRADER_HOME/config.yml" ]]; then
     local -x GRADER_HOME=""
-    # Guess GRADER_HOME if it's not set.
 
+    # Guess GRADER_HOME if it's not set.
     if [[ -e "$(pwd)/grader.yml" ]]; then
       GRADER_HOME=`pwd`
     elif [[ ! -z "$(which grader)" ]]; then
-      GRADER_HOME="$(which grader | rev | cut -d'/' -f3- | rev )"
+      GRADER_HOME="$(which grader | rev | cut -d'/' -f3- | rev)"
     fi
   fi
 
