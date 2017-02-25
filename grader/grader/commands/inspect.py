@@ -26,11 +26,11 @@ def run(args):
     g = Grader(args.path)
     a = g.get_assignment(args.assignment)
 
-    if args.username not in a.submissions_by_user:
+    if args.student_id not in a.submissions_by_user:
         logger.error("User does not have a graded submission available.")
         return
 
-    user_submissions = a.submissions_by_user[args.username]
+    user_submissions = a.submissions_by_user[args.student_id]
     id = None
     # If they have multiple submissions, make them choose
     if len(user_submissions) > 1:
@@ -60,11 +60,9 @@ def run(args):
 
     command = [shutil.which("docker"), "exec", "-it"]
     if args.user:
-      command.append("-u")
-      command.append(args.user)
+        command.extend(["-u", args.user])
 
-    command.append(id)
-    command.append(shell)
+    command.extend([id, shell])
     subprocess.call(command)
 
     logger.info("Stopping container {0}".format(id))
