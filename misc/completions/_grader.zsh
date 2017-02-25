@@ -46,6 +46,7 @@ _grader_completion() {
               "grade[Grade student submission(s)]" \
               "cat[Print an assignment's grade output to STDOUT]" \
               "report[Generate reports using a gradesheet template]" \
+              "inspect[Inspect a graded submission's container]" \
               "help[Show help for grader and exit]"
       ret=0
       ;;
@@ -115,6 +116,15 @@ _grader_completion() {
           _arguments \
             '--help[View help for cat and exit]' \
             "--submission_id[ID of a specific submission to cat]: :{_describe 'ALL submissions' _submissions}" \
+            "1: :{_describe 'assignments' assignments}" \
+            "2: :{_describe 'students' students }"
+
+          ret=0
+          ;;
+        inspect)
+          _arguments \
+            '--help[View help for inspect and exit]' \
+            "--user[username of a specific container user to inspect as]: :" \
             "1: :{_describe 'assignments' assignments}" \
             "2: :{_describe 'students' students }"
 
