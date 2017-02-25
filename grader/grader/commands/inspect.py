@@ -18,6 +18,8 @@ def setup_parser(parser):
                              'graded submission for.')
     parser.add_argument('username',
                         help='Username of the submission to inspect.')
+    parser.add_argument('--user',
+                        help="Linux user to inspect as")
     parser.set_defaults(run=run)
 
 
@@ -58,7 +60,14 @@ def run(args):
     logger.info("Starting container {0}".format(id))
     a.docker_cli.start(container=id)
 
-    subprocess.call([shutil.which("docker"), "exec", "-it", id, shell])
+    command = [shutil.which("docker"), "exec", "-it"]
+    if args.user:
+      command.append("-u")
+      command.append(args.user)
+
+    command.append(id)
+    command.append(shell)
+    subprocess.call(command)
 
     logger.info("Stopping container {0}".format(id))
     a.docker_cli.stop(container=id)
