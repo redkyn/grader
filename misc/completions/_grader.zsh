@@ -27,11 +27,14 @@ _grader_completion() {
   students=( $(cat "$GRADER_HOME/grader.yml" | grep -P --color=never "\s+\-?\s*id:" | sed -e 's/\s*\-\?\s*id:\s*\([A-Za-z0-9_]\+\)$/\1/g') )
   ##########################
 
-  _arguments -C -A "-h" -A "--path" -A "--tracebacks" -A "--verbosity" \
+  local -a verbosity
+  verbosity=( "DEBUG" "INFO" "WARNING" "ERROR" )
+
+  _arguments -C -A "-h" -A "--path" -A "--tracebacks" \
              '(- 1 *)-h[display grader help and exit]' \
              "(- 1 *)--path[specify grader's root manually]" \
              '(- 1 *)--tracebacks[show grader tracebacks when there is an error]' \
-             '(- 1 *)--verbosity[configure how verbose output is {DEBUG,INFO,WARNING,ERROR}]' \
+             '(- 1 *)--verbosity[configure how verbose output]: :{_describe "verbosity level" verbosity}' \
              '1: :->cmds' \
              '*:: :->args' && ret=0
 
