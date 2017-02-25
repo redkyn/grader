@@ -1,4 +1,32 @@
-'''TODO: Inspect command docs
+'''Inspects a student's submission's docker container by
+launching an interactive shell within it.
+
+Configuration
+-------------
+
+Gradesheet Configuration Keys:
+    shell (**/bin/bash/**): The shell command to run interactively within the submission's container.
+
+Usage
+-----
+
+.. code-block:: bash
+
+  grader inspect assignment student_id
+
+Examples
+--------
+
+.. code-block:: bash
+
+  $ grader inspect 1 bjrq48
+  INFO Starting container bjrq48--eb86a392-a9f5-464b-a70e-15b9366e8550
+  student@9338726 ~ $ echo "Hello!"
+  Hello!
+  student@9338726 ~ $ exit
+  INFO Stopping container bjrq48--eb86a392-a9f5-464b-a70e-15b9366e8550
+  $
+
 '''
 import logging
 import shutil
@@ -9,15 +37,15 @@ from grader.utils.config import require_grader_config
 
 logger = logging.getLogger(__name__)
 
-help = "Inspect a graded submission container."
+help = "Inspect a graded submission's container."
 
 
 def setup_parser(parser):
     parser.add_argument('assignment',
                         help='Name of the assignment which the user has a '
                              'graded submission for.')
-    parser.add_argument('username',
-                        help='Username of the submission to inspect.')
+    parser.add_argument('student_id',
+                        help='Inspect submission belonging to this student.')
     parser.set_defaults(run=run)
 
 
