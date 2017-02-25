@@ -60,11 +60,9 @@ def run(args):
 
     command = [shutil.which("docker"), "exec", "-it"]
     if args.user:
-      command.append("-u")
-      command.append(args.user)
+        command.extend(["-u", args.user])
 
-    command.append(id)
-    command.append(shell)
+    command.extend([id, shell])
     subprocess.call(command)
 
     logger.info("Stopping container {0}".format(id))
