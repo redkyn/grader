@@ -183,7 +183,10 @@ class AssignmentConfig(Config):
                 "type": "string",
                 "pattern": r"^[\w-]+$"
             },
-            "image-build-options": {"type": "object"}
+            "image-build-options": {"type": "object"},
+            "shell": {
+                "type": "string"
+            }
         },
         "required": ["assignment-name"],
         "additionalProperties": False
