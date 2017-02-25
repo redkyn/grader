@@ -13,6 +13,8 @@ help = "Build an assignment's docker image"
 def setup_parser(parser):
     parser.add_argument('assignment',
                         help='Name of the assignment to build.')
+    parser.add_argument('--no-cache', action='store_true',
+                        help='Do not use docker image cache when building.')
     parser.set_defaults(run=run)
 
 
@@ -20,4 +22,4 @@ def setup_parser(parser):
 def run(args):
     g = Grader(args.path)
     a = g.get_assignment(args.assignment)
-    a.build_image()
+    a.build_image(args.no_cache)
