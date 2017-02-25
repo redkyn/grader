@@ -17,7 +17,7 @@ _grader_completion() {
   local -a assignments
   assignments=( $GRADER_HOME/assignments/* )
   # Now trim everything except for the folder names.
-  assignments=$(printf "%s\n" "${assignments[@]}" | xargs -i echo "{}" | rev | cut -d'/' -f-1 | rev)
+  assignments=( $( echo "$GRADER_HOME/assignments"/* | xargs -i -d' ' sh -c "echo -e \"{}\" | rev | cut -d'/' -f-1 | rev") )
   ##############################
 
   #### Get all students ####
