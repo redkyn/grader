@@ -237,7 +237,7 @@ class Assignment(DockerClientMixin):
         """String representation of an Assignment (i.e., its name)"""
         return self.name
 
-    def build_image(self,nocache=False):
+    def build_image(self, nocache=False):
         """Build's an assignment's docker image using the Dockerfile from its
         :class:`GradeSheet`.
 
