@@ -1,11 +1,18 @@
-# You must set GRADER_HOME in you zshrc for this to work
-
 _grader_completion() {
-  if [[ -z "$GRADER_HOME" ]] || [[ ! -d "$GRADER_HOME" ]]; then
-    echo "GRADER_HOME is not set"
-    return
+  if [[ -z "$GRADER_HOME" ]] || [[ ! -d "$GRADER_HOME" ]] || [[ ! -e "$GRADER_HOME/config.yml" ]]; then
+    local -x GRADER_HOME=""
+    # Guess GRADER_HOME if it's not set.
+
+    if [[ -e "$(pwd)/grader.yml" ]]; then
+      GRADER_HOME=`pwd`
+    elif [[ ! -z "$(which grader)" ]]; then
+      GRADER_HOME="$(which grader | rev | cut -d'/' -f3- | rev )"
+    fi
   fi
 
+  if [[ ! -e "$GRADER_HOME/grader.yml" ]]; then
+    return
+  fi
   ##### Get all assignments ####
   local -a assignments
   assignments=( $GRADER_HOME/assignments/* )
@@ -98,6 +105,7 @@ _grader_completion() {
         cat)
           local -a _submissions
           _submissions=()
+          # FUTURE: Ideally, this would only grab submissions from the assignment/student you specified...
           # http://stackoverflow.com/a/23357277/7065175
           while IFS=  read -r -d $'\0'; do
             # Trim to just the submission ID alone.
@@ -109,8 +117,6 @@ _grader_completion() {
             "--submission_id[ID of a specific submission to cat]: :{_describe 'ALL submissions' _submissions}" \
             "1: :{_describe 'assignments' assignments}" \
             "2: :{_describe 'students' students }"
-          # TODO: submission_Id requires 1 and 2 to look up, so I'm not sure zsh can complete that.
-          # best thing may be a list of all submissions... but that is nontrivial and would incur
 
           ret=0
           ;;
