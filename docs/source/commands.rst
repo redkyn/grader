@@ -55,7 +55,9 @@ Usage
 Grader inspect interactively launches into a specified program on a container.
 When the program termiantes, the container is stopped implicitly by Docker.
 
-An optional user can be specified for the process to be launched as.
+An optional user can be specified for the process to be launched as. This is particularly
+useful when gradesheets restrict the container's default user's access to
+submission files that need to be modified.
 
 Examples
 ********
