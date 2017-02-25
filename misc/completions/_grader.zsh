@@ -10,7 +10,7 @@ _grader_completion() {
   local -a assignments
   assignments=( $GRADER_HOME/assignments/* )
   # Now trim everything except for the folder names.
-  assignments=$(printf "%s\n" "${assignments[@]}" | xargs -i echo "{}" | sed -e 's/.\+[\/]assignments[\/]\(.\+\)/\1/' )
+  assignments=$(printf "%s\n" "${assignments[@]}" | xargs -i echo "{}" | rev | cut -d'/' -f-1 | rev)
   ##############################
 
   #### Get all students ####
@@ -80,7 +80,7 @@ _grader_completion() {
             '--help[View help for list and exit]' \
             "--submissions[Show submissions for each assignment]" \
             "--full[Show full length of values]" \
-            "--sortby[Sort by a specific field]: :{_describe 'sortby of import' _sortby}" \
+            "--sortby[Sort by a specific field]: :{_describe 'sort import by' _sortby}" \
             "1: :{_describe 'assignments' assignments}"
 
           ret=0
@@ -96,25 +96,30 @@ _grader_completion() {
           ret=0
           ;;
         cat)
+          local -a _submissions
+          _submissions=()
+          # http://stackoverflow.com/a/23357277/7065175
+          while IFS=  read -r -d $'\0'; do
+            # Trim to just the submission ID alone.
+            _submissions+=($(echo "$REPLY" | rev | cut -d'/' -f-1 | rev))
+          done < <(find "$GRADER_HOME/assignments/" -wholename '*/*{*}' -print0)
+
           _arguments \
             '--help[View help for cat and exit]' \
-            '--submission_id[ID of a specific submission to cat]' \
+            "--submission_id[ID of a specific submission to cat]: :{_describe 'ALL submissions' _submissions}" \
             "1: :{_describe 'assignments' assignments}" \
             "2: :{_describe 'students' students }"
           # TODO: submission_Id requires 1 and 2 to look up, so I'm not sure zsh can complete that.
-          # best thing may be a list of all submissions?
+          # best thing may be a list of all submissions... but that is nontrivial and would incur
 
           ret=0
           ;;
         report)
           _arguments \
             '--help[View help for report and exit]' \
-            '--submission_id[Type of template to use]' \
+            '--template[Type of template to use]:' \
             "1: :{_describe 'assignments' assignments}" \
             "::OPTIONAL :{_describe 'students' students }"
-          # TODO: submission_Id requires 1 and 2 to look up, so I'm not sure zsh can complete that.
-          # best thing may be a list of all submissions?
-
           ret=0
           ;;
       esac
