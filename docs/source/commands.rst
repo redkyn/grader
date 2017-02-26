@@ -71,3 +71,64 @@ Examples
   student@9338726 ~ $ exit
   INFO Stopping container bjrq48--eb86a392-a9f5-464b-a70e-15b9366e8550
   $
+
+.. _remove::
+
+``remove``
+---------
+Remove submission Docker containers for an assignment, using an optional filter by student ids
+
+Usage
+*****
+
+.. code-block:: bash
+
+  grader remove [--negate] assignment [student_id student_id2 ...]
+
+Grader remove allows the removal of all submission's Docker containers per assignment. It
+optionally allows selecting specific student ids submissions for removal if desired.
+Containers to be removed are listed, confirmed, and then stopped before removal.
+
+args:
+  --negate: instead of the student ids provided being removed, they are
+            explicitly excluded from removal.
+
+
+Examples
+********
+
+.. code-block:: bash
+
+   $ grader remove hw1
+   INFO     Containers to delete:
+   INFO       bjrq48 (1 container(s)):
+   INFO         1661d79d7a88cd6c47268bbc45fcd021d45b450276261b3fa3b19cf83580e73f created on 2017-02-25 21:01:58
+   INFO       nmjxc9 (1 container(s)):
+   INFO         5a75dc16334a393d9ac6cc70980c7a53599aa73db2f8766affa290151748116b created on 2017-02-25 21:02:01
+   INFO       mwcp2 (1 container(s)):
+   INFO         ba4e4a891f69023359d312149629f05cf1f36a63694cb77a31c3f23514974469 created on 2017-02-25 21:02:06
+   Are you sure you wish to remove the containers listed above [yes/no] (no): yes
+   INFO     Removing container 1661d79d7a88cd6c47268bbc45fcd021d45b450276261b3fa3b19cf83580e73f
+   INFO     Removing container 5a75dc16334a393d9ac6cc70980c7a53599aa73db2f8766affa290151748116b
+   INFO     Removing container ba4e4a891f69023359d312149629f05cf1f36a63694cb77a31c3f23514974469
+
+.. code-block:: bash
+
+   $ grader remove hw1 bjrq48
+   INFO     Containers to delete:
+   INFO       bjrq48 (1 container(s)):
+   INFO         1661d79d7a88cd6c47268bbc45fcd021d45b450276261b3fa3b19cf83580e73f created on 2017-02-25 21:01:58
+   Are you sure you wish to remove the containers listed above [yes/no] (no): yes
+   INFO     Removing container 1661d79d7a88cd6c47268bbc45fcd021d45b450276261b3fa3b19cf83580e73f
+
+.. code-block:: bash
+
+   $ grader remove --negate hw1 bjrq48
+   INFO     Containers to delete:
+   INFO       nmjxc9 (1 container(s)):
+   INFO         5a75dc16334a393d9ac6cc70980c7a53599aa73db2f8766affa290151748116b created on 2017-02-25 21:02:01
+   INFO       mwcp2 (1 container(s)):
+   INFO         ba4e4a891f69023359d312149629f05cf1f36a63694cb77a31c3f23514974469 created on 2017-02-25 21:02:06
+   Are you sure you wish to remove the containers listed above [yes/no] (no): yes
+   INFO     Removing container 5a75dc16334a393d9ac6cc70980c7a53599aa73db2f8766affa290151748116b
+   INFO     Removing container ba4e4a891f69023359d312149629f05cf1f36a63694cb77a31c3f23514974469

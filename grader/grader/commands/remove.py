@@ -1,5 +1,3 @@
-'''TODO: Remove command docs
-'''
 import datetime
 import logging
 
@@ -38,6 +36,7 @@ def run(args):
         logger.info("No submissions found.")
         return
 
+    # Gather containers by student_id
     containers_to_delete = {}
     for student_id, submissions in submissions_to_delete.items():
         if len(submissions) == 0:
