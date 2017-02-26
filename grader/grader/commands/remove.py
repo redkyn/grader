@@ -10,7 +10,7 @@ help = "Remove student container(s)"
 
 
 def setup_parser(parser):
-    parser.add_argument('--negate', action='store_true', default=False,
+    parser.add_argument('--exclude-listed', action='store_true', default=False,
                         help='Preserve the specified student_id\'s containers instead of removing them.')
     parser.add_argument('assignment',
                         help='Name of the assignment to delete containers from.')
@@ -27,8 +27,8 @@ def run(args):
 
     if args.student_ids != []:
         submissions_to_delete = {k: v for k, v in a.submissions_by_user.items()
-                                 if (not args.negate and k in args.student_ids)
-                                   or (args.negate and k not in args.student_ids)}
+                                 if (not args.exclude_listed and k in args.student_ids)
+                                   or (args.exclude_listed and k not in args.student_ids)}
     else:
         submissions_to_delete = a.submissions_by_user
 

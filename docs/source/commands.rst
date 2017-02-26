@@ -83,14 +83,14 @@ Usage
 
 .. code-block:: bash
 
-  grader remove [--negate] assignment [student_id student_id2 ...]
+  grader remove [--exclude-listed] assignment [student_id student_id2 ...]
 
 Grader remove allows the removal of all submission's Docker containers per assignment. It
 optionally allows selecting specific student ids submissions for removal if desired.
 Containers to be removed are listed, confirmed, and then stopped before removal.
 
 args:
-  --negate: instead of the student ids provided being removed, they are
+  --exclude-listed: instead of the student ids provided being removed, they are
             explicitly excluded from removal.
 
 
@@ -123,7 +123,7 @@ Examples
 
 .. code-block:: bash
 
-   $ grader remove --negate hw1 bjrq48
+   $ grader remove --exclude-listed hw1 bjrq48
    INFO     Containers to delete:
    INFO       nmjxc9 (1 container(s)):
    INFO         5a75dc16334a393d9ac6cc70980c7a53599aa73db2f8766affa290151748116b created on 2017-02-25 21:02:01
