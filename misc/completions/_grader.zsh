@@ -30,12 +30,13 @@ _grader_completion() {
   local -a verbosity
   verbosity=( "DEBUG" "INFO" "WARNING" "ERROR" )
 
-  _arguments -C -A "-h" -A "--path" -A "--tracebacks" \
-             '(- 1 *)-h[display grader help and exit]' \
-             "(- 1 *)--path[specify grader's root manually]" \
-             '(- 1 *)--tracebacks[show grader tracebacks when there is an error]' \
-             '(- 1 *)--verbosity[configure how verbose output]: :{_describe "verbosity level" verbosity}' \
-             '1: :->cmds' \
+  _arguments \
+             "(- 1 *)-h[display grader help and exit]" \
+             "(- 1 *)--help[display grader help and exit]" \
+             "--path[specify grader's root manually]: :" \
+             "--tracebacks[show grader tracebacks when there is an error]" \
+             "--verbosity[configure how verbose output]: :{_describe 'verbosity level' verbosity}" \
+             "1: :->cmds" \
              '*:: :->args' && ret=0
 
   case $state in
