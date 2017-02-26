@@ -554,6 +554,20 @@ class Submission(DockerClientMixin):
                 msg += " Did you build the assignment?"
             raise SubmissionContainerError(msg) from e
 
+    def get_all_container_ids(self):
+        """Passively get any created container ids for this submission.
+
+        :return: A list of dicts of container information.
+        """
+        # Filter the containers down to the one we want
+        filters = {
+            'label': 'submission_uuid={}'.format(self.uuid)
+        }
+        containers = self.docker_cli.containers(all=True, filters=filters)
+        logger.debug("Found matching containers: %s", containers)
+
+        return containers
+
     def get_container_id(self, rebuild=True):
         """Retrieve's this submission's container id
 
@@ -562,12 +576,7 @@ class Submission(DockerClientMixin):
 
         :return: The ID of this submission's container
         """
-        # Filter the containers down to the one we want
-        filters = {
-            'label': 'submission_uuid={}'.format(self.uuid)
-        }
-        containers = self.docker_cli.containers(all=True, filters=filters)
-        logger.debug("Found matching containers: %s", containers)
+        containers = self.get_all_container_ids()
 
         container_id = None
         if len(containers) < 1:
