@@ -102,6 +102,7 @@ _grader_completion() {
             '--help[View help for grade and exit]' \
             '--rebuild[Rebuild cointainers (if they exist)]' \
             "--suppress_output[Don't display output]" \
+             "-j[Number of containers to grade concurrently]: :" \
             "1: :{_describe 'assignments' assignments}" \
             "2: :{_describe 'students' students }"
 
