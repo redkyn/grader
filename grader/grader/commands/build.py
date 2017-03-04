@@ -18,7 +18,7 @@ def setup_parser(parser):
     parser.add_argument('--pull', action='store_true',
                         help='Pull the gradesheet repo before building')
     parser.add_argument('--silent', action='store_true',
-                        help='Do not parse and display responses from docker.')
+                        help='Do not parse aor display output from docker.')
     parser.set_defaults(run=run)
 
 
