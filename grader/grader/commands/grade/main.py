@@ -4,6 +4,7 @@ import logging
 
 from grader.models import Grader
 from grader.utils.config import require_grader_config
+from grader.commands.grade.async import async_grade
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,8 @@ def setup_parser(parser):
                         help='Rebuild containers (if they exist).')
     parser.add_argument('--suppress_output', action='store_false',
                         help='Don\'t display output.')
+    parser.add_argument('-j',  default="1",
+                        help='How many concurrent containers to grade.')
     parser.add_argument('assignment',
                         help='Name of the assignment to grade.')
     parser.add_argument('student_id', nargs='?',
@@ -36,8 +39,12 @@ def run(args):
             logger.error("Cannot find student %s", args.student_id)
             return
 
-    for user_id, submissions in users.items():
-        logger.info("Grading submissions for %s", user_id)
-        for submission in submissions:
-            submission.grade(a, rebuild_container=args.rebuild,
-                             show_output=args.suppress_output)
+    if args.j != "1":
+        async_grade(args, a, users)
+    else:
+        for user_id, submissions in users.items():
+            logger.info("Grading submissions for %s", user_id)
+
+            for submission in submissions:
+                submission.grade(a, rebuild_container=args.rebuild,
+                                show_output=args.suppress_output)
