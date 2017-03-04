@@ -17,6 +17,8 @@ def setup_parser(parser):
                         help='Do not use docker image cache when building.')
     parser.add_argument('--pull', action='store_true',
                         help='Pull the gradesheet repo before building')
+    parser.add_argument('--silent', action='store_true',
+                        help='Do not parse and display responses from docker.')
     parser.set_defaults(run=run)
 
 
@@ -24,4 +26,4 @@ def setup_parser(parser):
 def run(args):
     g = Grader(args.path)
     a = g.get_assignment(args.assignment)
-    a.build_image(args.no_cache, args.pull)
+    a.build_image(args.no_cache, args.pull, args.silent)
