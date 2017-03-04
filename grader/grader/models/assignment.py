@@ -1,5 +1,6 @@
 import docker
 import itertools
+import json
 import logging
 import os
 import shutil
@@ -237,7 +238,7 @@ class Assignment(DockerClientMixin):
         """String representation of an Assignment (i.e., its name)"""
         return self.name
 
-    def build_image(self, nocache=False, pull=False):
+    def build_image(self, nocache=False, pull=False, silent=False):
         """Build's an assignment's docker image using the Dockerfile from its
         :class:`GradeSheet`.
 
@@ -260,7 +261,7 @@ class Assignment(DockerClientMixin):
         build_options.update({
             "path": self.gradesheet.path,
             "tag": self.image_tag,
-            "decode": True,
+            "decode": not silent,
             "nocache": nocache
         })
 
@@ -275,6 +276,9 @@ class Assignment(DockerClientMixin):
             # asynchronously
             prompt = "building {}>".format(self.name)
             for line in output:
+                if silent:
+                    continue
+
                 error = 'Error: "{}"\n'.format(line.get('error', ''))
                 stream = line.get('stream', '')
                 print(prompt, stream or error, end="")
