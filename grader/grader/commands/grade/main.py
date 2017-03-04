@@ -40,11 +40,11 @@ def run(args):
             return
 
     if args.j != "1":
-        async_grade(args, a, users)
-    else:
-        for user_id, submissions in users.items():
-            logger.info("Grading submissions for %s", user_id)
+        return async_grade(args, a, users)
 
-            for submission in submissions:
-                submission.grade(a, rebuild_container=args.rebuild,
-                                show_output=args.suppress_output)
+    for user_id, submissions in users.items():
+        logger.info("Grading submissions for %s", user_id)
+
+        for submission in submissions:
+            submission.grade(a, rebuild_container=args.rebuild,
+                             show_output=args.suppress_output)
