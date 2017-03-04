@@ -120,3 +120,8 @@ class GradeSheet(object):
         # Verify that paths exist like we expect
         if not os.path.exists(self.dockerfile_path):
             raise FileNotFoundError("GradeSheet repo has no Dockerfile!")
+
+    def pull(self):
+        if self.repository is not None:
+            logger.debug("Pulling gradesheet repo...")
+            self.repository.git.pull('--rebase')

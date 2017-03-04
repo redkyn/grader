@@ -237,7 +237,7 @@ class Assignment(DockerClientMixin):
         """String representation of an Assignment (i.e., its name)"""
         return self.name
 
-    def build_image(self, nocache=False):
+    def build_image(self, nocache=False, pull=False):
         """Build's an assignment's docker image using the Dockerfile from its
         :class:`GradeSheet`.
 
@@ -248,6 +248,11 @@ class Assignment(DockerClientMixin):
         :return: :obj:`None`
 
         """
+
+        if pull:
+            logger.debug("Attempting to pull gradesheet")
+            self.gradesheet.pull()
+
         # Load build options from the config
         build_options = self.gradesheet.config.get('image-build-options', {})
 
