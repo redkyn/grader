@@ -5,13 +5,16 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def grade(assignment, submission, user_id, rebuild=False):
+def grade(assignment, submission, user_id, rebuild=False,
+          suppress_output=False):
     """
     Grade a single submission asyncronously.
     """
     logger.info("Grading submission for %s", user_id)
-    submission.grade(assignment, rebuild_container=rebuild,
-                     show_output=False)
+    output = submission.grade(assignment, rebuild_container=rebuild,
+                              show_output=False)
+    if not suppress_output:
+        print(output)
 
 
 def async_grade(args, assignment, users):
@@ -35,11 +38,12 @@ def async_grade(args, assignment, users):
                 blocking_tasks.append(
                     loop.run_in_executor(
                         executor, grade, assignment, submission, user_id,
-                        args.rebuild))
+                        args.rebuild, args.suppress_output))
 
         logger.debug("Waiting on pool to finish.")
         await asyncio.wait(blocking_tasks)
 
+    logger.debug("Spawning a worker pool with %s workers.", args.j)
     executor = concurrent.futures.ProcessPoolExecutor(
         max_workers=int(args.j)
     )

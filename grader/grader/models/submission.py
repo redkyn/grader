@@ -680,7 +680,7 @@ class Submission(DockerClientMixin):
         :param bool show_output: Whether to output STDOUT/STDERR from the
             container to STDOUT. Defaults to True.
 
-        :return: None
+        :return: output str from the container.
 
         """
         c_id = self.get_container_id(rebuild=rebuild_container)
@@ -710,8 +710,11 @@ class Submission(DockerClientMixin):
                 print(line, end="")
             output_text.write(line)
 
-        self._record_output(output_text.getvalue())
+        output_text = output_text.getvalue()
+        self._record_output(output_text)
 
         self.docker_cli.stop(
             container=c_id
         )
+
+        return output_text
