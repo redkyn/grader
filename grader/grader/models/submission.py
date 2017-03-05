@@ -669,18 +669,16 @@ class Submission(DockerClientMixin):
 
         logger.info("Wrote to %s", path)
 
-    def grade(self, assignment, rebuild_container=False, show_output=True):
+    def grade(self, rebuild_container=False, show_output=True):
         """Performs the magic--- prepares the docker container,
         runs the grade command, and writes to logs.
 
-        :param Assignment assignment: The assignment we're grading, used for
-            results directory.
         :param bool rebuild_container: Whether to discard the old
             container and build a new one instead. Defaults to False.
         :param bool show_output: Whether to output STDOUT/STDERR from the
             container to STDOUT. Defaults to True.
 
-        :return: output str from the container.
+        :return: output stfrom the container.
 
         """
         c_id = self.get_container_id(rebuild=rebuild_container)

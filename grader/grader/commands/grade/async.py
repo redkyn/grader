@@ -1,33 +1,38 @@
 import asyncio
 import concurrent.futures
 import logging
+from threading import Lock
 
 logger = logging.getLogger(__name__)
 
 
-def grade(assignment, submission, user_id, rebuild=False,
-          suppress_output=False):
+def grade(submission, print_lock, rebuild, suppress_output):
     """
     Grade a single submission asyncronously.
     """
-    logger.info("Grading submission for %s", user_id)
-    output = submission.grade(assignment, rebuild_container=rebuild,
-                              show_output=False)
+    logger.info("Grading submission for %s", submission.user_id)
+    output = submission.grade(
+        rebuild_container=rebuild, show_output=(not suppress_output)
+    )
+
     if not suppress_output:
-        print(output)
+        # Synchronously print
+        logger.debug("Waiting for print lock.")
+        with print_lock:
+            print(output)
 
 
-def async_grade(args, assignment, users):
+def async_grade(args, users):
     """
     Asynchronously grade submissions.
 
     :param argparse.Arguments args: the arguments from the grade
         comand.
-    :param Assignment assignment: the assignment for which to grade
-        submissions.
     :param dict users: user_id: [Submission, ...], all
         submissions will be graded.
     """
+    print_lock = Lock()
+
     async def run_blocking_tasks(executor):
         loop = asyncio.get_event_loop()
         blocking_tasks = []
@@ -37,14 +42,15 @@ def async_grade(args, assignment, users):
             for submission in submissions:
                 blocking_tasks.append(
                     loop.run_in_executor(
-                        executor, grade, assignment, submission, user_id,
-                        args.rebuild, args.suppress_output))
+                        executor, grade, submission,
+                        print_lock, args.rebuild,
+                        args.suppress_output))
 
         logger.debug("Waiting on pool to finish.")
         await asyncio.wait(blocking_tasks)
 
     logger.debug("Spawning a worker pool with %s workers.", args.j)
-    executor = concurrent.futures.ProcessPoolExecutor(
+    executor = concurrent.futures.ThreadPoolExecutor(
         max_workers=int(args.j)
     )
     event_loop = asyncio.get_event_loop()

@@ -14,7 +14,7 @@ help = "Grade assignment submission(s)"
 def setup_parser(parser):
     parser.add_argument('--rebuild', action='store_true',
                         help='Rebuild containers (if they exist).')
-    parser.add_argument('--suppress_output', action='store_false',
+    parser.add_argument('--suppress_output', action='store_true',
                         help='Don\'t display output.')
     parser.add_argument('-j',  default="1",
                         help='How many concurrent containers to grade.')
@@ -40,11 +40,11 @@ def run(args):
             return
 
     if args.j != "1":
-        return async_grade(args, a, users)
+        return async_grade(args, users)
 
     for user_id, submissions in users.items():
         logger.info("Grading submissions for %s", user_id)
 
         for submission in submissions:
-            submission.grade(a, rebuild_container=args.rebuild,
-                             show_output=args.suppress_output)
+            submission.grade(rebuild_container=args.rebuild,
+                             show_output=(not args.suppress_output))
