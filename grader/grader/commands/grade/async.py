@@ -8,7 +8,8 @@ logger = logging.getLogger(__name__)
 
 def grade(submission, print_lock, rebuild, suppress_output):
     """
-    Grade a single submission asyncronously.
+    Grade a single submission asynchronously. Locks to print
+    output if output is not suppressed.
     """
     logger.info("Grading submission for %s", submission.user_id)
     output = submission.grade(
@@ -26,7 +27,7 @@ def async_grade(args, users):
     """
     Asynchronously grade submissions.
 
-    :param argparse.Arguments args: the arguments from the grade
+    :param argparse.Namespace args: the arguments from the grade
         comand.
     :param dict users: user_id: [Submission, ...], all
         submissions will be graded.
