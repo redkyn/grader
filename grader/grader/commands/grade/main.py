@@ -16,7 +16,7 @@ def setup_parser(parser):
                         help='Rebuild containers (if they exist).')
     parser.add_argument('--suppress_output', action='store_true',
                         help='Don\'t display output.')
-    parser.add_argument('-j',  default="1",
+    parser.add_argument('--jobs', '-j',  default="1",
                         help='How many concurrent containers to grade.')
     parser.add_argument('assignment',
                         help='Name of the assignment to grade.')
@@ -39,7 +39,7 @@ def run(args):
             logger.error("Cannot find student %s", args.student_id)
             return
 
-    if args.j != "1":
+    if args.jobs != "1":
         return async_grade(args, users)
 
     for user_id, submissions in users.items():

@@ -13,7 +13,7 @@ def grade(submission, print_lock, rebuild, suppress_output):
     """
     logger.info("Grading submission for %s", submission.user_id)
     output = submission.grade(
-        rebuild_container=rebuild, show_output=(not suppress_output)
+        rebuild_container=rebuild, show_output=False)
     )
 
     if not suppress_output:
@@ -50,9 +50,9 @@ def async_grade(args, users):
         logger.debug("Waiting on pool to finish.")
         await asyncio.wait(blocking_tasks)
 
-    logger.debug("Spawning a worker pool with %s workers.", args.j)
+    logger.debug("Spawning a worker pool with %s workers.", args.jobs)
     executor = concurrent.futures.ThreadPoolExecutor(
-        max_workers=int(args.j)
+        max_workers=int(args.jobs)
     )
     event_loop = asyncio.get_event_loop()
 
