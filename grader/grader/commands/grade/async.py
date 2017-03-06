@@ -13,7 +13,7 @@ def grade(submission, print_lock, rebuild, suppress_output):
     """
     logger.info("Grading submission for %s", submission.user_id)
     output = submission.grade(
-        rebuild_container=rebuild, show_output=False)
+        rebuild_container=rebuild, show_output=False
     )
 
     if not suppress_output:
@@ -34,7 +34,8 @@ def async_grade(args, users):
     """
     print_lock = Lock()
 
-    async def run_blocking_tasks(executor):
+    @asyncio.coroutine
+    def run_blocking_tasks(executor):
         loop = asyncio.get_event_loop()
         blocking_tasks = []
 
