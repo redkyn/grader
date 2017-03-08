@@ -141,7 +141,7 @@ def review_files(sub, editor):
                     print("NO MATCH {0}".format(fullfile))
                     sub_files.append(fullfile)
 
-        results = sub.results_files
+        results = sorted(sub.results_files, reverse=True)
         com_args = []
 
         # Smash all of our files into a list so it looks like:
