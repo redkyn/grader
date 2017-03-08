@@ -68,6 +68,8 @@ _grader_completion() {
         build)
           _arguments \
             '--help[View help for build and exit]' \
+            '--no-cache[Do not use docker image cache when building]' \
+            '--pull[Pull the gradesheet repo before building]' \
             "1: :{_describe 'assignments' assignments}"
 
           ret=0
