@@ -101,6 +101,9 @@ class Config(object):
         """
         return self.data[name]
 
+    def __contains__(self, name):
+        return name in self.data
+
     def get(self, name, default=None):
         """Returns the configuration item for key ``name``, defaulting to
         ``default``
@@ -111,6 +114,11 @@ class Config(object):
 
         """
         return self.data.get(name, default)
+
+    def save(self):
+        config_path = os.path.join(self.path, self.__class__.CONFIG_FILE_NAME)
+        with open(config_path, 'w') as config_file:
+            config_file.write(yaml.dump(self.data, default_flow_style=False))
 
 
 class GraderConfig(Config):
@@ -150,6 +158,14 @@ class GraderConfig(Config):
                     "additionalProperties": False,
                 },
             },
+            # Canvas API token
+            "canvas-token": {
+                "type": "string",
+            },
+            # Canvas domain
+            "canvas-host": {
+                "type": "string",
+            },
         },
         "required": ["course-id", "course-name"],
         "additionalProperties": False,
@@ -158,7 +174,9 @@ class GraderConfig(Config):
 
     @property
     def roster(self):
-        return self.data.get('roster', [])
+        if 'roster' not in self.data:
+            self.data['roster'] = []
+        return self.data['roster']
 
     def get_student_name(self, student_id):
         d = {x['id']: x['name'] for x in self.roster}

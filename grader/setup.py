@@ -15,7 +15,8 @@ setup(  # pragma: no cover
         'jsonschema>=2.5.1',
         'PTable==0.9.2',
         'colorlog>=2.6,<3',
-        'Jinja2>=2.10'
+        'Jinja2>=2.10',
+        'assigner>=1.1,<2'
     ],
     entry_points={
         'console_scripts': ['grader = grader:run'],
