@@ -11,7 +11,7 @@ setup(  # pragma: no cover
         'setuptools',
         'GitPython==1.0.1',
         'docker-py==1.6.0',
-        'PyYAML==3.11',
+        'PyYAML>=3.13',
         'jsonschema==2.5.1',
         'prettytable==0.7.2',
         'colorlog==2.6.0',
