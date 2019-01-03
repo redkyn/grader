@@ -22,7 +22,7 @@ def test_build(parse_and_run):
     dockerfile_path = os.path.join(path, "assignments", "a1",
                                    "gradesheet", "Dockerfile")
     with open(dockerfile_path, 'w') as dockerfile:
-        dockerfile.write("FROM ubuntu:12.04")
+        dockerfile.write("FROM busybox")
 
     # Build the image
     parse_and_run(["build", "a1"])
