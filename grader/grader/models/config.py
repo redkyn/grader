@@ -143,7 +143,7 @@ class GraderConfig(Config):
                         "name": {"type": "string"},
                         "id": {
                             "type": "string",
-                            "pattern": "^\w+$",
+                            "pattern": r"^\w+$",
                         },
                     },
                     "required": ["name", "id"],
