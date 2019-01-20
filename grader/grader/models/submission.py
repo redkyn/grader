@@ -705,9 +705,11 @@ class Submission(DockerClientMixin):
         # string buffer for later
         output_text = io.StringIO()
         for line in output:
-            line = line.decode("utf-8")
+            line = line.decode("utf-8").rstrip('\n')
+            if line.endswith('Error: ""'):
+                continue
             if show_output:
-                print(line, end="")
+                print(line)
             output_text.write(line)
 
         self._record_output(output_text.getvalue())
