@@ -9,6 +9,8 @@ from grader.models import Grader
 from grader.utils.config import require_grader_config
 from grader.utils.interactive import submission_choice
 
+from grader.commands.inspect import inspect
+
 logger = logging.getLogger(__name__)
 
 help = "Opens results for each submission along with submission code in an \
@@ -63,14 +65,20 @@ def review_loop(assignment, start_at):
             print("{0} is next.\n".format(user_ids[i+1]))
 
             choice = "A"
-            while choice.upper() not in ["C", "Q", "P", "L", "U", ""]:
+            while choice.upper() not in ["C", "Q", "P", "L", "U", "I", "G", "N", "H", "R", ""]:
                 print("C|N)   Continue (default)")
                 if i > 0:
                     print("H|P)   Previous")
+                print("R)     Review current student's submission")
+                print("I)     Inspect current student's assignment container")
+                print("G)     Grade current student's submission")
                 print("U)     User")
                 print("Q)     Quit")
 
                 choice = input("\nSelect a command: ").upper()
+
+                if choice == "R":
+                    break
 
                 if choice == "U":
                     new_index = select_user(user_ids, i)
@@ -81,12 +89,20 @@ def review_loop(assignment, start_at):
                               .format(new_index+1, user_ids[new_index]))
                         i = new_index
 
+                if choice == "I":
+                    inspect(assignment, sub.full_id)
+                    choice = "A"
+
+                elif choice == "G":
+                    sub.grade(assignment, show_output=True)
+                    choice = "A"
+
             if choice == "Q":
                 break
 
             if (choice == "H" or choice == "P") and i > 0:
                 i -= 1
-            elif choice != "U":
+            elif choice == "C" or choice == "N" or choice == "L" or choice == "":
                 i += 1  # continue
 
             # Separate from next call

@@ -34,7 +34,9 @@ def run(args):
     user_submissions = a.submissions_by_user[args.student_id]
     id = submission_choice(a, args.student_id, user_submissions).full_id
 
+    inspect(a, id, args.user)
 
+def inspect(a, id, user=None):
     shell = a.gradesheet.config.get('shell', '/bin/bash')
 
     # Start container, run exec, stop container
@@ -42,8 +44,8 @@ def run(args):
     a.docker_cli.start(container=id)
 
     command = [shutil.which("docker"), "exec", "-it"]
-    if args.user:
-        command.extend(["-u", args.user])
+    if user:
+        command.extend(["-u", user])
 
     command.extend([id, shell])
     subprocess.call(command)
