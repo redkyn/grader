@@ -90,7 +90,7 @@ class Config(object):
 
         with open(self.file_path) as config_file:
             logger.debug("Loading {}.".format(self.file_path))
-            self.data = yaml.load(config_file)
+            self.data = yaml.safe_load(config_file)
             logger.debug("Validating {}.".format(self.file_path))
             self.__class__._validate(self.data)
 

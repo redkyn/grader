@@ -28,7 +28,7 @@ def test_new_without_repo(parse_and_run):
     assert os.path.exists(os.path.join(gs_path, "Dockerfile"))
 
     with open(os.path.join(gs_path, "assignment.yml")) as f:
-        config = yaml.load(f)
+        config = yaml.safe_load(f)
 
     assert config['assignment-name'] == 'assignment1'
 
@@ -56,7 +56,7 @@ def test_new_with_repo(parse_and_run):
     assert os.path.exists(os.path.join(gs_path, "Dockerfile"))
 
     with open(os.path.join(gs_path, "assignment.yml")) as f:
-        config = yaml.load(f)
+        config = yaml.safe_load(f)
 
     # Now it's equal to the value from the repo
     assert config['assignment-name'] == 'new-python-assignment'

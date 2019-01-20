@@ -14,7 +14,7 @@ def init_and_build_roster(p_and_r):
     assert os.path.exists(path)
 
     with open(config_path) as config:
-        content = yaml.load(config)
+        content = yaml.safe_load(config)
         content['roster'] = [
             {'name': 'Finn Mertens', 'id': 'fmm000'},
             {'name': 'Jake the Dog', 'id': 'jtd111'},

@@ -14,7 +14,7 @@ def test_init(parse_and_run):
     path = parse_and_run(["init", "cpl"])
 
     with open(os.path.join(path, "grader.yml")) as config_file:
-        grader_config = yaml.load(config_file)
+        grader_config = yaml.safe_load(config_file)
 
     assert grader_config['course-name'] == "cpl"
     assert re.match(UUID_RE, grader_config['course-id']) is not None
@@ -25,12 +25,12 @@ def test_init_force(parse_and_run):
     """
     path = parse_and_run(["init", "cpl"])
     with open(os.path.join(path, "grader.yml")) as config_file:
-        grader_config = yaml.load(config_file)
+        grader_config = yaml.safe_load(config_file)
         previous_id = grader_config['course-id']
 
     parse_and_run(["init", "--force", "cpl"])
     with open(os.path.join(path, "grader.yml")) as config_file:
-        grader_config = yaml.load(config_file)
+        grader_config = yaml.safe_load(config_file)
 
     assert grader_config['course-id'] != previous_id
 
