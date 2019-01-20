@@ -9,6 +9,7 @@ matrix:
       dist: xenial
       sudo: true
 install:
+  - pip3 install -r requirements.txt
   - python3 bin/bootstrap-buildout.py
   - bin/buildout
 script:
