@@ -26,7 +26,7 @@ def setup_parser(parser):
 
 def load_data(user_id, content):
     try:
-        return yaml.load(content)
+        return yaml.safe_load(content)
     except yaml.YAMLError:
         logger.info(
             "Couldn't parse YAML for {}."

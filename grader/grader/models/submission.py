@@ -648,7 +648,7 @@ class Submission(DockerClientMixin):
         # correct file extension.
         extension = "log"
         try:
-            yaml.load(output)
+            yaml.safe_load(output)
             logger.info("Logging %s output as YAML", self.user_id)
             extension = "yml"
         except yaml.YAMLError:
