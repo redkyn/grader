@@ -4,6 +4,7 @@ import subprocess
 
 from grader.models import Grader
 from grader.utils.config import require_grader_config
+from grader.utils.interactive import submission_choice
 
 logger = logging.getLogger(__name__)
 
@@ -31,27 +32,11 @@ def run(args):
         return
 
     user_submissions = a.submissions_by_user[args.student_id]
-    id = None
-    # If they have multiple submissions, make them choose
-    if len(user_submissions) > 1:
-        i = 1
-        print("Index\tCreated")
-        for s in user_submissions:
-            info = a.docker_cli.inspect_container(s.full_id)
-            print("{0}\t{1}".format(i, info['Created']))
-            i += 1
-        choice = -1
-        while choice < 0 or choice >= len(user_submissions):
-            choice = input("Please enter your selection: ")
-            try:
-                choice = int(choice)-1
-            except:
-                choice = -1
+    id = submission_choice(a, args.student_id, user_submissions).full_id
 
-        id = user_submissions[choice].full_id
-    else:
-        id = user_submissions[0].full_id
+    inspect(a, id, args.user)
 
+def inspect(a, id, user=None):
     shell = a.gradesheet.config.get('shell', '/bin/bash')
 
     # Start container, run exec, stop container
@@ -59,8 +44,8 @@ def run(args):
     a.docker_cli.start(container=id)
 
     command = [shutil.which("docker"), "exec", "-it"]
-    if args.user:
-        command.extend(["-u", args.user])
+    if user:
+        command.extend(["-u", user])
 
     command.extend([id, shell])
     subprocess.call(command)
