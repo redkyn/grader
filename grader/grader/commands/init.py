@@ -17,6 +17,8 @@ def setup_parser(parser):
                         help='Unique course ID (for docker\'s sake)')
     parser.add_argument('--force', action='store_true',
                         help='Overwrite an existing grader.yml')
+    parser.add_argument('--canvas-host', default=None,
+                        help='Canvas server to use (will prompt for canvas token')
     parser.add_argument('name', help='Name of the course')
     parser.set_defaults(run=run)
 
@@ -31,6 +33,11 @@ def run(args):
         )
         raise SystemExit(1)
 
+    if args.canvas_host:
+        canvas_token = input("Canvas access token (from {}/profile/settings): ".format(args.canvas_host))
+    else:
+        canvas_token = None
+
     # Create the new grader
-    g = Grader.new(args.path, args.name, args.course_id)
+    g = Grader.new(args.path, args.name, args.course_id, args.canvas_host, canvas_token)
     logger.info("Wrote {}".format(g.config.file_path))
