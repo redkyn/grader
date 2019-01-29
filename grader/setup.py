@@ -16,7 +16,7 @@ setup(  # pragma: no cover
         'PTable==0.9.2',
         'colorlog>=2.6,<3',
         'Jinja2>=2.10',
-        'assigner>=1.1,<2'
+        'redkyn-common>=1.0.1'
     ],
     entry_points={
         'console_scripts': ['grader = grader:run'],

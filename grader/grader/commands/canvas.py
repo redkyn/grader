@@ -6,7 +6,7 @@ from grader.models import Grader, Submission
 from grader.utils.config import require_grader_config
 from grader.utils.interactive import make_help_parser
 
-from assigner.canvas import CanvasAPI
+from redkyn.canvas import CanvasAPI
 
 from prettytable import PrettyTable
 
