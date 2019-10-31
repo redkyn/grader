@@ -29,7 +29,7 @@ class Grader(object):
     """
 
     @classmethod
-    def new(cls, path, course_name, course_id):
+    def new(cls, path, course_name, course_id, canvas_host=None, canvas_token=None):
         """Creates a new Grader instance and sets up its operating
         environment. This includes creating associated files on disk.
 
@@ -46,8 +46,14 @@ class Grader(object):
             ``course_id`` don't comply with the configuration schema
 
         """
-        GraderConfig.new(path, {'course-name': course_name,
-                                'course-id': course_id})
+        config = {'course-name': course_name,
+                  'course-id': course_id,
+                 }
+        if canvas_host:
+            config['canvas-host'] = canvas_host
+            config['canvas-token'] = canvas_token
+
+        GraderConfig.new(path, config)
         return cls(path)
 
     @property

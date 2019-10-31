@@ -27,3 +27,13 @@ def submission_choice(assignment, user_id, subs):
     else:
         return subs[0]
 
+def make_help_parser(parser, subparsers, help_text):
+    def show_help(args):
+        new_args = list(args.command)
+        new_args.append("--help")
+        parser.parse_args(new_args)
+
+    help_parser = subparsers.add_parser("help", help=help_text)
+    help_parser.add_argument("command", nargs="*",
+                             help="Command to get help with")
+    help_parser.set_defaults(run=show_help)
