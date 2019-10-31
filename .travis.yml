@@ -13,4 +13,4 @@ install:
   - python3 bin/bootstrap-buildout.py
   - bin/buildout
 script:
-  - bin/py.test --cov=grader -v grader/
+  - bin/py.test --cov=grader -v redkyn-grader/
