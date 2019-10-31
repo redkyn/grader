@@ -3,8 +3,8 @@
 
 |pypi| |travis|
 
-.. |pypi| image:: https://badge.fury.io/py/grader.svg
-    :target: https://badge.fury.io/py/grader
+.. |pypi| image:: https://badge.fury.io/py/redkyn-grader.svg
+    :target: https://badge.fury.io/py/redkyn-grader
     :alt: PyPi package
 
 .. |travis| image:: https://travis-ci.org/redkyn/grader.svg?branch=master
