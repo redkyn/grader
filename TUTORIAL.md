@@ -2,15 +2,20 @@
 
 ## Installation
 
-For now, you'll have to install Grader manually.
-The easiest way to do this is to clone the [grader repository](https://github.com/redkyn/grader.git).
-Inside the cloned repository, run `pip3 install --user -e grader/`.
-This will install a `grader` executable to `~/.local/bin` and make the install "editable" -- this way, changes made in the Grader repository apply anywhere you run Grader.
+### The easy way
 
-In the future, we plan to package Grader to make the install easier, but it's not yet ready for a `v0.1.0` release yet.
+Use `pip`: `pip3 install redkyn-grader`
 
 You'll also need to have docker installed and be in the `docker` group so you can do dockery things.
 Plan to have a lot of free hard drive space -- docker is not exactly frugal with its bytes.
+
+If you use `zsh`, you may want to source the [`zsh` completion script](misc/completions/_grader.zsh) too.
+
+### If you want to hack on Grader
+
+The easiest way to do this is to clone the [grader repository](https://github.com/redkyn/grader.git).
+Inside the cloned repository, run `pip3 install --user -e redkyn-grader/`.
+This will install a `grader` executable to `~/.local/bin` and make the install "editable" -- this way, changes made in the Grader repository apply anywhere you run Grader.
 
 ## Setting up a new class
 
