@@ -1,13 +1,10 @@
 language: python
 python:
+  - "3.8"
+  - "3.7"
   - "3.6"
   - "3.5"
   - "3.4"
-matrix:
-  include:
-    - python: 3.7
-      dist: xenial
-      sudo: true
 install:
   - pip3 install -r requirements.txt
   - python3 bin/bootstrap-buildout.py
