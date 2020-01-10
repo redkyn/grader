@@ -53,8 +53,8 @@ setup(  # pragma: no cover
         'Programming Language :: Python :: 3.8',
     ],
 
-    packages=['grader'],
-    package_dir={'grader': 'grader'},
+    packages = find_packages(),
+
     install_requires=[
         'setuptools',
         'GitPython>=2.1.8',
