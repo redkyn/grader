@@ -57,7 +57,26 @@ def check_grader_tarfile(grader_path, student_id, filenames=["main.py"]):
     tar_path = os.path.join(submission_dir, tar_filename)
     with tempfile.TemporaryDirectory() as tempdir:
         with tarfile.open(tar_path, "r:gz") as tar:
-            tar.extractall(tempdir)
+            def is_within_directory(directory, target):
+                
+                abs_directory = os.path.abspath(directory)
+                abs_target = os.path.abspath(target)
+            
+                prefix = os.path.commonprefix([abs_directory, abs_target])
+                
+                return prefix == abs_directory
+            
+            def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+            
+                for member in tar.getmembers():
+                    member_path = os.path.join(path, member.name)
+                    if not is_within_directory(path, member_path):
+                        raise Exception("Attempted Path Traversal in Tar File")
+            
+                tar.extractall(path, members, numeric_owner=numeric_owner) 
+                
+            
+            safe_extract(tar, tempdir)
 
         name, = os.listdir(tempdir)
         assert name == student_id
@@ -94,7 +113,26 @@ def test_make_student_tarball(clean_dir):
 
     with tempfile.TemporaryDirectory() as tempdir:
         with tarfile.open(student_tarball, "r:gz") as tar:
-            tar.extractall(tempdir)
+            def is_within_directory(directory, target):
+                
+                abs_directory = os.path.abspath(directory)
+                abs_target = os.path.abspath(target)
+            
+                prefix = os.path.commonprefix([abs_directory, abs_target])
+                
+                return prefix == abs_directory
+            
+            def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+            
+                for member in tar.getmembers():
+                    member_path = os.path.join(path, member.name)
+                    if not is_within_directory(path, member_path):
+                        raise Exception("Attempted Path Traversal in Tar File")
+            
+                tar.extractall(path, members, numeric_owner=numeric_owner) 
+                
+            
+            safe_extract(tar, tempdir)
 
         # Look for folder
         assert os.listdir(tempdir) == ["jtd111"]
